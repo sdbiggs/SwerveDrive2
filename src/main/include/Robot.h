@@ -15,6 +15,9 @@
 #include <frc/drive/DifferentialDrive.h>
 #include "rev/CANSparkMax.h"
 #include <frc/AnalogInput.h>
+#include "rev/ColorSensorV3.h"
+#include "rev/ColorMatch.h"
+
  
 class Robot : public frc::TimedRobot {
   static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRightSteerDeviceID = 4, frontRightDriveDeviceID = 3;
@@ -45,6 +48,9 @@ class Robot : public frc::TimedRobot {
 
   frc::Joystick c_joyStick{0};
 
+   static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
+
+
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
@@ -59,4 +65,10 @@ class Robot : public frc::TimedRobot {
   const std::string kAutoNameDefault = "Default";
   const std::string kAutoNameCustom = "My Auto";
   std::string m_autoSelected;
+  rev::ColorSensorV3 m_colorSensor{i2cPort};
+  rev::ColorMatch m_colorMatcher;
+  static constexpr frc::Color kBlueTarget = frc::Color(0.143, 0.427, 0.429);
+  static constexpr frc::Color kGreenTarget = frc::Color(0.197, 0.561, 0.240);
+  static constexpr frc::Color kRedTarget = frc::Color(0.561, 0.232, 0.114);
+  static constexpr frc::Color kYellowTarget = frc::Color(0.361, 0.524, 0.113);
 };

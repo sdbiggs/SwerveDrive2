@@ -12,7 +12,8 @@
 
 #include "Encoder.hpp"
 #include "Enums.hpp"
-#include "NavxGyro.hpp"
+#include "AHRS.h"
+
  
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
@@ -140,6 +141,7 @@ double Control_PID(double  L_DesiredSpeed,
 
 
 
+
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
   m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
@@ -161,6 +163,11 @@ void Robot::RobotInit() {
 
     V_RobotInit = false;
     V_WheelSpeedDelay = false;
+
+    m_colorMatcher.AddColorMatch(kBlueTarget);
+    m_colorMatcher.AddColorMatch(kGreenTarget);
+    m_colorMatcher.AddColorMatch(kRedTarget);
+    m_colorMatcher.AddColorMatch(kYellowTarget);
 
 
     try{
@@ -237,6 +244,8 @@ void Robot::TeleopInit(){
 void Robot::TeleopPeriodic() {
 
   SmartDashboard::PutNumber("NavX Zeroed Yaw", NavX->GetYaw());
+
+
 
   T_RobotCorner index;
   bool L_WheelSpeedDelay = false;
@@ -435,6 +444,51 @@ void Robot::TeleopPeriodic() {
 //    m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (0));
 //    m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (0));
 //    m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (0));
+
+
+double IR = m_colorSensor.GetIR();
+
+    frc::SmartDashboard::PutNumber("IR", IR);
+    uint32_t proximity = m_colorSensor.GetProximity();
+
+    frc::SmartDashboard::PutNumber("Proximity", proximity);
+
+frc::Color detectedColor = m_colorSensor.GetColor();
+
+    /**
+     * Run the color match algorithm on our detected color
+     */
+    std::string colorString;
+    double confidence = 0.0;
+    frc::Color matchedColor = m_colorMatcher.MatchClosestColor(detectedColor, confidence);
+if (proximity > 450) {
+if (matchedColor == kBlueTarget) {
+      colorString = "Blue";
+    } else if (matchedColor == kRedTarget) {
+      colorString = "Red";
+    } else if (matchedColor == kGreenTarget) {
+      colorString = "Green";
+    } else if (matchedColor == kYellowTarget) {
+      colorString = "Yellow";
+    } else {
+      colorString = "Unknown";
+    }
+}
+else {colorString = "Too far away";
+}
+
+    
+
+    /**
+     * Open Smart Dashboard or Shuffleboard to see the color detected by the 
+     * sensor.
+     */
+    frc::SmartDashboard::PutNumber("Red", detectedColor.red);
+    frc::SmartDashboard::PutNumber("Green", detectedColor.green);
+    frc::SmartDashboard::PutNumber("Blue", detectedColor.blue);
+    frc::SmartDashboard::PutNumber("Confidence", confidence);
+    frc::SmartDashboard::PutString("Detected Color", colorString);
+
 
 
     frc::SmartDashboard::PutBoolean("Wheel Delay",  V_WheelSpeedDelay);
