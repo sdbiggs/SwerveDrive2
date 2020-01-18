@@ -233,7 +233,7 @@ void Robot::TeleopPeriodic() {
       V_DesiredWheelAngle[E_FrontLeft] = 45;
       V_DesiredWheelAngle[E_FrontRight] = 135;
       V_DesiredWheelAngle[E_RearLeft] = -45;
-      V_DesiredWheelAngle[E_RearRight] = 225;
+      V_DesiredWheelAngle[E_RearRight] = -135;
 
       if (V_Mode != 1)
         {
@@ -264,7 +264,14 @@ void Robot::TeleopPeriodic() {
              index < E_RobotCornerSz;
              index = T_RobotCorner(int(index) + 1))
           {
-          V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            if (index == E_RearRight)
+            {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
+            else
+            {
+              V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            }
+            
+          
           }
         }
 
