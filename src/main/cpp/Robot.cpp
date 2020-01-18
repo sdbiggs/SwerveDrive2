@@ -9,9 +9,10 @@
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
-#include "AHRS.h"
+
 #include "Encoder.hpp"
 #include "Enums.hpp"
+#include "NavxGyro.hpp"
  
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
@@ -27,7 +28,7 @@ bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
 
-AHRS *ahrs;
+AHRS *NavX;
 
 /******************************************************************************
  * Function:     Control_PID
@@ -161,17 +162,15 @@ void Robot::RobotInit() {
     V_RobotInit = false;
     V_WheelSpeedDelay = false;
 
-    try
-    {
-      ahrs = new AHRS(SPI::Port::kMXP);
+
+    try{
+      NavX = new AHRS(SPI::Port::kMXP);
     }
-    catch(const std::exception e)
-    {
+    catch(const std::exception e){
       std::string err_string = "Error instantiating navX-MXP:  ";
       err_string += e.what();
-      //DriverStation::ReportError(err_string.c_str());
+      DriverStation::ReportError(err_string.c_str());
     }
-    
     /**
      * In CAN mode, one SPARK MAX can be configured to follow another. This is done by calling
      * the Follow() method on the SPARK MAX you want to configure as a follower, and by passing
@@ -231,21 +230,16 @@ void Robot::TeleopInit(){
   V_WheelSpeedDelay = false;
   V_ModeTransition = false;
   V_Mode = 0;
+
+  NavX->ZeroYaw();
 }
 
 void Robot::TeleopPeriodic() {
 
+  SmartDashboard::PutNumber("NavX Zeroed Yaw", NavX->GetYaw());
+
   T_RobotCorner index;
   bool L_WheelSpeedDelay = false;
-
-    SmartDashboard::PutBoolean( "IMU_Connected",        ahrs->IsConnected());
-    SmartDashboard::PutNumber(  "IMU_Yaw",              ahrs->GetYaw());
-    SmartDashboard::PutNumber(  "IMU_Pitch",            ahrs->GetPitch());
-    SmartDashboard::PutNumber(  "IMU_Roll",             ahrs->GetRoll());
-    SmartDashboard::PutNumber(  "IMU_CompassHeading",   ahrs->GetCompassHeading());
-    SmartDashboard::PutNumber(  "IMU_Update_Count",     ahrs->GetUpdateCount());
-    SmartDashboard::PutNumber(  "IMU_Byte_Count",       ahrs->GetByteCount());
-
 
     if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
       {
