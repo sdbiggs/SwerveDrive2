@@ -12,8 +12,8 @@
 
 #include "Encoder.hpp"
 #include "Enums.hpp"
-#include "NavxGyro.hpp"
- 
+#include "AHRS.h"
+
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
@@ -27,6 +27,8 @@ bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
+int gryoloopcnt = 0;
+float gyroangleprev;
 
 AHRS *NavX;
 
@@ -235,8 +237,26 @@ void Robot::TeleopInit(){
 }
 
 void Robot::TeleopPeriodic() {
+  
+  float currentyaw = NavX->GetYaw();
+  
+  //Check to see if gyro angle flips over 180 or -180
+  if(175 < abs(gyroangleprev))
+  {
+    if(currentyaw < 0)
+    {
+      gryoloopcnt -= 1;
+    } else if (currentyaw > 0)
+    {
+      gryoloopcnt += 1;
+    }
+  }
 
-  SmartDashboard::PutNumber("NavX Zeroed Yaw", NavX->GetYaw());
+  float finalangle = (gryoloopcnt * 360) + currentyaw;
+
+  SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
+
+  gyroangleprev = currentyaw;
 
   T_RobotCorner index;
   bool L_WheelSpeedDelay = false;
