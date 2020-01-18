@@ -8,11 +8,15 @@
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
+#include <frc/DriverStation.h>
+
 #include "Encoder.hpp"
 #include "Enums.hpp"
 #include <frc/DriverStation.h>
 
  
+#include "AHRS.h"
+
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
@@ -26,12 +30,15 @@ bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
+int gryoloopcnt = 0;
+float gyroangleprev;
 
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
 
 
+AHRS *NavX;
 
 /******************************************************************************
  * Function:     Control_PID
@@ -165,6 +172,15 @@ void Robot::RobotInit() {
     V_RobotInit = false;
     V_WheelSpeedDelay = false;
 
+
+    try{
+      NavX = new AHRS(SPI::Port::kMXP);
+    }
+    catch(const std::exception e){
+      std::string err_string = "Error instantiating navX-MXP:  ";
+      err_string += e.what();
+      DriverStation::ReportError(err_string.c_str());
+    }
     /**
      * In CAN mode, one SPARK MAX can be configured to follow another. This is done by calling
      * the Follow() method on the SPARK MAX you want to configure as a follower, and by passing
@@ -232,22 +248,41 @@ void Robot::TeleopInit(){
   V_WheelSpeedDelay = false;
   V_ModeTransition = false;
   V_Mode = 0;
+
+  NavX->ZeroYaw();
 }
 
 void Robot::TeleopPeriodic() {
+  
+  float currentyaw = NavX->GetYaw();
+  
+  //Check to see if gyro angle flips over 180 or -180
+  if(175 < abs(gyroangleprev))
+  {
+    if(currentyaw < 0)
+    {
+      gryoloopcnt -= 1;
+    } else if (currentyaw > 0)
+    {
+      gryoloopcnt += 1;
+    }
+  }
+
+  float finalangle = (gryoloopcnt * 360) + currentyaw;
+
+  SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
+
+  gyroangleprev = currentyaw;
 
   T_RobotCorner index;
   bool L_WheelSpeedDelay = false;
-
-
-
 
     if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
       {
       V_DesiredWheelAngle[E_FrontLeft] = 45;
       V_DesiredWheelAngle[E_FrontRight] = 135;
       V_DesiredWheelAngle[E_RearLeft] = -45;
-      V_DesiredWheelAngle[E_RearRight] = 225;
+      V_DesiredWheelAngle[E_RearRight] = -135;
 
       if (V_Mode != 1)
         {
@@ -278,7 +313,14 @@ void Robot::TeleopPeriodic() {
              index < E_RobotCornerSz;
              index = T_RobotCorner(int(index) + 1))
           {
-          V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            if (index == E_RearRight)
+            {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
+            else
+            {
+              V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            }
+            
+          
           }
         }
 
