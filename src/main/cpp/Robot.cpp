@@ -12,9 +12,10 @@
 
 #include "Encoder.hpp"
 #include "Enums.hpp"
-#include "AHRS.h"
 
  
+#include "AHRS.h"
+
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
@@ -28,6 +29,13 @@ bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
+int gryoloopcnt = 0;
+float gyroangleprev;
+
+std::shared_ptr<NetworkTable> vision;
+nt::NetworkTableInstance inst;
+nt::NetworkTableEntry driverMode;
+
 
 AHRS *NavX;
 
@@ -188,6 +196,14 @@ void Robot::RobotInit() {
      */
 //    m_leftFollowMotor.Follow(m_leftLeadMotor);
 //    m_rightFollowMotor.Follow(m_rightLeadMotor);
+        
+    inst = nt::NetworkTableInstance::Create();
+    inst.StartClient("10.55.61.24");
+    inst.StartDSClient();
+  
+    vision = inst.GetTable("chameleon-vision/Scotty");
+    
+    driverMode = vision->GetEntry("driver_mode");
 }
 
 /**
@@ -242,8 +258,26 @@ void Robot::TeleopInit(){
 }
 
 void Robot::TeleopPeriodic() {
+  
+  float currentyaw = NavX->GetYaw();
+  
+  //Check to see if gyro angle flips over 180 or -180
+  if(175 < abs(gyroangleprev))
+  {
+    if(currentyaw < 0)
+    {
+      gryoloopcnt -= 1;
+    } else if (currentyaw > 0)
+    {
+      gryoloopcnt += 1;
+    }
+  }
 
-  SmartDashboard::PutNumber("NavX Zeroed Yaw", NavX->GetYaw());
+  float finalangle = (gryoloopcnt * 360) + currentyaw;
+
+  SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
+
+  gyroangleprev = currentyaw;
 
 
 
@@ -445,6 +479,22 @@ void Robot::TeleopPeriodic() {
 //    m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (0));
 //    m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (0));
 
+   /* if (a_joyStick.GetRawButton(0) && driver_mode == false)
+    {
+      table->PutBoolean("driver_mode", true);
+    }
+    else if ((a_joyStick.GetRawButton(0) && driver_mode == true)
+    {
+      table->PutBoolean("driver_mode", false);
+    }
+    */
+   
+    //driverMode = vision->PutBoolean("driver_mode", true);
+
+    // vision->GetBooleanArray()
+    frc::SmartDashboard::PutBoolean("driver_mode", driverMode.GetBoolean(false));
+   
+
 
 double IR = m_colorSensor.GetIR();
 
@@ -535,3 +585,4 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
+

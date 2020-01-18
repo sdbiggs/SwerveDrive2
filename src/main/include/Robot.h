@@ -17,6 +17,8 @@
 #include <frc/AnalogInput.h>
 #include "rev/ColorSensorV3.h"
 #include "rev/ColorMatch.h"
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/NetworkTableEntry.h>
 
  
 class Robot : public frc::TimedRobot {
@@ -47,6 +49,7 @@ class Robot : public frc::TimedRobot {
   frc::AnalogInput a_encoderRearRightSteer{3};
 
   frc::Joystick c_joyStick{0};
+  frc::Joystick a_joyStick{1};
 
    static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
 
