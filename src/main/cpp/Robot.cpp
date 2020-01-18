@@ -10,6 +10,8 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "Encoder.hpp"
 #include "Enums.hpp"
+#include <frc/DriverStation.h>
+
  
 double V_WheelRPM[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
@@ -24,6 +26,10 @@ bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
+
+std::shared_ptr<NetworkTable> vision;
+nt::NetworkTableInstance inst;
+nt::NetworkTableEntry driverMode;
 
 
 
@@ -169,6 +175,14 @@ void Robot::RobotInit() {
      */
 //    m_leftFollowMotor.Follow(m_leftLeadMotor);
 //    m_rightFollowMotor.Follow(m_rightLeadMotor);
+        
+    inst = nt::NetworkTableInstance::Create();
+    inst.StartClient("10.55.61.24");
+    inst.StartDSClient();
+  
+    vision = inst.GetTable("chameleon-vision/Scotty");
+    
+    driverMode = vision->GetEntry("driver_mode");
 }
 
 /**
@@ -416,6 +430,22 @@ void Robot::TeleopPeriodic() {
 //    m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (0));
 //    m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (0));
 
+   /* if (a_joyStick.GetRawButton(0) && driver_mode == false)
+    {
+      table->PutBoolean("driver_mode", true);
+    }
+    else if ((a_joyStick.GetRawButton(0) && driver_mode == true)
+    {
+      table->PutBoolean("driver_mode", false);
+    }
+    */
+   
+    //driverMode = vision->PutBoolean("driver_mode", true);
+
+    // vision->GetBooleanArray()
+    frc::SmartDashboard::PutBoolean("driver_mode", driverMode.GetBoolean(false));
+   
+
 
     frc::SmartDashboard::PutBoolean("Wheel Delay",  V_WheelSpeedDelay);
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
@@ -461,3 +491,4 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
+

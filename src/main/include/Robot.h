@@ -15,6 +15,9 @@
 #include <frc/drive/DifferentialDrive.h>
 #include "rev/CANSparkMax.h"
 #include <frc/AnalogInput.h>
+#include <networktables/NetworkTableInstance.h>
+#include <networktables/NetworkTableEntry.h>
+
  
 class Robot : public frc::TimedRobot {
   static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRightSteerDeviceID = 4, frontRightDriveDeviceID = 3;
@@ -44,6 +47,7 @@ class Robot : public frc::TimedRobot {
   frc::AnalogInput a_encoderRearRightSteer{3};
 
   frc::Joystick c_joyStick{0};
+  frc::Joystick a_joyStick{1};
 
  public:
   void RobotInit() override;
