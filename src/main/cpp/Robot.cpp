@@ -46,6 +46,10 @@ bool   V_RobotInit;
 
 double V_WheelAngleCase[E_RobotCornerSz];  // For trouble shooting where the angle is coming from
 
+std::shared_ptr<NetworkTable> vision;
+nt::NetworkTableInstance inst;
+nt::NetworkTableEntry driverMode;
+
 
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
@@ -540,3 +544,4 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
+
