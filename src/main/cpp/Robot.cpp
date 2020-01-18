@@ -320,13 +320,13 @@ void Robot::TeleopPeriodic() {
              index < E_RobotCornerSz;
              index = T_RobotCorner(int(index) + 1))
           {
-            if (index == E_RearRight)
-            {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
-            else
-            {
-              V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
-            }
-            
+            // if (index == E_RearRight)
+            // {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
+            // else
+            // {
+              // V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            // }
+            V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
           
           }
         }
