@@ -29,8 +29,8 @@ bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
-int gryoloopcnt = 0;
-float gyroangleprev;
+int gryo_loopcount = 0;
+float gyro_angleprev;
 
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
@@ -259,30 +259,47 @@ void Robot::TeleopInit(){
 
 void Robot::TeleopPeriodic() {
   
-  float currentyaw = NavX->GetYaw();
+  float gyro_currentyaw = NavX->GetYaw();
   
   //Check to see if gyro angle flips over 180 or -180
-  if(175 < abs(gyroangleprev))
+  if(175 <= abs(gyro_angleprev))
   {
-    if(currentyaw < 0)
+    if(gyro_angleprev < 0 && gyro_currentyaw > 0)
     {
-      gryoloopcnt -= 1;
-    } else if (currentyaw > 0)
+      gryo_loopcount -= 1;
+    } else if (gyro_angleprev > 0 && gyro_currentyaw < 0)
     {
-      gryoloopcnt += 1;
+      gryo_loopcount += 1;
     }
   }
 
-  float finalangle = (gryoloopcnt * 360) + currentyaw;
+  float finalangle = ((float)gryo_loopcount * 360) + gyro_currentyaw;
 
   SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
+  SmartDashboard::PutNumber("NavX accum angle", finalangle);
+  gyro_angleprev = gyro_currentyaw;
 
-  gyroangleprev = currentyaw;
 
+  SmartDashboard::PutNumber("Front Left Wheel Position",m_encoderFrontLeftDrive.GetPosition() / reductionRatio);
+  SmartDashboard::PutNumber("Front Right Wheel Position",m_encoderFrontRightDrive.GetPosition() / reductionRatio);
+  SmartDashboard::PutNumber("Rear Left Wheel Position",m_encoderRearLeftDrive.GetPosition() / reductionRatio);
+  SmartDashboard::PutNumber("Rear Right Wheel Position",m_encoderRearRightDrive.GetPosition() / reductionRatio);
 
+  SmartDashboard::PutNumber("Front Left Wheel Velocity",((m_encoderFrontLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
+  SmartDashboard::PutNumber("Front Right Wheel Velocity",((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
+  SmartDashboard::PutNumber("Rear Left Wheel Velocity",((m_encoderRearLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
+  SmartDashboard::PutNumber("Rear Right Wheel Velocity",((m_encoderRearRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
+
+  //8.31 : 1 
+  //11.9 m/s
 
   T_RobotCorner index;
   bool L_WheelSpeedDelay = false;
+
+
+    for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
+
+    }
 
     if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
       {
@@ -395,7 +412,7 @@ void Robot::TeleopPeriodic() {
            index = T_RobotCorner(int(index) + 1))
         {
         V_DesiredWheelAngle[index] = c_joyStick.GetRawAxis(0) * 90;
-        V_WheelSpeedCmnd[index] = c_joyStick.GetY() * -0.5;
+        // V_WheelSpeedCmnd[index] = c_joyStick.GetY() * -0.5;
         }
       V_WheelSpeedDelay = false;
       V_Mode = 3;
