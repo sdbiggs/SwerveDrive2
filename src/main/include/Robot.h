@@ -21,6 +21,7 @@
 #include "ctre/Phoenix.h"
  
 class Robot : public frc::TimedRobot {
+<<<<<<< HEAD
  public:
   void RobotInit() override;
   void RobotPeriodic() override;
@@ -34,6 +35,13 @@ class Robot : public frc::TimedRobot {
   frc::AnalogInput a_encoderFrontRightSteer{1};
   frc::AnalogInput a_encoderRearLeftSteer{3};
   frc::AnalogInput a_encoderRearRightSteer{0};
+=======
+  static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRightSteerDeviceID = 4, frontRightDriveDeviceID = 3;
+  static const int rearLeftSteerDeviceID  = 5, rearLeftDriveDeviceID  = 6, rearRightSteerDeviceID  = 7, rearRightDriveDeviceID  = 8;
+  const float reductionRatio = 8.31;
+  const int WheelDiamter = 4;
+  const int WheelCircufrence = 12.566;
+>>>>>>> Working Gyro and speed
 
   rev::CANSparkMax m_frontLeftSteerMotor {frontLeftSteerDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_frontLeftDriveMotor {frontLeftDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
