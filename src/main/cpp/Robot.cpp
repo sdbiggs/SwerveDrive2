@@ -21,6 +21,9 @@ double V_WheelAngle[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelSpeedCmnd[E_RobotCornerSz];
+double V_WheelSpeedIntergral[E_RobotCornerSz];
+double V_WheelRpmCmnd[E_RobotCornerSz];
+double V_WheelVelocity[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
 double V_WheelAngleIntegral[E_RobotCornerSz];
 double V_DesiredWheelAngle[E_RobotCornerSz];
@@ -31,6 +34,7 @@ int    V_Mode;
 bool   V_WheelSpeedDelay;
 int gryo_loopcount = 0;
 float gyro_angleprev;
+double V_WheelSpeedError[E_RobotCornerSz];
 
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
@@ -280,15 +284,25 @@ void Robot::TeleopPeriodic() {
   gyro_angleprev = gyro_currentyaw;
 
 
+  V_WheelVelocity[E_FrontLeft] = ((m_encoderFrontLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
+  V_WheelVelocity[E_FrontRight] =((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
+  V_WheelVelocity[E_RearRight] = ((m_encoderRearRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
+  V_WheelVelocity[E_RearLeft] = ((m_encoderRearLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
+
   SmartDashboard::PutNumber("Front Left Wheel Position",m_encoderFrontLeftDrive.GetPosition() / reductionRatio);
   SmartDashboard::PutNumber("Front Right Wheel Position",m_encoderFrontRightDrive.GetPosition() / reductionRatio);
   SmartDashboard::PutNumber("Rear Left Wheel Position",m_encoderRearLeftDrive.GetPosition() / reductionRatio);
   SmartDashboard::PutNumber("Rear Right Wheel Position",m_encoderRearRightDrive.GetPosition() / reductionRatio);
 
-  SmartDashboard::PutNumber("Front Left Wheel Velocity",((m_encoderFrontLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
-  SmartDashboard::PutNumber("Front Right Wheel Velocity",((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
-  SmartDashboard::PutNumber("Rear Left Wheel Velocity",((m_encoderRearLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
-  SmartDashboard::PutNumber("Rear Right Wheel Velocity",((m_encoderRearRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence);
+  SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
+  SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
+  SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
+  SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
+
+  SmartDashboard::PutNumber("RPM Desire Front Left", V_WheelRpmCmnd[E_FrontLeft]);
+   SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
+    SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
+     SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
 
   //8.31 : 1 
   //11.9 m/s
@@ -343,7 +357,7 @@ void Robot::TeleopPeriodic() {
             // {
               // V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
             // }
-            V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+            V_WheelRpmCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -20;
           
           }
         }
@@ -396,11 +410,11 @@ void Robot::TeleopPeriodic() {
         {
         if (V_WheelSpeedDelay == false)
           {
-          V_WheelSpeedCmnd[index] = 0.2;
+          V_WheelRpmCmnd[index] = 20;
           }
         else
           {
-          V_WheelSpeedCmnd[index] = 0.0;
+          V_WheelRpmCmnd[index] = 0.0;
           }
         }
       V_Mode = 2;
@@ -412,7 +426,7 @@ void Robot::TeleopPeriodic() {
            index = T_RobotCorner(int(index) + 1))
         {
         V_DesiredWheelAngle[index] = c_joyStick.GetRawAxis(0) * 90;
-        // V_WheelSpeedCmnd[index] = c_joyStick.GetY() * -0.5;
+        V_WheelRpmCmnd[index] = c_joyStick.GetY() * -20;
         }
       V_WheelSpeedDelay = false;
       V_Mode = 3;
@@ -457,6 +471,22 @@ void Robot::TeleopPeriodic() {
                                              -0.0, // D LL
                                               0.7, // Max upper
                                              -0.7); // Max lower
+
+      V_WheelSpeedCmnd[index] = Control_PID(V_WheelRpmCmnd[index],
+                                      V_WheelVelocity[index], 
+                                      &V_WheelSpeedError[index], 
+                                      &V_WheelSpeedIntergral[index], 
+                                      0.007, // P Gx
+                                      0.0005, // I Gx
+                                      0.0, // D Gx
+                                      0.9, // P UL
+                                      -0.9, // P LL
+                                      0.9, // I UL
+                                      -0.9, // I LL
+                                      0.0, // D UL
+                                      -0.0, // D LL
+                                      1.0, // Max upper
+                                      -1.0);
       }
 
     if (V_RobotInit == true)
