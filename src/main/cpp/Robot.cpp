@@ -10,38 +10,37 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
 
-#include "Encoder.hpp"
+#include "Encoders.hpp"
 #include "Enums.hpp"
+#include "control_pid.hpp"
+#include "ColorSensor.hpp"
+#include "Gyro.hpp"
 
- 
-#include "AHRS.h"
 
 double V_WheelRPM[E_RobotCornerSz];
-double V_WheelAngle[E_RobotCornerSz];
-double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
+//double V_WheelAngle[E_RobotCornerSz];
+//double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelSpeedCmnd[E_RobotCornerSz];
 double V_WheelSpeedIntergral[E_RobotCornerSz];
 double V_WheelRpmCmnd[E_RobotCornerSz];
-double V_WheelVelocity[E_RobotCornerSz];
+//double V_WheelVelocity[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
 double V_WheelAngleIntegral[E_RobotCornerSz];
-double V_DesiredWheelAngle[E_RobotCornerSz];
-double V_DesiredWheelSpeed[E_RobotCornerSz];
+//double V_DesiredWheelAngle[E_RobotCornerSz];
+//double V_DesiredWheelSpeed[E_RobotCornerSz];
 bool   V_RobotInit;
 bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
-int gryo_loopcount = 0;
-float gyro_angleprev;
 double V_WheelSpeedError[E_RobotCornerSz];
+double V_FWD;
+double V_STR;
+double V_RCW;
 
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
-
-
-AHRS *NavX;
 
 /******************************************************************************
  * Function:     Control_PID
@@ -62,97 +61,6 @@ bool CriteriaMet(double  L_Desired,
 
   return (L_CriteriaMet);
   }
-
-
-/******************************************************************************
- * Function:     Control_PID
- *
- * Description:  This function provides PID control.  This will also limit the
- *               the three controllers (P I D) by the calibrated thresholds.
- ******************************************************************************/
-double Control_PID(double  L_DesiredSpeed,
-                   double  L_CurrentSpeed,
-                   double *L_ErrorPrev,
-                   double *L_IntegralPrev,
-                   double  L_ProportionalGx,
-                   double  L_IntegralGx,
-                   double  L_DerivativeGx,
-                   double  L_ProportionalUpperLimit,
-                   double  L_ProportionalLowerLimit,
-                   double  L_IntegralUpperLimit,
-                   double  L_IntegralLowerLimit,
-                   double  L_DerivativeUpperLimit,
-                   double  L_DerivativeLowerLimit,
-                   double  L_OutputUpperLimit,
-                   double  L_OutputLowerLimit)
-  {
-  double L_Error        = 0.0;
-  double L_Proportional = 0.0;
-  double L_Integral     = 0.0;
-  double L_Derivative   = 0.0;
-  double L_OutputCmnd   = 0.0;
-
-  L_Error = L_DesiredSpeed - L_CurrentSpeed;
-
-  L_Proportional = L_Error * L_ProportionalGx;
-
-  L_Integral = *L_IntegralPrev + (L_Error * L_IntegralGx);
-
-  L_Derivative = L_DerivativeGx * (*L_ErrorPrev / 0.01);
-
-  *L_ErrorPrev = L_Error;
-
-  if (L_Proportional > L_ProportionalUpperLimit)
-    {
-    L_Proportional = L_ProportionalUpperLimit;
-    }
-  else if (L_Proportional < L_ProportionalLowerLimit)
-    {
-    L_Proportional = L_ProportionalLowerLimit;
-    }
-
-  if (L_Integral > L_IntegralUpperLimit)
-    {
-    L_Integral = L_IntegralUpperLimit;
-    }
-  else if (L_Integral < L_IntegralLowerLimit)
-    {
-    L_Integral = L_IntegralLowerLimit;
-    }
-
-  if (L_Derivative > L_DerivativeUpperLimit)
-    {
-    L_Derivative = L_DerivativeUpperLimit;
-    }
-  else if (L_Derivative < L_DerivativeLowerLimit)
-    {
-    L_Derivative = L_DerivativeLowerLimit;
-    }
-
-  /* Ok, lets record the integral to use next loop: */
-  *L_IntegralPrev = L_Integral;
-
-  /* Lets add all three controllers. */
-  L_OutputCmnd = L_Proportional + L_Integral + L_Derivative;
-
-  /* This is kind of redundant, but lets limit the output to the min and max
-   * allowed for the controller: */
-  if (L_OutputCmnd > L_OutputUpperLimit)
-    {
-    L_OutputCmnd = L_OutputUpperLimit;
-    }
-  else if (L_OutputCmnd < L_OutputLowerLimit)
-    {
-    L_OutputCmnd = L_OutputLowerLimit;
-    }
-
-  return L_OutputCmnd;
-}
-
-
-
-
-
 
 void Robot::RobotInit() {
   m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
@@ -176,20 +84,8 @@ void Robot::RobotInit() {
     V_RobotInit = false;
     V_WheelSpeedDelay = false;
 
-    m_colorMatcher.AddColorMatch(kBlueTarget);
-    m_colorMatcher.AddColorMatch(kGreenTarget);
-    m_colorMatcher.AddColorMatch(kRedTarget);
-    m_colorMatcher.AddColorMatch(kYellowTarget);
+    GyroRobotInit();
 
-
-    try{
-      NavX = new AHRS(SPI::Port::kMXP);
-    }
-    catch(const std::exception e){
-      std::string err_string = "Error instantiating navX-MXP:  ";
-      err_string += e.what();
-      DriverStation::ReportError(err_string.c_str());
-    }
     /**
      * In CAN mode, one SPARK MAX can be configured to follow another. This is done by calling
      * the Follow() method on the SPARK MAX you want to configure as a follower, and by passing
@@ -210,27 +106,8 @@ void Robot::RobotInit() {
     driverMode = vision->GetEntry("driver_mode");
 }
 
-/**
- * This function is called every robot packet, no matter the mode. Use
- * this for items like diagnostics that you want ran during disabled,
- * autonomous, teleoperated and test.
- *
- * <p> This runs after the mode specific periodic functions, but before
- * LiveWindow and SmartDashboard integrated updating.
- */
 void Robot::RobotPeriodic() {}
 
-/**
- * This autonomous (along with the chooser code above) shows how to select
- * between different autonomous modes using the dashboard. The sendable chooser
- * code works with the Java SmartDashboard. If you prefer the LabVIEW Dashboard,
- * remove all of the chooser code and uncomment the GetString line to get the
- * auto name from the text box below the Gyro.
- *
- * You can add additional auto modes by adding additional comparisons to the
- * if-else structure below with additional strings. If using the SendableChooser
- * make sure to add them to the chooser code above as well.
- */
 void Robot::AutonomousInit() {
   m_autoSelected = m_chooser.GetSelected();
   // m_autoSelected = SmartDashboard::GetString("Auto Selector",
@@ -257,57 +134,32 @@ void Robot::TeleopInit(){
   V_WheelSpeedDelay = false;
   V_ModeTransition = false;
   V_Mode = 0;
-
-  NavX->ZeroYaw();
+  GyroTeleInit();
 }
 
 void Robot::TeleopPeriodic() {
   
-  float gyro_currentyaw = NavX->GetYaw();
-  
-  //Check to see if gyro angle flips over 180 or -180
-  if(175 <= abs(gyro_angleprev))
-  {
-    if(gyro_angleprev < 0 && gyro_currentyaw > 0)
-    {
-      gryo_loopcount -= 1;
-    } else if (gyro_angleprev > 0 && gyro_currentyaw < 0)
-    {
-      gryo_loopcount += 1;
-    }
-  }
+  ColorSensor(false);
+  Gyro();
+  V_FWD = c_joyStick.GetRawAxis(1) * -1;
+  V_STR = c_joyStick.GetRawAxis(0);
+  V_RCW = c_joyStick.GetRawAxis(4);
+  // double L_temp = V_FWD * cos() + V_STR * sin(0);
 
-  float finalangle = ((float)gryo_loopcount * 360) + gyro_currentyaw;
+  frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
+  frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
+  frc::SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
+  frc::SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
 
-  SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
-  SmartDashboard::PutNumber("NavX accum angle", finalangle);
-  gyro_angleprev = gyro_currentyaw;
+  frc::SmartDashboard::PutNumber("RPM Desire Front Left", V_WheelRpmCmnd[E_FrontLeft]);
+  frc::SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
+  frc::SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
+  frc::SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
 
-
-  V_WheelVelocity[E_FrontLeft] = ((m_encoderFrontLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_FrontRight] =((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_RearRight] = ((m_encoderRearRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_RearLeft] = ((m_encoderRearLeftDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
-
-  SmartDashboard::PutNumber("Front Left Wheel Position",m_encoderFrontLeftDrive.GetPosition() / reductionRatio);
-  SmartDashboard::PutNumber("Front Right Wheel Position",m_encoderFrontRightDrive.GetPosition() / reductionRatio);
-  SmartDashboard::PutNumber("Rear Left Wheel Position",m_encoderRearLeftDrive.GetPosition() / reductionRatio);
-  SmartDashboard::PutNumber("Rear Right Wheel Position",m_encoderRearRightDrive.GetPosition() / reductionRatio);
-
-  SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
-  SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
-  SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
-  SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
-
-  SmartDashboard::PutNumber("RPM Desire Front Left", V_WheelRpmCmnd[E_FrontLeft]);
-  SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
-  SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
-  SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
-
-  SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
-  SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
-  SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
-  SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
+  frc::SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+  frc::SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+  frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+  frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
   //8.31 : 1 
   //11.9 m/s
@@ -319,6 +171,11 @@ void Robot::TeleopPeriodic() {
     for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
 
     }
+
+    Read_Encoders(V_RobotInit, 
+    a_encoderFrontLeftSteer.GetVoltage(), a_encoderFrontRightSteer.GetVoltage(), a_encoderRearLeftSteer.GetVoltage(), a_encoderRearRightSteer.GetVoltage(), 
+    m_encoderFrontLeftSteer,m_encoderFrontRightSteer, m_encoderRearLeftSteer, m_encoderRearRightSteer, 
+    m_encoderFrontLeftDrive, m_encoderFrontRightDrive,m_encoderRearLeftDrive, m_encoderRearRightDrive);
 
     if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
       {
@@ -461,25 +318,7 @@ void Robot::TeleopPeriodic() {
       V_Mode = 3;
       }
 
-    if (V_RobotInit == true)
-      {
-      V_WheelAngle[E_FrontLeft]  = a_encoderFrontLeftSteer.GetVoltage() * 72 - 309;
-      V_WheelAngle[E_FrontRight] = a_encoderFrontRightSteer.GetVoltage() * 72 - 106.7;
-      V_WheelAngle[E_RearLeft]   = a_encoderRearLeftSteer.GetVoltage() * 72 - 7;
-      V_WheelAngle[E_RearRight]  = a_encoderRearRightSteer.GetVoltage() * 72 - 178;
 
-      V_DesiredWheelAngle[E_FrontLeft] = 0;
-      V_DesiredWheelAngle[E_FrontRight] = 0;
-      V_DesiredWheelAngle[E_RearLeft] = 0;
-      V_DesiredWheelAngle[E_RearRight] = 0;
-      }
-    else
-      {
-      V_WheelAngle[E_FrontLeft] = (m_encoderFrontLeftSteer.GetPosition() - V_WheelRelativeAngleRawOffset[E_FrontLeft]) * -20;
-      V_WheelAngle[E_FrontRight] = (m_encoderFrontRightSteer.GetPosition() - V_WheelRelativeAngleRawOffset[E_FrontRight]) * -20;
-      V_WheelAngle[E_RearLeft] = (m_encoderRearLeftSteer.GetPosition() - V_WheelRelativeAngleRawOffset[E_RearLeft]) * -20;
-      V_WheelAngle[E_RearRight] = (m_encoderRearRightSteer.GetPosition() - V_WheelRelativeAngleRawOffset[E_RearRight]) * -20;
-      }
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
@@ -531,13 +370,7 @@ void Robot::TeleopPeriodic() {
           }
         }
 
-      if (V_RobotInit == false)
-        {
-        V_WheelRelativeAngleRawOffset[E_FrontLeft] = m_encoderFrontLeftSteer.GetPosition();
-        V_WheelRelativeAngleRawOffset[E_FrontRight] = m_encoderFrontRightSteer.GetPosition();
-        V_WheelRelativeAngleRawOffset[E_RearLeft] = m_encoderRearLeftSteer.GetPosition();
-        V_WheelRelativeAngleRawOffset[E_RearRight] = m_encoderRearRightSteer.GetPosition();
-        }
+      
       }
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
@@ -570,53 +403,16 @@ void Robot::TeleopPeriodic() {
     // vision->GetBooleanArray()
     frc::SmartDashboard::PutBoolean("driver_mode", driverMode.GetBoolean(false));
    
+    frc::SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
-
-double IR = m_colorSensor.GetIR();
-
-    frc::SmartDashboard::PutNumber("IR", IR);
-    uint32_t proximity = m_colorSensor.GetProximity();
-
-    frc::SmartDashboard::PutNumber("Proximity", proximity);
-
-frc::Color detectedColor = m_colorSensor.GetColor();
-
-    /**
-     * Run the color match algorithm on our detected color
-     */
-    std::string colorString;
-    double confidence = 0.0;
-    frc::Color matchedColor = m_colorMatcher.MatchClosestColor(detectedColor, confidence);
-if (proximity > 450) {
-if (matchedColor == kBlueTarget) {
-      colorString = "Blue";
-    } else if (matchedColor == kRedTarget) {
-      colorString = "Red";
-    } else if (matchedColor == kGreenTarget) {
-      colorString = "Green";
-    } else if (matchedColor == kYellowTarget) {
-      colorString = "Yellow";
-    } else {
-      colorString = "Unknown";
-    }
-}
-else {colorString = "Too far away";
-}
-
-    SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
-    SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
-    SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
-    SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
-
-    /**
-     * Open Smart Dashboard or Shuffleboard to see the color detected by the 
-     * sensor.
-     */
-    frc::SmartDashboard::PutNumber("Red", detectedColor.red);
-    frc::SmartDashboard::PutNumber("Green", detectedColor.green);
-    frc::SmartDashboard::PutNumber("Blue", detectedColor.blue);
-    frc::SmartDashboard::PutNumber("Confidence", confidence);
-    frc::SmartDashboard::PutString("Detected Color", colorString);
+    // /**
+    //  * Open Smart Dashboard or Shuffleboard to see the color detected by the 
+    //  * sensor.
+    //  */
+    
 
 
 
@@ -624,41 +420,8 @@ else {colorString = "Too far away";
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
     frc::SmartDashboard::PutNumber("Desired Wheel Angle",  V_DesiredWheelAngle[E_FrontLeft]);
 
-    frc::SmartDashboard::PutNumber("Encoder Front Left Converted",  V_WheelAngle[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Encoder Front Right Converted", V_WheelAngle[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Encoder Rear Left Converted",   V_WheelAngle[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("Encoder Rear Right Converted",  V_WheelAngle[E_RearRight]);
-
-    frc::SmartDashboard::PutNumber("Encoder Front Left Steer Position", m_encoderFrontLeftSteer.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Front Left Steer Velocity", m_encoderFrontLeftSteer.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Front Left Drive Position", m_encoderFrontLeftDrive.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Front Left Drive Velocity", m_encoderFrontLeftDrive.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Front Right Steer Position", m_encoderFrontRightSteer.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Front Right Steer Velocity", m_encoderFrontRightSteer.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Front Right Drive Position", m_encoderFrontRightDrive.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Front Right Drive Velocity", m_encoderFrontRightDrive.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Rear Left Steer Position", m_encoderRearLeftSteer.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Rear Left Steer Velocity", m_encoderRearLeftSteer.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Rear Left Drive Position", m_encoderRearLeftDrive.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Rear Left Drive Velocity", m_encoderRearLeftDrive.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Rear Right Steer Position", m_encoderRearRightSteer.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Rear Right Steer Velocity", m_encoderRearRightSteer.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Rear Right Drive Position", m_encoderRearRightDrive.GetPosition());
-    frc::SmartDashboard::PutNumber("Encoder Rear Right Drive Velocity", m_encoderRearRightDrive.GetVelocity());
-
-    frc::SmartDashboard::PutNumber("Encoder Front Left", a_encoderFrontLeftSteer.GetVoltage());
-    frc::SmartDashboard::PutNumber("Encoder Front Right", a_encoderFrontRightSteer.GetVoltage());
-    frc::SmartDashboard::PutNumber("Encoder Rear Left", a_encoderRearLeftSteer.GetVoltage());
-    frc::SmartDashboard::PutNumber("Encoder Rear Right", a_encoderRearRightSteer.GetVoltage());
-
-    Wait(0.1);
+    
+    frc::Wait(0.1);
 }
 
 void Robot::TestPeriodic() {}
@@ -666,4 +429,3 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
-

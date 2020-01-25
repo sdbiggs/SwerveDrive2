@@ -5,8 +5,10 @@
    Author: 5561
  */
 
-
+#pragma once
  
+#ifndef ENUMS
+#define ENUMS 
 
 typedef enum T_RobotCorner
 {
@@ -16,3 +18,5 @@ typedef enum T_RobotCorner
   E_RearRight,
   E_RobotCornerSz
 } T_RobotCorner;
+
+#endif
