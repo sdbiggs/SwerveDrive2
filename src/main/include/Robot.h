@@ -27,6 +27,8 @@ class Robot : public frc::TimedRobot {
   const double reductionRatio = 8.31;
   const int WheelDiamter = 4;
   const double WheelCircufrence = 12.566;
+  const double RadtoDeg = 57.2958;
+  const double C_ExeTime = 0.01;
 
   rev::CANSparkMax m_frontLeftSteerMotor {frontLeftSteerDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_frontLeftDriveMotor {frontLeftDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};

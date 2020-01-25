@@ -300,9 +300,14 @@ void Robot::TeleopPeriodic() {
   SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
 
   SmartDashboard::PutNumber("RPM Desire Front Left", V_WheelRpmCmnd[E_FrontLeft]);
-   SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
-    SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
-     SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
+  SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
+  SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
+  SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
+
+  SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+  SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+  SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+  SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
   //8.31 : 1 
   //11.9 m/s
@@ -421,12 +426,36 @@ void Robot::TeleopPeriodic() {
       }
     else
       {
+
+      double _JoyStickX = c_joyStick.GetRawAxis(0);
+      double _JoyStickY = c_joyStick.GetRawAxis(1);
+      double _JoyAngle;
+      double _JoyStickZ = sqrt((_JoyStickX * _JoyStickX) + (_JoyStickY * _JoyStickY));
+      if(_JoyStickY > 0.01) {
+        _JoyAngle = RadtoDeg * atan(_JoyStickX/-_JoyStickY);  
+      } else if(_JoyStickY < -0.01) {
+        _JoyAngle = RadtoDeg * atan(-_JoyStickX/_JoyStickY);  
+      } else {
+        _JoyAngle = _JoyStickX * 90;
+      }
+       
+       if (_JoyStickY < 0) {
+         _JoyStickZ = -_JoyStickZ;
+       }
+       else if (_JoyStickY > 0) {
+         _JoyStickZ = _JoyStickZ;
+       }
+      
+      
+      
+
       for (index = E_FrontLeft;
            index < E_RobotCornerSz;
            index = T_RobotCorner(int(index) + 1))
         {
-        V_DesiredWheelAngle[index] = c_joyStick.GetRawAxis(0) * 90;
-        V_WheelRpmCmnd[index] = c_joyStick.GetY() * -20;
+        
+        V_DesiredWheelAngle[index] = _JoyAngle;
+        V_WheelRpmCmnd[index] = _JoyStickZ * -20;
         }
       V_WheelSpeedDelay = false;
       V_Mode = 3;
@@ -574,7 +603,10 @@ if (matchedColor == kBlueTarget) {
 else {colorString = "Too far away";
 }
 
-    
+    SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+    SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+    SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+    SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
     /**
      * Open Smart Dashboard or Shuffleboard to see the color detected by the 
@@ -625,6 +657,8 @@ else {colorString = "Too far away";
     frc::SmartDashboard::PutNumber("Encoder Front Right", a_encoderFrontRightSteer.GetVoltage());
     frc::SmartDashboard::PutNumber("Encoder Rear Left", a_encoderRearLeftSteer.GetVoltage());
     frc::SmartDashboard::PutNumber("Encoder Rear Right", a_encoderRearRightSteer.GetVoltage());
+
+    Wait(0.1);
 }
 
 void Robot::TestPeriodic() {}
