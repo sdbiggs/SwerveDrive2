@@ -46,6 +46,9 @@ bool   V_RobotInit;
 
 
 double V_WheelSpeedError[E_RobotCornerSz];
+double V_FWD;
+double V_STR;
+double V_RCW;
 
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
@@ -562,4 +565,3 @@ void Robot::TestPeriodic() {}
 #ifndef RUNNING_FRC_TESTS
 int main() { return frc::StartRobot<Robot>(); }
 #endif
-
