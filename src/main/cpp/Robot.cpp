@@ -383,10 +383,10 @@ void Robot::TeleopPeriodic() {
     m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (-1));
     m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (-1));
 
-//    m_frontLeftSteerMotor.Set(V_WheelAngleCmnd[E_FrontLeft] * (0));
-//    m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (0));
-//    m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (0));
-//    m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (0));
+    // m_frontLeftSteerMotor.Set (0);
+    // m_frontRightSteerMotor.Set(0);
+    // m_rearLeftSteerMotor.Set(0);
+    // m_rearRightSteerMotor.Set(0);
 
    /* if (a_joyStick.GetRawButton(0) && driver_mode == false)
     {
@@ -413,8 +413,8 @@ void Robot::TeleopPeriodic() {
     //  * sensor.
     //  */
     
-
-
+  
+    //frc::SmartDashboard::PutNumberArray("Anglealjshdfkjshdfsdhfklsjdfh Desired Array", V_DesiredWheelAngle);
 
     frc::SmartDashboard::PutBoolean("Wheel Delay",  V_WheelSpeedDelay);
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
