@@ -1,11 +1,14 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include "AHRS.h"
 #include <frc/DriverStation.h>
+#include <Const.hpp>
 
 AHRS *NavX;
 
 float gyro_angleprev;
 int gryo_loopcount = 0;
+float gyro_yawangledegrees;
+float gyro_yawanglerad;
 
 void GyroRobotInit()
 {
@@ -40,8 +43,12 @@ float gyro_currentyaw = NavX->GetYaw();
   }
 float finalangle = ((float)gryo_loopcount * 360) + gyro_currentyaw;
 
-  frc::SmartDashboard::PutNumber("NavX Raw Yaw", NavX->GetYaw());
+gyro_yawangledegrees = NavX->GetYaw();
+gyro_yawanglerad = NavX->GetYaw() / RadtoDeg;
+
+  frc::SmartDashboard::PutNumber("NavX Raw Degree Yaw", NavX->GetYaw());
   frc::SmartDashboard::PutNumber("NavX accum angle", finalangle);
+  frc::SmartDashboard::PutNumber("NavX Raw Radians Yaw", gyro_yawanglerad);
   gyro_angleprev = gyro_currentyaw;
 
 }

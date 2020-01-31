@@ -5,3 +5,7 @@ static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRi
   const double WheelCircufrence = 12.566;
   const double RadtoDeg = 57.2958;
   const double C_ExeTime = 0.01;
+  const double C_L = 0.5969;
+  const double C_W = 0.5969;
+  const double C_R = 0.8441;
+  const double C_PI = 3.14159265358979;

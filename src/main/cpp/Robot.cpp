@@ -9,13 +9,13 @@
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
+#include <frc/livewindow/LiveWindow.h>
 
 #include "Encoders.hpp"
 #include "Enums.hpp"
 #include "control_pid.hpp"
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
-
 
 double V_WheelRPM[E_RobotCornerSz];
 //double V_WheelAngle[E_RobotCornerSz];
@@ -37,7 +37,7 @@ double V_WheelSpeedError[E_RobotCornerSz];
 double V_FWD;
 double V_STR;
 double V_RCW;
-
+frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
@@ -144,7 +144,49 @@ void Robot::TeleopPeriodic() {
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
-  // double L_temp = V_FWD * cos() + V_STR * sin(0);
+  double L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
+  V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
+  V_FWD = L_temp;
+
+  double V_A = V_STR - V_RCW * (C_L/C_R);
+  double V_B = V_STR + V_RCW * (C_L/C_R);
+  double V_C = V_FWD - V_RCW * (C_W/C_R);
+  double V_D = V_FWD + V_RCW * (C_W/C_R);
+
+  double V_WS1 = pow((V_B * V_B + V_C * V_C), 0.5);
+  double V_WS2 = pow((V_B * V_B + V_D * V_D), 0.5);
+  double V_WS3 = pow((V_A * V_A + V_D * V_D), 0.5);
+  double V_WS4 = pow((V_A * V_A + V_C * V_C), 0.5);
+
+  double V_WA1 = atan2(V_B, V_C) *180/C_PI;
+  double V_WA2 = atan2(V_B, V_D) *180/C_PI;
+  double V_WA3 = atan2(V_A, V_D) *180/C_PI;
+  double V_WA4 = atan2(V_A, V_C) *180/C_PI;
+
+  double V_Max = V_WS1;
+
+  if (V_WS2 > V_Max) {
+      V_Max = V_WS2;
+  }
+ if (V_WS3 > V_Max) {
+      V_Max = V_WS3;
+  }
+   if (V_WS4 > V_Max) {
+      V_Max = V_WS4;
+  }
+  if (V_Max > 1) {
+      V_WS1 /= V_Max;
+      V_WS2 /= V_Max;
+      V_WS3 /= V_Max;
+      V_WS4 /= V_Max;
+  }
+
+  V_WS1 *= 20;
+  V_WS2 *= 20;
+  V_WS3 *= 20;
+  V_WS4 *= 20;
+  
+
 
   frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
   frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
@@ -412,7 +454,7 @@ void Robot::TeleopPeriodic() {
     //  * Open Smart Dashboard or Shuffleboard to see the color detected by the 
     //  * sensor.
     //  */
-    
+    //lw->Add
   
     //frc::SmartDashboard::PutNumberArray("Anglealjshdfkjshdfsdhfklsjdfh Desired Array", V_DesiredWheelAngle);
 
