@@ -49,7 +49,7 @@ double V_WheelSpeedError[E_RobotCornerSz];
 double V_FWD;
 double V_STR;
 double V_RCW;
-
+frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
