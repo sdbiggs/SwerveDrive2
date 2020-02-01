@@ -519,10 +519,18 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA_Final[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA_Final[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA_Final[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA_Final[E_RearRight]);
+
+    
+    frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
+
+  
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 

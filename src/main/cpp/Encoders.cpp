@@ -43,6 +43,8 @@ void Read_Encoders(bool            L_RobotInit,
   {
   T_RobotCorner index;
 
+T_RobotCorner index;
+
   if (L_RobotInit == true)
     {
     V_WheelAngleRaw[E_FrontLeft]  = a_encoderFrontLeftSteerVoltage * 72 - K_WheelOffsetAngle[E_FrontLeft];

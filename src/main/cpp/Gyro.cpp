@@ -30,7 +30,6 @@ void GyroTeleInit()
 void Gyro() {
 
 double gyro_currentyaw = (double)NavX->GetYaw();
-
   //Check to see if gyro angle flips over 180 or -180
   if(175 <= abs(gyro_angleprev))
   {
