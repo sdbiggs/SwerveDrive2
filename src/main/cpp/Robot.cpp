@@ -16,6 +16,10 @@
 #include "control_pid.hpp"
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
+#include "Lookup.hpp"
+
+double V_WS[E_RobotCornerSz];
+double V_WA[E_RobotCornerSz];
 
 double V_WheelRPM[E_RobotCornerSz];
 //double V_WheelAngle[E_RobotCornerSz];
@@ -37,6 +41,7 @@ double V_WheelSpeedError[E_RobotCornerSz];
 double V_FWD;
 double V_STR;
 double V_RCW;
+
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
@@ -134,6 +139,22 @@ void Robot::TeleopInit(){
   V_WheelSpeedDelay = false;
   V_ModeTransition = false;
   V_Mode = 0;
+
+  for (int index = E_FrontLeft;
+         index < E_RobotCornerSz;
+         index = T_RobotCorner(int(index) + 1))
+      {
+        V_WS[index] = 0;
+        V_WA[index] = 0;
+        V_DesiredWheelAngle[index] = 0;
+        V_WheelRelativeAngleRawOffset[index] = 0;
+        V_WheelAngle[index] = 0;
+      }
+      V_STR = 0;
+      V_FWD = 0;
+      gyro_yawangledegrees = 0;
+      gyro_yawanglerad = 0;
+
   GyroTeleInit();
 }
 
@@ -144,49 +165,57 @@ void Robot::TeleopPeriodic() {
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
+
+
+  V_FWD = DesiredSpeed(V_FWD);
+  V_STR = DesiredSpeed(V_STR);
+  V_RCW = DesiredSpeed(V_RCW);
+
   double L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
   V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
   V_FWD = L_temp;
 
+      //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
   double V_A = V_STR - V_RCW * (C_L/C_R);
   double V_B = V_STR + V_RCW * (C_L/C_R);
   double V_C = V_FWD - V_RCW * (C_W/C_R);
   double V_D = V_FWD + V_RCW * (C_W/C_R);
 
-  double V_WS1 = pow((V_B * V_B + V_C * V_C), 0.5);
-  double V_WS2 = pow((V_B * V_B + V_D * V_D), 0.5);
-  double V_WS3 = pow((V_A * V_A + V_D * V_D), 0.5);
-  double V_WS4 = pow((V_A * V_A + V_C * V_C), 0.5);
+  V_WS[E_FrontRight] = pow((V_B * V_B + V_C * V_C), 0.5);
+  V_WS[E_FrontLeft] = pow((V_B * V_B + V_D * V_D), 0.5);
+  V_WS[E_RearLeft] = pow((V_A * V_A + V_D * V_D), 0.5);
+  V_WS[E_RearRight] = pow((V_A * V_A + V_C * V_C), 0.5);
 
-  double V_WA1 = atan2(V_B, V_C) *180/C_PI;
-  double V_WA2 = atan2(V_B, V_D) *180/C_PI;
-  double V_WA3 = atan2(V_A, V_D) *180/C_PI;
-  double V_WA4 = atan2(V_A, V_C) *180/C_PI;
+  V_WA[E_FrontRight] = atan2(V_B, V_C) *180/C_PI;
+  V_WA[E_FrontLeft] = atan2(V_B, V_D) *180/C_PI;
+  V_WA[E_RearLeft] = atan2(V_A, V_D) *180/C_PI;
+  V_WA[E_RearRight] = atan2(V_A, V_C) *180/C_PI;
 
-  double V_Max = V_WS1;
+  double V_Max = V_WS[E_FrontRight];
 
-  if (V_WS2 > V_Max) {
-      V_Max = V_WS2;
+  if (V_WS[E_FrontLeft] > V_Max) {
+      V_Max = V_WS[E_FrontLeft];
   }
- if (V_WS3 > V_Max) {
-      V_Max = V_WS3;
+ if (V_WS[E_RearLeft] > V_Max) {
+      V_Max = V_WS[E_RearLeft];
   }
-   if (V_WS4 > V_Max) {
-      V_Max = V_WS4;
+   if (V_WS[E_RearRight] > V_Max) {
+      V_Max = V_WS[E_RearRight];
   }
   if (V_Max > 1) {
-      V_WS1 /= V_Max;
-      V_WS2 /= V_Max;
-      V_WS3 /= V_Max;
-      V_WS4 /= V_Max;
+      V_WS[E_FrontRight] /= V_Max;
+      V_WS[E_FrontLeft] /= V_Max;
+      V_WS[E_RearLeft] /= V_Max;
+      V_WS[E_RearRight] /= V_Max;
   }
 
-  V_WS1 *= 20;
-  V_WS2 *= 20;
-  V_WS3 *= 20;
-  V_WS4 *= 20;
+  V_WS[E_FrontRight] *= 20;
+  V_WS[E_FrontLeft] *= 20;
+  V_WS[E_RearLeft] *= 20;
+  V_WS[E_RearRight] *= 20;
   
-
+  frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
+  frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
 
   frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
   frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
@@ -325,7 +354,7 @@ void Robot::TeleopPeriodic() {
       }
     else
       {
-
+      
       double _JoyStickX = c_joyStick.GetRawAxis(0);
       double _JoyStickY = c_joyStick.GetRawAxis(1);
       double _JoyAngle;
@@ -360,13 +389,30 @@ void Robot::TeleopPeriodic() {
       V_Mode = 3;
       }
 
+    
+    if (V_RobotInit == true)
+      {
+      V_RobotInit = false;
+      for (index = E_FrontLeft;
+           index < E_RobotCornerSz;
+           index = T_RobotCorner(int(index) + 1))
+        {
+        V_WS[index] = 0;
+        V_WA[index] = 0;
+        if (fabs(V_WheelAngle[index]) > 1.2)
+          {
+          V_RobotInit = true;
+          }
+        }
 
+      
+      }
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID( V_DesiredWheelAngle[index],
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
                                               V_WheelAngle[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
@@ -382,7 +428,7 @@ void Robot::TeleopPeriodic() {
                                               0.7, // Max upper
                                              -0.7); // Max lower
 
-      V_WheelSpeedCmnd[index] = Control_PID(V_WheelRpmCmnd[index],
+      V_WheelSpeedCmnd[index] = Control_PID(V_WS[index],
                                       V_WheelVelocity[index], 
                                       &V_WheelSpeedError[index], 
                                       &V_WheelSpeedIntergral[index], 
@@ -398,22 +444,22 @@ void Robot::TeleopPeriodic() {
                                       1.0, // Max upper
                                       -1.0);
       }
+    //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
-    if (V_RobotInit == true)
-      {
-      V_RobotInit = false;
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
-        if (fabs(V_WheelAngle[index]) > 1.2)
-          {
-          V_RobotInit = true;
-          }
-        }
+    frc::SmartDashboard::PutNumber("Drive Intergral Front Left", V_WheelSpeedIntergral[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Drive Intergral Front Right", V_WheelSpeedIntergral[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Drive Intergral Rear Left", V_WheelSpeedIntergral[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Drive Intergral Rear Right", V_WheelSpeedIntergral[E_RearRight]);
 
-      
-      }
+    frc::SmartDashboard::PutNumber("WS_FR", V_WS[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WS_FL", V_WS[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
+
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
