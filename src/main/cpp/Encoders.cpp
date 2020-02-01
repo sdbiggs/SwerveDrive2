@@ -13,6 +13,8 @@
 #include "Const.hpp"
 
  double V_WheelAngle[E_RobotCornerSz];
+ double V_WheelAnglePrev[E_RobotCornerSz];
+ double V_WheelAngleLoop[E_RobotCornerSz];
  double V_DesiredWheelAngle[E_RobotCornerSz];
  double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
  double V_WheelVelocity[E_RobotCornerSz];
@@ -29,6 +31,8 @@ void Read_Encoders(bool L_RobotInit,
 {
   double l_FL_Angle = 0;
 
+T_RobotCorner index;
+
   if (L_RobotInit == true)
   {
     V_WheelAngle[E_FrontLeft]  = a_encoderFrontLeftSteerVoltage * 72 - 322;
@@ -40,6 +44,24 @@ void Read_Encoders(bool L_RobotInit,
     V_WheelRelativeAngleRawOffset[E_FrontRight] = m_encoderFrontRightSteer.GetPosition();
     V_WheelRelativeAngleRawOffset[E_RearLeft] = m_encoderRearLeftSteer.GetPosition();
     V_WheelRelativeAngleRawOffset[E_RearRight] = m_encoderRearRightSteer.GetPosition();
+
+      for (index = E_FrontLeft;
+           index < E_RobotCornerSz;
+           index = T_RobotCorner(int(index) + 1))
+        {
+        if(abs(V_WheelAnglePrev[index] >= 330 || abs(V_WheelAnglePrev[index] <= 30 )))
+         {
+          if(V_WheelAnglePrev[index] >= 330 && V_WheelAngle[index] <= 30)
+           {
+            V_WheelAngleLoop[index] -= 1;
+            }
+          else if (V_WheelAnglePrev[index] <= 30 && V_WheelAngle[index] >= 330)
+           {
+            V_WheelAngleLoop[index] += 1;
+           }
+          }
+          V_WheelAngle[index] = (V_WheelAngleLoop[index] * 360) + V_WheelAngle[index];
+        }
 
     V_DesiredWheelAngle[E_FrontLeft] = 0;
     V_DesiredWheelAngle[E_FrontRight] = 0;

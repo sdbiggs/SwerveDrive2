@@ -2,5 +2,6 @@
 void Gyro();
 void GyroRobotInit();
 void GyroTeleInit();
-extern float gyro_yawangledegrees;
-extern float gyro_yawanglerad;
+extern double gyro_yawangledegrees;
+extern double gyro_yawanglerad;
+extern double gyro_rolloverrad;

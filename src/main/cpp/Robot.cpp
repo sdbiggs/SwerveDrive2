@@ -20,6 +20,9 @@
 
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
+double V_WA_Prev[E_RobotCornerSz];
+double V_WA_Loopcount[E_RobotCornerSz];
+double V_WA_Final[E_RobotCornerSz];
 
 double V_WheelRPM[E_RobotCornerSz];
 //double V_WheelAngle[E_RobotCornerSz];
@@ -161,7 +164,14 @@ void Robot::TeleopInit(){
 void Robot::TeleopPeriodic() {
   
   ColorSensor(false);
-  Gyro();
+  Gyro(); 
+  bool L_WheelSpeedDelay = false;
+
+    Read_Encoders(V_RobotInit, 
+    a_encoderFrontLeftSteer.GetVoltage(), a_encoderFrontRightSteer.GetVoltage(), a_encoderRearLeftSteer.GetVoltage(), a_encoderRearRightSteer.GetVoltage(), 
+    m_encoderFrontLeftSteer,m_encoderFrontRightSteer, m_encoderRearLeftSteer, m_encoderRearRightSteer, 
+    m_encoderFrontLeftDrive, m_encoderFrontRightDrive,m_encoderRearLeftDrive, m_encoderRearRightDrive);
+
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
@@ -186,10 +196,42 @@ void Robot::TeleopPeriodic() {
   V_WS[E_RearLeft] = pow((V_A * V_A + V_D * V_D), 0.5);
   V_WS[E_RearRight] = pow((V_A * V_A + V_C * V_C), 0.5);
 
+  T_RobotCorner index = E_FrontLeft;
+      for (index = E_FrontLeft;
+         index < E_RobotCornerSz;
+         index = T_RobotCorner(int(index) + 1)){
+         V_WA_Prev[index] = V_WA[index];
+        }
+         
+      
+      
+      
+      
   V_WA[E_FrontRight] = atan2(V_B, V_C) *180/C_PI;
   V_WA[E_FrontLeft] = atan2(V_B, V_D) *180/C_PI;
   V_WA[E_RearLeft] = atan2(V_A, V_D) *180/C_PI;
   V_WA[E_RearRight] = atan2(V_A, V_C) *180/C_PI;
+
+for (index = E_FrontLeft;
+     index < E_RobotCornerSz;
+     index = T_RobotCorner(int(index) + 1))
+  {
+    if(abs(V_WA_Prev[index]) >= 150)
+      {
+        if(V_WA_Prev[index] < 0 && V_WA[index] > 0)
+          {
+           V_WA_Loopcount[index] += 1;
+          }     
+        else if (V_WA_Prev[index] > 0 && V_WA[index] < 0)
+          {
+           V_WA_Loopcount[index] -= 1;
+          }
+     }
+    V_WA_Final[index] = (V_WA_Loopcount[index] * 360) + V_WA[index];
+    //V_WA_Final[index] = V_WA[index];
+  }
+     
+
 
   double V_Max = V_WS[E_FrontRight];
 
@@ -214,8 +256,12 @@ void Robot::TeleopPeriodic() {
   V_WS[E_RearLeft] *= 20;
   V_WS[E_RearRight] *= 20;
   
+  
+
+  frc::SmartDashboard::PutNumber("WA Loop Count FL", V_WA_Loopcount[E_FrontLeft]);
   frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
   frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
+  frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
 
   frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
   frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
@@ -232,162 +278,155 @@ void Robot::TeleopPeriodic() {
   frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
   frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
+  frc::SmartDashboard::PutNumber("STR", V_STR);
+  frc::SmartDashboard::PutNumber("FWD", V_FWD);
+  frc::SmartDashboard::PutNumber("RCW", V_RCW);
+
   //8.31 : 1 
   //11.9 m/s
 
-  T_RobotCorner index;
-  bool L_WheelSpeedDelay = false;
 
 
-    for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
+    // if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
+    //   {
+    //   V_DesiredWheelAngle[E_FrontLeft] = 45;
+    //   V_DesiredWheelAngle[E_FrontRight] = 135;
+    //   V_DesiredWheelAngle[E_RearLeft] = -45;
+    //   V_DesiredWheelAngle[E_RearRight] = -135;
 
-    }
+    //   if (V_Mode != 1)
+    //     {
+    //     V_WheelSpeedDelay = true;
+    //     }
 
-    Read_Encoders(V_RobotInit, 
-    a_encoderFrontLeftSteer.GetVoltage(), a_encoderFrontRightSteer.GetVoltage(), a_encoderRearLeftSteer.GetVoltage(), a_encoderRearRightSteer.GetVoltage(), 
-    m_encoderFrontLeftSteer,m_encoderFrontRightSteer, m_encoderRearLeftSteer, m_encoderRearRightSteer, 
-    m_encoderFrontLeftDrive, m_encoderFrontRightDrive,m_encoderRearLeftDrive, m_encoderRearRightDrive);
+    //   if (V_WheelSpeedDelay == true)
+    //     {
+    //     L_WheelSpeedDelay = false;
+    //     V_WheelSpeedDelay = false;
 
-    if ((c_joyStick.GetRawAxis(2) > 0.1) || (c_joyStick.GetRawAxis(3) > 0.1)) // Rotate clockwise w/ 2, counter clockwise w/ 3
-      {
-      V_DesiredWheelAngle[E_FrontLeft] = 45;
-      V_DesiredWheelAngle[E_FrontRight] = 135;
-      V_DesiredWheelAngle[E_RearLeft] = -45;
-      V_DesiredWheelAngle[E_RearRight] = -135;
-
-      if (V_Mode != 1)
-        {
-        V_WheelSpeedDelay = true;
-        }
-
-      if (V_WheelSpeedDelay == true)
-        {
-        L_WheelSpeedDelay = false;
-        V_WheelSpeedDelay = false;
-
-        for (index = E_FrontLeft;
-             index < E_RobotCornerSz;
-             index = T_RobotCorner(int(index) + 1))
-          {
-          L_WheelSpeedDelay =  CriteriaMet(V_DesiredWheelAngle[index],
-                                           V_WheelAngle[index],
-                                           5);
-          if (L_WheelSpeedDelay == true)
-            {
-            V_WheelSpeedDelay = true;
-            }
-          }
-        }
-      else
-        {
-        for (index = E_FrontLeft;
-             index < E_RobotCornerSz;
-             index = T_RobotCorner(int(index) + 1))
-          {
-            // if (index == E_RearRight)
-            // {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
-            // else
-            // {
-              // V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
-            // }
-            V_WheelRpmCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -20;
+    //     for (index = E_FrontLeft;
+    //          index < E_RobotCornerSz;
+    //          index = T_RobotCorner(int(index) + 1))
+    //       {
+    //       L_WheelSpeedDelay =  CriteriaMet(V_DesiredWheelAngle[index],
+    //                                        V_WheelAngle[index],
+    //                                        5);
+    //       if (L_WheelSpeedDelay == true)
+    //         {
+    //         V_WheelSpeedDelay = true;
+    //         }
+    //       }
+    //     }
+    //   else
+    //     {
+    //     for (index = E_FrontLeft;
+    //          index < E_RobotCornerSz;
+    //          index = T_RobotCorner(int(index) + 1))
+    //       {
+    //         // if (index == E_RearRight)
+    //         // {V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * 0.3;}
+    //         // else
+    //         // {
+    //           // V_WheelSpeedCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -0.3;
+    //         // }
+    //         V_WheelRpmCmnd[index] =  (c_joyStick.GetRawAxis(2) - c_joyStick.GetRawAxis(3)) * -20;
           
-          }
-        }
+    //       }
+    //     }
 
-      V_Mode = 1;
-      }
-    else if ((c_joyStick.GetRawButton(5) == true) || (c_joyStick.GetRawButton(6) == true)) // Straif left 5, right 6
-      {
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
-        if (c_joyStick.GetRawButton(5) == true)
-          {
-          V_DesiredWheelAngle[index] = -90;
-          }
-        else
-          {
-          V_DesiredWheelAngle[index] = 90;
-          }
-        }
+    //   V_Mode = 1;
+    //   }
+    // else if ((c_joyStick.GetRawButton(5) == true) || (c_joyStick.GetRawButton(6) == true)) // Straif left 5, right 6
+    //   {
+    //   for (index = E_FrontLeft;
+    //        index < E_RobotCornerSz;
+    //        index = T_RobotCorner(int(index) + 1))
+    //     {
+    //     if (c_joyStick.GetRawButton(5) == true)
+    //       {
+    //       V_DesiredWheelAngle[index] = -90;
+    //       }
+    //     else
+    //       {
+    //       V_DesiredWheelAngle[index] = 90;
+    //       }
+    //     }
 
-      if (V_Mode != 2)
-        {
-        V_WheelSpeedDelay = true;
-        }
+    //   if (V_Mode != 2)
+    //     {
+    //     V_WheelSpeedDelay = true;
+    //     }
 
-      if (V_WheelSpeedDelay == true)
-        {
-        L_WheelSpeedDelay = false;
-        V_WheelSpeedDelay = false;
+    //   if (V_WheelSpeedDelay == true)
+    //     {
+    //     L_WheelSpeedDelay = false;
+    //     V_WheelSpeedDelay = false;
 
-        for (index = E_FrontLeft;
-             index < E_RobotCornerSz;
-             index = T_RobotCorner(int(index) + 1))
-          {
-          L_WheelSpeedDelay =  CriteriaMet(V_DesiredWheelAngle[index],
-                                           V_WheelAngle[index],
-                                           5);
-          if (L_WheelSpeedDelay == true)
-            {
-            V_WheelSpeedDelay = true;
-            }
-          }
-        }
+    //     for (index = E_FrontLeft;
+    //          index < E_RobotCornerSz;
+    //          index = T_RobotCorner(int(index) + 1))
+    //       {
+    //       L_WheelSpeedDelay =  CriteriaMet(V_DesiredWheelAngle[index],
+    //                                        V_WheelAngle[index],
+    //                                        5);
+    //       if (L_WheelSpeedDelay == true)
+    //         {
+    //         V_WheelSpeedDelay = true;
+    //         }
+    //       }
+    //     }
 
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
-        if (V_WheelSpeedDelay == false)
-          {
-          V_WheelRpmCmnd[index] = 20;
-          }
-        else
-          {
-          V_WheelRpmCmnd[index] = 0.0;
-          }
-        }
-      V_Mode = 2;
-      }
-    else
-      {
+    //   for (index = E_FrontLeft;
+    //        index < E_RobotCornerSz;
+    //        index = T_RobotCorner(int(index) + 1))
+    //     {
+    //     if (V_WheelSpeedDelay == false)
+    //       {
+    //       V_WheelRpmCmnd[index] = 20;
+    //       }
+    //     else
+    //       {
+    //       V_WheelRpmCmnd[index] = 0.0;
+    //       }
+    //     }
+    //   V_Mode = 2;
+    //   }
+    // else
+    //   {
       
-      double _JoyStickX = c_joyStick.GetRawAxis(0);
-      double _JoyStickY = c_joyStick.GetRawAxis(1);
-      double _JoyAngle;
-      double _JoyStickZ = sqrt((_JoyStickX * _JoyStickX) + (_JoyStickY * _JoyStickY));
-      if(_JoyStickY > 0.01) {
-        _JoyAngle = RadtoDeg * atan(_JoyStickX/-_JoyStickY);  
-      } else if(_JoyStickY < -0.01) {
-        _JoyAngle = RadtoDeg * atan(-_JoyStickX/_JoyStickY);  
-      } else {
-        _JoyAngle = _JoyStickX * 90;
-      }
+    //   double _JoyStickX = c_joyStick.GetRawAxis(0);
+    //   double _JoyStickY = c_joyStick.GetRawAxis(1);
+    //   double _JoyAngle;
+    //   double _JoyStickZ = sqrt((_JoyStickX * _JoyStickX) + (_JoyStickY * _JoyStickY));
+    //   if(_JoyStickY > 0.01) {
+    //     _JoyAngle = RadtoDeg * atan(_JoyStickX/-_JoyStickY);  
+    //   } else if(_JoyStickY < -0.01) {
+    //     _JoyAngle = RadtoDeg * atan(-_JoyStickX/_JoyStickY);  
+    //   } else {
+    //     _JoyAngle = _JoyStickX * 90;
+    //   }
        
-       if (_JoyStickY < 0) {
-         _JoyStickZ = -_JoyStickZ;
-       }
-       else if (_JoyStickY > 0) {
-         _JoyStickZ = _JoyStickZ;
-       }
+    //    if (_JoyStickY < 0) {
+    //      _JoyStickZ = -_JoyStickZ;
+    //    }
+    //    else if (_JoyStickY > 0) {
+    //      _JoyStickZ = _JoyStickZ;
+    //    }
       
       
       
 
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
+    //   for (index = E_FrontLeft;
+    //        index < E_RobotCornerSz;
+    //        index = T_RobotCorner(int(index) + 1))
+    //     {
         
-        V_DesiredWheelAngle[index] = _JoyAngle;
-        V_WheelRpmCmnd[index] = _JoyStickZ * -20;
-        }
-      V_WheelSpeedDelay = false;
-      V_Mode = 3;
-      }
+    //     V_DesiredWheelAngle[index] = _JoyAngle;
+    //     V_WheelRpmCmnd[index] = _JoyStickZ * -20;
+    //     }
+    //   V_WheelSpeedDelay = false;
+    //   V_Mode = 3;
+    //   }
 
     
     if (V_RobotInit == true)
@@ -399,41 +438,40 @@ void Robot::TeleopPeriodic() {
         {
         V_WS[index] = 0;
         V_WA[index] = 0;
+        V_WA_Final[index] = 0;
         if (fabs(V_WheelAngle[index]) > 1.2)
           {
           V_RobotInit = true;
           }
         }
-
-      
       }
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA_Final[index],
                                               V_WheelAngle[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
-                                              0.005, // P Gx
-                                              0.00008, // I Gx
+                                              0.0045, // P Gx
+                                              0.0001, // I Gx
                                               0.0, // D Gx
-                                              0.15, // P UL
-                                             -0.15, // P LL
-                                              0.015, // I UL
-                                             -0.015, // I LL
+                                              0.4, // P UL
+                                             -0.4, // P LL
+                                              0.12, // I UL
+                                             -0.12, // I LL
                                               0.0, // D UL
                                              -0.0, // D LL
-                                              0.7, // Max upper
-                                             -0.7); // Max lower
+                                              0.9, // Max upper
+                                             -0.9); // Max lower
 
       V_WheelSpeedCmnd[index] = Control_PID(V_WS[index],
                                       V_WheelVelocity[index], 
                                       &V_WheelSpeedError[index], 
                                       &V_WheelSpeedIntergral[index], 
-                                      0.007, // P Gx
-                                      0.0005, // I Gx
+                                      0.0038, // P Gx
+                                      0.0029, // I Gx
                                       0.0, // D Gx
                                       0.9, // P UL
                                       -0.9, // P LL
@@ -451,15 +489,28 @@ void Robot::TeleopPeriodic() {
     frc::SmartDashboard::PutNumber("Drive Intergral Rear Left", V_WheelSpeedIntergral[E_RearLeft]);
     frc::SmartDashboard::PutNumber("Drive Intergral Rear Right", V_WheelSpeedIntergral[E_RearRight]);
 
+    frc::SmartDashboard::PutNumber("Wheel angle FR", V_WheelAngle[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle FL", V_WheelAngle[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle RR", V_WheelAngle[E_RearRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle RL", V_WheelAngle[E_RearLeft]);
+
     frc::SmartDashboard::PutNumber("WS_FR", V_WS[E_FrontRight]);
     frc::SmartDashboard::PutNumber("WS_FL", V_WS[E_FrontLeft]);
     frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA_Final[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA_Final[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA_Final[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA_Final[E_RearRight]);
+
+    
+    frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
+
+  
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
