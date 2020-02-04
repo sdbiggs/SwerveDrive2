@@ -41,9 +41,9 @@ bool   V_ModeTransition;
 int    V_Mode;
 bool   V_WheelSpeedDelay;
 double V_WheelSpeedError[E_RobotCornerSz];
-double V_FWD;
-double V_STR;
-double V_RCW;
+double V_JoystickAxisForward;
+double V_JoystickAxisStrafe;
+double V_JoystickAxisRotate;
 
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
@@ -153,8 +153,8 @@ void Robot::TeleopInit(){
         V_WheelRelativeAngleRawOffset[index] = 0;
         V_WheelAngle[index] = 0;
       }
-      V_STR = 0;
-      V_FWD = 0;
+      V_JoystickAxisStrafe = 0;
+      V_JoystickAxisForward = 0;
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
 
@@ -167,29 +167,28 @@ void Robot::TeleopPeriodic() {
   Gyro(); 
   bool L_WheelSpeedDelay = false;
 
-    Read_Encoders(V_RobotInit, 
-    a_encoderFrontLeftSteer.GetVoltage(), a_encoderFrontRightSteer.GetVoltage(), a_encoderRearLeftSteer.GetVoltage(), a_encoderRearRightSteer.GetVoltage(), 
-    m_encoderFrontLeftSteer,m_encoderFrontRightSteer, m_encoderRearLeftSteer, m_encoderRearRightSteer, 
-    m_encoderFrontLeftDrive, m_encoderFrontRightDrive,m_encoderRearLeftDrive, m_encoderRearRightDrive);
+  Read_Encoders(V_RobotInit, 
+  a_encoderFrontLeftSteer.GetVoltage(), a_encoderFrontRightSteer.GetVoltage(), a_encoderRearLeftSteer.GetVoltage(), a_encoderRearRightSteer.GetVoltage(), 
+  m_encoderFrontLeftSteer,m_encoderFrontRightSteer, m_encoderRearLeftSteer, m_encoderRearRightSteer, 
+  m_encoderFrontLeftDrive, m_encoderFrontRightDrive,m_encoderRearLeftDrive, m_encoderRearRightDrive);
 
-  V_FWD = c_joyStick.GetRawAxis(1) * -1;
-  V_STR = c_joyStick.GetRawAxis(0);
-  V_RCW = c_joyStick.GetRawAxis(4);
+  V_JoystickAxisForward = c_joyStick.GetRawAxis(1) * -1;
+  V_JoystickAxisStrafe = c_joyStick.GetRawAxis(0);
+  V_JoystickAxisRotate = c_joyStick.GetRawAxis(4);
 
+  V_JoystickAxisForward = DesiredSpeed(V_JoystickAxisForward);
+  V_JoystickAxisStrafe = DesiredSpeed(V_JoystickAxisStrafe);
+  V_JoystickAxisRotate = DesiredSpeed(V_JoystickAxisRotate);
 
-  V_FWD = DesiredSpeed(V_FWD);
-  V_STR = DesiredSpeed(V_STR);
-  V_RCW = DesiredSpeed(V_RCW);
-
-  double L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
-  V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
-  V_FWD = L_temp;
+  double L_temp = V_JoystickAxisForward * cos(gyro_yawanglerad) + V_JoystickAxisStrafe * sin(gyro_yawanglerad);
+  V_JoystickAxisStrafe = -V_JoystickAxisForward * sin(gyro_yawanglerad) + V_JoystickAxisStrafe * cos(gyro_yawanglerad);
+  V_JoystickAxisForward = L_temp;
 
       //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
-  double V_A = V_STR - V_RCW * (C_L/C_R);
-  double V_B = V_STR + V_RCW * (C_L/C_R);
-  double V_C = V_FWD - V_RCW * (C_W/C_R);
-  double V_D = V_FWD + V_RCW * (C_W/C_R);
+  double V_A = V_JoystickAxisStrafe - V_JoystickAxisRotate * (C_Lenght/C_R);
+  double V_B = V_JoystickAxisStrafe + V_JoystickAxisRotate * (C_Lenght/C_R);
+  double V_C = V_JoystickAxisForward - V_JoystickAxisRotate * (C_Width/C_R);
+  double V_D = V_JoystickAxisForward + V_JoystickAxisRotate * (C_Width/C_R);
 
   V_WS[E_FrontRight] = pow((V_B * V_B + V_C * V_C), 0.5);
   V_WS[E_FrontLeft] = pow((V_B * V_B + V_D * V_D), 0.5);
@@ -197,39 +196,33 @@ void Robot::TeleopPeriodic() {
   V_WS[E_RearRight] = pow((V_A * V_A + V_C * V_C), 0.5);
 
   T_RobotCorner index = E_FrontLeft;
-      for (index = E_FrontLeft;
-         index < E_RobotCornerSz;
-         index = T_RobotCorner(int(index) + 1)){
-         V_WA_Prev[index] = V_WA[index];
-        }
+  for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
+      V_WA_Prev[index] = V_WA[index];
+    }
          
-      
-      
-      
-      
   V_WA[E_FrontRight] = atan2(V_B, V_C) *180/C_PI;
   V_WA[E_FrontLeft] = atan2(V_B, V_D) *180/C_PI;
   V_WA[E_RearLeft] = atan2(V_A, V_D) *180/C_PI;
   V_WA[E_RearRight] = atan2(V_A, V_C) *180/C_PI;
 
-for (index = E_FrontLeft;
-     index < E_RobotCornerSz;
-     index = T_RobotCorner(int(index) + 1))
-  {
-    if(abs(V_WA_Prev[index]) >= 150)
-      {
-        if(V_WA_Prev[index] < 0 && V_WA[index] > 0)
-          {
-           V_WA_Loopcount[index] += 1;
-          }     
-        else if (V_WA_Prev[index] > 0 && V_WA[index] < 0)
-          {
-           V_WA_Loopcount[index] -= 1;
-          }
-     }
-    V_WA_Final[index] = (V_WA_Loopcount[index] * 360) + V_WA[index];
-    //V_WA_Final[index] = V_WA[index];
-  }
+// for (index = E_FrontLeft;
+//      index < E_RobotCornerSz;
+//      index = T_RobotCorner(int(index) + 1))
+//   {
+//     if(abs(V_WA_Prev[index]) >= 150)
+//       {
+//         if(V_WA_Prev[index] < 0 && V_WA[index] > 0)
+//           {
+//            V_WA_Loopcount[index] += 1;
+//           }     
+//         else if (V_WA_Prev[index] > 0 && V_WA[index] < 0)
+//           {
+//            V_WA_Loopcount[index] -= 1;
+//           }
+//      }
+//     V_WA_Final[index] = (V_WA_Loopcount[index] * 360) + V_WA[index];
+//     //V_WA_Final[index] = V_WA[index];
+//   }
      
 
 
@@ -256,7 +249,37 @@ for (index = E_FrontLeft;
   V_WS[E_RearLeft] *= 20;
   V_WS[E_RearRight] *= 20;
   
-  
+  //PS positive angle in 0 to 180
+  //NS Negative angle in 0 to -180
+  double NS, PS;
+  double AnglePS, AngleNS;
+
+  for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
+    //check to set if angle is negative
+    if(V_WA[index] < 0)
+    {
+      NS = V_WA[index];
+      PS = 180 - abs(V_WA[index]);
+    } 
+    if(V_WA[index] > 0)
+    {
+      NS = 180 - abs(V_WA[index]);
+      PS = V_WA[index];
+    }
+
+    AngleNS = abs(V_WheelAngle[index] - NS);
+    AnglePS = abs(V_WheelAngle[index] - PS);
+
+    if(AngleNS < AnglePS)
+    {
+      V_WA[index] = NS;
+      V_WS[index] *= -1;
+    }
+    if(AngleNS > AnglePS)
+    {
+      V_WA[index] = PS;
+    }
+  }
 
   frc::SmartDashboard::PutNumber("WA Loop Count FL", V_WA_Loopcount[E_FrontLeft]);
   frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
@@ -278,9 +301,9 @@ for (index = E_FrontLeft;
   frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
   frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
-  frc::SmartDashboard::PutNumber("STR", V_STR);
-  frc::SmartDashboard::PutNumber("FWD", V_FWD);
-  frc::SmartDashboard::PutNumber("RCW", V_RCW);
+  frc::SmartDashboard::PutNumber("STR", V_JoystickAxisStrafe);
+  frc::SmartDashboard::PutNumber("FWD", V_JoystickAxisForward);
+  frc::SmartDashboard::PutNumber("RCW", V_JoystickAxisRotate);
 
   //8.31 : 1 
   //11.9 m/s
@@ -450,7 +473,7 @@ for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID( V_WA_Final[index],
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
                                               V_WheelAngle[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
@@ -499,10 +522,10 @@ for (index = E_FrontLeft;
     frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("WA_FR", V_WA_Final[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WA_FL", V_WA_Final[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WA_RL", V_WA_Final[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WA_RR", V_WA_Final[E_RearRight]);
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
     
     frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
@@ -516,6 +539,11 @@ for (index = E_FrontLeft;
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
     m_rearLeftDriveMotor.Set(V_WheelSpeedCmnd[E_RearLeft]);
     m_rearRightDriveMotor.Set(V_WheelSpeedCmnd[E_RearRight]);
+
+    // m_frontLeftDriveMotor.Set(0);
+    // m_frontRightDriveMotor.Set(0);
+    // m_rearLeftDriveMotor.Set(0);
+    // m_rearRightDriveMotor.Set(0);
 
     m_frontLeftSteerMotor.Set(V_WheelAngleCmnd[E_FrontLeft] * (-1));
     m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (-1));
