@@ -46,9 +46,9 @@ bool   V_RobotInit;
 
 
 double V_WheelSpeedError[E_RobotCornerSz];
-double V_FWD;
-double V_STR;
-double V_RCW;
+double V_JoystickAxisForward;
+double V_JoystickAxisStrafe;
+double V_JoystickAxisRotate;
 
 bool rotateMode; 
 double desiredAngle;
@@ -259,9 +259,9 @@ void Robot::TeleopPeriodic()
                 m_encoderRearLeftDrive,
                 m_encoderRearRightDrive);
 
-  V_FWD = c_joyStick.GetRawAxis(1) * -1;
-  V_STR = c_joyStick.GetRawAxis(0);
-  V_RCW = c_joyStick.GetRawAxis(4);
+  V_JoystickAxisForward = c_joyStick.GetRawAxis(1) * -1;
+  V_JoystickAxisStrafe = c_joyStick.GetRawAxis(0);
+  V_JoystickAxisRotate = c_joyStick.GetRawAxis(4);
 
   /* Let's place a deadband around the joystick readings */
   V_FWD = DesiredSpeed(V_FWD);
@@ -519,10 +519,10 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("WA_FR", V_WA_Final[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WA_FL", V_WA_Final[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WA_RL", V_WA_Final[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WA_RR", V_WA_Final[E_RearRight]);
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
     
     frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
