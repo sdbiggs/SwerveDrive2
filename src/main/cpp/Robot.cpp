@@ -50,7 +50,6 @@ double V_JoystickAxisForward;
 double V_JoystickAxisStrafe;
 double V_JoystickAxisRotate;
 
-frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
@@ -77,8 +76,10 @@ bool CriteriaMet(double  L_Desired,
     L_CriteriaMet = false;
     }
 
-  return (L_CriteriaMet);
-  }
+  GyroRobotInit();    
+  inst = nt::NetworkTableInstance::Create();
+  inst.StartClient("10.55.61.24");
+  inst.StartDSClient();
 
 /******************************************************************************
  * Function:     RobotInit
@@ -259,6 +260,8 @@ void Robot::TeleopPeriodic()
                 m_encoderRearLeftDrive,
                 m_encoderRearRightDrive);
 
+  //Swerve Math
+  #pragma region 
   V_JoystickAxisForward = c_joyStick.GetRawAxis(1) * -1;
   V_JoystickAxisStrafe = c_joyStick.GetRawAxis(0);
   V_JoystickAxisRotate = c_joyStick.GetRawAxis(4);
@@ -402,6 +405,8 @@ void Robot::TeleopPeriodic()
                                             -1.0);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
+    //SmartDashboard
+    #pragma region 
 
     frc::SmartDashboard::PutNumber("FL Case",(V_WheelAngleCase[E_FrontLeft]));
     frc::SmartDashboard::PutNumber("FR Case",(V_WheelAngleCase[E_FrontRight]));
@@ -446,13 +451,43 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
-    
     frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
     frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
     frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
     frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
 
-  
+    frc::SmartDashboard::PutNumber("WA Loop Count FL", V_WA_Loopcount[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
+    frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
+    frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
+
+    frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
+    frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
+    frc::SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
+    frc::SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
+
+    frc::SmartDashboard::PutNumber("RPM Desire Front Left", V_WheelRpmCmnd[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("RPM Desire Front Right", V_WheelRpmCmnd[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("RPM Desire Rear Left", V_WheelRpmCmnd[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("RPM Desire Rear Right", V_WheelRpmCmnd[E_RearRight]);
+
+    frc::SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
+
+    frc::SmartDashboard::PutNumber("STR", V_JoystickAxisStrafe);
+    frc::SmartDashboard::PutNumber("FWD", V_JoystickAxisForward);
+    frc::SmartDashboard::PutNumber("RCW", V_JoystickAxisRotate);
+
+    frc::SmartDashboard::PutBoolean("Wheel Delay",  V_WheelSpeedDelay);
+    frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
+    frc::SmartDashboard::PutNumber("Desired Wheel Angle",  V_DesiredWheelAngle[E_FrontLeft]);
+
+    frc::SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
@@ -559,6 +594,7 @@ void Robot::TeleopPeriodic()
     // m_frontRightSteerMotor.Set(0);
     // m_rearLeftSteerMotor.Set(0);
     // m_rearRightSteerMotor.Set(0);
+    #pragma endregion
 
     frc::Wait(0.01);
 }
