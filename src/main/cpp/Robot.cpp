@@ -214,9 +214,12 @@ void Robot::TeleopPeriodic() {
   double PS = 0;
   double AnglePS = 0; 
   double AngleNS = 0;
+  double desired[E_RobotCornerSz];
 
   for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
     //check to set if angle is negative
+    desired[index] = V_WA[index];
+
     if(V_WA[index] < 0)
     {
       NS = V_WA[index];
@@ -231,17 +234,50 @@ void Robot::TeleopPeriodic() {
     AngleNS = abs(V_WheelAngle[index] - NS);
     AnglePS = abs(V_WheelAngle[index] - PS);
 
-    if(AngleNS < AnglePS)
-    {
+    
+
+    // if(V_WA[index] )
+    // {
+    //   V_WS[index] *= -1;
+    // }
+
+    if(AngleNS < AnglePS){
       V_WA[index] = NS;
-      V_WS[index] *= -1;
+     
     }
-    if(AngleNS > AnglePS)
-    {
+    if(AngleNS > AnglePS){
       V_WA[index] = PS;
     }
 
+    if(desired[index] < -90.5 || desired[index] > 90.5)
+    {
+      V_WS[index] *= -1;
+    }
   }
+
+  //   for (index = E_FrontLeft; index < E_RobotCornerSz; index = T_RobotCorner(int(index) + 1)){
+  //   //check to set if angle is negative
+  //   // if(V_WA[index] > -90 && V_WA[index] < 0)
+  //   // {
+  //   //   V_WA[index] += 180;
+  //   //   V_WS[index] *= -1;
+  //   // } 
+  //   // if(V_WA[index] < 90 && V_WA[index] > 0)
+  //   // {
+  //   //   V_WA[index] -= 180;
+  //   //   V_WS[index] *= -1;
+  //   // }
+
+  //   if(V_WA[index] > 90 && V_WA[index] < 180)
+  //   {
+
+  //   }
+    
+  //   if(V_WA[index] < -90 && V_WA[index] > -180)
+  //   {
+
+  //   }
+  // }
   #pragma endregion
    
 
@@ -432,8 +468,8 @@ void Robot::TeleopPeriodic() {
                                       V_WheelVelocity[index], 
                                       &V_WheelSpeedError[index], 
                                       &V_WheelSpeedIntergral[index], 
-                                      0.0038, // P Gx
-                                      0.0029, // I Gx
+                                      0.003, // P Gx
+                                      0.0002, // I Gx
                                       0.0, // D Gx
                                       0.9, // P UL
                                       -0.9, // P LL
@@ -506,14 +542,19 @@ void Robot::TeleopPeriodic() {
     frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
     frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
 
+    frc::SmartDashboard::PutNumber("Wheel Speed Cmd FL", V_WheelSpeedCmnd[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel Speed Cmd FR", V_WheelSpeedCmnd[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel Speed Cmd RL", V_WheelSpeedCmnd[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Wheel Speed Cmd RR", V_WheelSpeedCmnd[E_RearRight]);
+
     #pragma endregion
   
     //Motor Set Functions
     #pragma region 
-    // m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
-    // m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
-    // m_rearLeftDriveMotor.Set(V_WheelSpeedCmnd[E_RearLeft]);
-    // m_rearRightDriveMotor.Set(V_WheelSpeedCmnd[E_RearRight]);
+    m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
+    m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
+    m_rearLeftDriveMotor.Set(V_WheelSpeedCmnd[E_RearLeft]);
+    m_rearRightDriveMotor.Set(V_WheelSpeedCmnd[E_RearRight]);
 
     // m_frontLeftDriveMotor.Set(0);
     // m_frontRightDriveMotor.Set(0);
@@ -531,7 +572,7 @@ void Robot::TeleopPeriodic() {
     // m_rearRightSteerMotor.Set(0);
     #pragma endregion
 
-    // frc::Wait(0.01);
+    //frc::Wait(0.001);
 }
 
 void Robot::TestPeriodic() {}
