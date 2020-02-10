@@ -44,8 +44,8 @@ double gyro_currentyaw = (double)NavX->GetYaw();
   }
   gyro_rolloverrad = ((gryo_loopcount * 360) + gyro_currentyaw) / RadtoDeg;
 
-  gyro_yawangledegrees = (double)NavX->GetYaw();
-  gyro_yawanglerad = (double)NavX->GetYaw() / RadtoDeg;
+gyro_yawangledegrees = (double)NavX->GetYaw();
+gyro_yawanglerad = (double)NavX->GetYaw() / RadtoDeg;
 
   frc::SmartDashboard::PutNumber("NavX Raw Degree Yaw", NavX->GetYaw());
   //frc::SmartDashboard::PutNumber("NavX accum angle", finalangle);
