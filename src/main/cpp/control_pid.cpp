@@ -1,5 +1,3 @@
-#include <math.h>
-
 double Control_PID(double  L_DesiredSpeed,
                    double  L_CurrentSpeed,
                    double *L_ErrorPrev,
@@ -78,17 +76,3 @@ double Control_PID(double  L_DesiredSpeed,
 
   return L_OutputCmnd;
 }
-
-bool CriteriaMet(double  L_Desired,
-                 double  L_Current,
-                 double  L_AllowedError)
-  {
-  bool L_CriteriaMet = true;
-
-  if (fabs(L_Current - L_Desired) <= L_AllowedError)
-    {
-    L_CriteriaMet = false;
-    }
-
-  return (L_CriteriaMet);
-  }
