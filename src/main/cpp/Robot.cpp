@@ -46,10 +46,12 @@ bool   V_RobotInit;
 
 
 double V_WheelSpeedError[E_RobotCornerSz];
-double V_JoystickAxisForward;
-double V_JoystickAxisStrafe;
-double V_JoystickAxisRotate;
+double V_WheelAngleCase[E_RobotCornerSz];
+double V_FWD;
+double V_STR;
+double V_RCW;
 
+frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
@@ -260,11 +262,9 @@ void Robot::TeleopPeriodic()
                 m_encoderRearLeftDrive,
                 m_encoderRearRightDrive);
 
-  //Swerve Math
-  #pragma region 
-  V_JoystickAxisForward = c_joyStick.GetRawAxis(1) * -1;
-  V_JoystickAxisStrafe = c_joyStick.GetRawAxis(0);
-  V_JoystickAxisRotate = c_joyStick.GetRawAxis(4);
+  V_FWD = c_joyStick.GetRawAxis(1) * -1;
+  V_STR = c_joyStick.GetRawAxis(0);
+  V_RCW = c_joyStick.GetRawAxis(4);
 
   /* Let's place a deadband around the joystick readings */
   V_FWD = DesiredSpeed(V_FWD);
@@ -405,8 +405,6 @@ void Robot::TeleopPeriodic()
                                             -1.0);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
-    //SmartDashboard
-    #pragma region 
 
     frc::SmartDashboard::PutNumber("FL Case",(V_WheelAngleCase[E_FrontLeft]));
     frc::SmartDashboard::PutNumber("FR Case",(V_WheelAngleCase[E_FrontRight]));
@@ -451,6 +449,7 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
+    
     frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
     frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
     frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
@@ -594,7 +593,6 @@ void Robot::TeleopPeriodic()
     // m_frontRightSteerMotor.Set(0);
     // m_rearLeftSteerMotor.Set(0);
     // m_rearRightSteerMotor.Set(0);
-    #pragma endregion
 
     frc::Wait(0.01);
 }
