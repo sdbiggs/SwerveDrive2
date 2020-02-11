@@ -23,14 +23,14 @@ void GyroRobotInit()
     }
 }
 
-void GyroTeleInit() 
+void GyroTeleInit()
 {
     NavX->ZeroYaw();
 }
 void Gyro() {
 
 double gyro_currentyaw = (double)NavX->GetYaw();
-  
+
   //Check to see if gyro angle flips over 180 or -180
   if(175 <= abs(gyro_angleprev))
   {
@@ -47,9 +47,7 @@ double gyro_currentyaw = (double)NavX->GetYaw();
 gyro_yawangledegrees = (double)NavX->GetYaw();
 gyro_yawanglerad = (double)NavX->GetYaw() / RadtoDeg;
 
-  frc::SmartDashboard::PutNumber("NavX Raw Degree Yaw", NavX->GetYaw());
-  //frc::SmartDashboard::PutNumber("NavX accum angle", finalangle);
-  frc::SmartDashboard::PutNumber("NavX Raw Radians Yaw", gyro_yawanglerad);
+
   gyro_angleprev = gyro_currentyaw;
 
 }
