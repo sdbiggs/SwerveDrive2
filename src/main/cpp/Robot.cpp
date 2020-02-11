@@ -566,11 +566,7 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
-    
-    frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
+    frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
     frc::SmartDashboard::PutNumber("WA Loop Count FL", V_WA_Loopcount[E_FrontLeft]);
     frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
