@@ -147,3 +147,36 @@ double DtrmnEncoderRelativeToCmnd(double          L_JoystickCmnd,
       
     return (L_Output);
   }
+
+/******************************************************************************
+ * Function:     DtrmnEncoderRelativeToCmnd
+ *
+ * Description:  tbd
+ ******************************************************************************/
+double DtrmnEncoderRelativeToCmnd(double          L_JoystickCmnd,
+                                  double          L_EncoderReading)
+  {
+    double L_Opt1;
+    double L_Opt2;
+    double L_Opt3;
+    double L_Output;
+
+    L_Opt1 = fabs(L_JoystickCmnd - L_EncoderReading);
+    L_Opt2 = fabs(L_JoystickCmnd - (L_EncoderReading + 360));
+    L_Opt3 = fabs(L_JoystickCmnd - (L_EncoderReading - 360));
+
+    if ((L_Opt1 < L_Opt2) && (L_Opt1 < L_Opt3))
+      {
+        L_Output = L_EncoderReading;
+      }
+    else if ((L_Opt2 < L_Opt1) && (L_Opt2 < L_Opt3))
+      {
+        L_Output = L_EncoderReading + 360;
+      }
+    else
+      {
+        L_Output = L_EncoderReading - 360;
+      }
+      
+    return (L_Output);
+  }
