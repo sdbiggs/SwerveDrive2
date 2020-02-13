@@ -13,7 +13,3 @@ double Control_PID(double  L_DesiredSpeed,
                    double  L_DerivativeLowerLimit,
                    double  L_OutputUpperLimit,
                    double  L_OutputLowerLimit);
-
-bool CriteriaMet(double  L_Desired,
-                 double  L_Current,
-                 double  L_AllowedError);

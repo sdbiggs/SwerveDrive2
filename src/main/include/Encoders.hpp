@@ -9,3 +9,6 @@ void Read_Encoders(bool L_RobotInit, double a_encoderFrontLeftSteerVoltage, doub
  extern double V_DesiredWheelAngle[E_RobotCornerSz];
  extern double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
  extern double V_WheelVelocity[E_RobotCornerSz];
+ extern double V_WheelAnglePrev[E_RobotCornerSz];
+ extern double V_WheelAngleLoop[E_RobotCornerSz];
+ extern double V_WheelAngleRaw[E_RobotCornerSz];
