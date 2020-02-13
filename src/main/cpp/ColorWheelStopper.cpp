@@ -11,16 +11,15 @@ double desiredColor;
 
 switch (colorThingy) {
     case rotation:
-        if detectedColor = primaryColor{
+        for (detectedColor = primaryColor) {
             counter = counter + 1;
             }
-            // else (???) {
-            //     ??????????? no clue what to put here.. maybe just counter = counter??
-            // }
         break;
 
     case colorPick:
         //need a way to put in the desired color
+        //maybe something like
+        //frc::SmartDashboard::GetNumber("Desired Color", desiredColor;
         if (desiredColor == "Red") {
             //stop color wheel-- probably won't be able to code this until we have robot
         }
