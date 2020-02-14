@@ -1,15 +1,24 @@
+#include "Enums.hpp"
+
 static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRightSteerDeviceID = 4, frontRightDriveDeviceID = 3;
 static const int rearLeftSteerDeviceID  = 5, rearLeftDriveDeviceID  = 6, rearRightSteerDeviceID  = 7, rearRightDriveDeviceID  = 8;
 static const int topShooterID = 9, bottomShooterID = 10;
 const double reductionRatio = 8.31;
 const int WheelDiamter = 4;
-const double WheelCircufrence = 12.566;
+const double WheelCircufrence = 12.566; // Circumferance of wheel, in inches
 const double RadtoDeg = 57.2958;
 const double C_ExeTime = 0.01;
 const double C_L = 0.5969;
 const double C_W = 0.5969;
 const double C_R = 0.8441;
 const double C_PI = 3.14159265358979;
+const double K_InitAngle = 1.4; // This is the absolute angle that all of the wheels need to be sitting at before allowing the robot to exit init
+const double K_WheelMaxSpeed = 200; // This is the max allowed speed for the wheels
+
+const double K_WheelOffsetAngle[E_RobotCornerSz] = {322,    // E_FrontLeft
+                                                    152,    // E_FrontRight 152  104.6
+                                                     14,    // E_RearLeft
+                                                    180.6}; // E_RearRight
 
 const double K_DesiredDriveSpeedAxis[20] = {-0.95,
                                             -0.85,

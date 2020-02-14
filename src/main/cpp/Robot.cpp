@@ -1,10 +1,11 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
- 
+/*
+ * Team 5561 2020 Code
+ *
+ * This code runs the 2020 robot which is capable of the following:
+ * - Swerve Drive
+ *
+ * */
+
 #include "Robot.h"
 #include <iostream>
 #include <frc/smartdashboard/SmartDashboard.h>
@@ -19,28 +20,17 @@
 #include "Lookup.hpp"
 #include "SwerveDrive.hpp"
 
+double V_FWD;
+double V_STR;
+double V_RCW;
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
 double V_WA_Prev[E_RobotCornerSz];
-double V_WA_Loopcount[E_RobotCornerSz];
-double V_WA_Final[E_RobotCornerSz];
 
-double V_WheelRPM[E_RobotCornerSz];
-//double V_WheelAngle[E_RobotCornerSz];
-//double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
 double V_WheelAngleCmnd[E_RobotCornerSz];
-double V_WheelSpeedCmnd[E_RobotCornerSz];
-double V_WheelSpeedIntergral[E_RobotCornerSz];
-double V_WheelRpmCmnd[E_RobotCornerSz];
-//double V_WheelVelocity[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
 double V_WheelAngleIntegral[E_RobotCornerSz];
-//double V_DesiredWheelAngle[E_RobotCornerSz];
-//double V_DesiredWheelSpeed[E_RobotCornerSz];
-bool   V_RobotInit;
-bool   V_ModeTransition;
-int    V_Mode;
-bool   V_WheelSpeedDelay;
+double V_WheelSpeedCmnd[E_RobotCornerSz];
 double V_WheelSpeedError[E_RobotCornerSz];
 double V_WheelAngleCase[E_RobotCornerSz];
 double V_FWD;
@@ -231,7 +221,6 @@ void Robot::RobotInit() {
     m_rearRightDriveMotor.RestoreFactoryDefaults();
 
     V_RobotInit = false;
-    V_WheelSpeedDelay = false;
 
     GyroRobotInit();
         
@@ -267,30 +256,40 @@ void Robot::AutonomousInit() {}
 
 void Robot::AutonomousPeriodic() {}
 
-void Robot::TeleopInit(){
+
+/******************************************************************************
+ * Function:     TeleopInit
+ *
+ * Description:  Function called when starting out in teleop mode.
+ *               We should zero out all of our global varibles.
+ ******************************************************************************/
+void Robot::TeleopInit()
+  {
+  int index;
+
   V_RobotInit = true;
-  V_WheelSpeedDelay = false;
-  V_ModeTransition = false;
-  V_Mode = 0;
+  m_frontLeftSteerMotor.RestoreFactoryDefaults();
+  m_frontLeftDriveMotor.RestoreFactoryDefaults();
+  m_frontRightSteerMotor.RestoreFactoryDefaults();
+  m_frontRightDriveMotor.RestoreFactoryDefaults();
+  m_rearLeftSteerMotor.RestoreFactoryDefaults();
+  m_rearLeftDriveMotor.RestoreFactoryDefaults();
+  m_rearRightSteerMotor.RestoreFactoryDefaults();
+  m_rearRightDriveMotor.RestoreFactoryDefaults();
 
-    m_frontLeftSteerMotor.RestoreFactoryDefaults();
-    m_frontLeftDriveMotor.RestoreFactoryDefaults();
-    m_frontRightSteerMotor.RestoreFactoryDefaults();
-    m_frontRightDriveMotor.RestoreFactoryDefaults();
-    m_rearLeftSteerMotor.RestoreFactoryDefaults();
-    m_rearLeftDriveMotor.RestoreFactoryDefaults();
-    m_rearRightSteerMotor.RestoreFactoryDefaults();
-    m_rearRightDriveMotor.RestoreFactoryDefaults();
+  m_frontLeftSteerMotor.SetSmartCurrentLimit(25);
+  m_frontRightSteerMotor.SetSmartCurrentLimit(25);
+  m_rearLeftSteerMotor.SetSmartCurrentLimit(25);
+  m_frontLeftSteerMotor.SetSmartCurrentLimit(25);
 
-  for (int index = E_FrontLeft;
-         index < E_RobotCornerSz;
-         index = T_RobotCorner(int(index) + 1))
+  for (index = E_FrontLeft;
+       index < E_RobotCornerSz;
+       index = T_RobotCorner(int(index) + 1))
       {
         V_WS[index] = 0;
         V_WA[index] = 0;
-        V_DesiredWheelAngle[index] = 0;
         V_WheelRelativeAngleRawOffset[index] = 0;
-        V_WheelAngle[index] = 0;
+        V_WheelAngleFwd[index] = 0;
         V_WheelAnglePrev[index] = 0;
         V_WheelAngleLoop[index] = 0;
         V_WheelAngleRaw[index] = 0;
@@ -298,10 +297,12 @@ void Robot::TeleopInit(){
         V_WheelAngleIntegral[index] = 0;
         V_WheelVelocity[index] = 0;
         V_WheelSpeedError[index] = 0;
-        V_WheelSpeedIntergral[index] = 0; 
+        V_WheelSpeedIntergral[index] = 0;
+        V_WheelAngleArb[index] = 0;
       }
       V_STR = 0;
       V_FWD = 0;
+      V_RCW = 0;
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
 
@@ -379,62 +380,86 @@ void Robot::TeleopPeriodic() {
         {
         V_WS[index] = 0;
         V_WA[index] = 0;
-        V_WA_Final[index] = 0;
-        if (fabs(V_WheelAngle[index]) > 1.2)
+        V_WheelAngleArb[index] = V_WheelAngleFwd[index];
+        if (fabs(V_WheelAngleArb[index]) > K_InitAngle)
           {
           V_RobotInit = true;
           }
         }
       }
-      
+    // V_RobotInit = false;
+
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
-                                              V_WheelAngle[index],
+      V_WheelAngleCmnd[index] =  Control_PID(V_WA[index],
+                                             V_WheelAngleArb[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
-                                              0.0045, // P Gx 0.0045
-                                              0.0001, // I Gx 0001
-                                              0.0, // D Gx
+                                              0.007, // P Gx 0.0045
+                                              0.0005, // I Gx 0001
+                                              0.0000005, // D Gx
                                               0.4, // P UL
                                              -0.4, // P LL
                                               0.12, // I UL
                                              -0.12, // I LL
-                                              0.0, // D UL
-                                             -0.0, // D LL
+                                              0.5, // D UL
+                                             -0.5, // D LL
                                               0.9, // Max upper
                                              -0.9); // Max lower
 
       V_WheelSpeedCmnd[index] = Control_PID(V_WS[index],
-                                      V_WheelVelocity[index], 
-                                      &V_WheelSpeedError[index], 
-                                      &V_WheelSpeedIntergral[index], 
-                                      0.0038, // P Gx
-                                      0.0029, // I Gx
-                                      0.0, // D Gx
-                                      0.9, // P UL
-                                      -0.9, // P LL
-                                      0.9, // I UL
-                                      -0.9, // I LL
-                                      0.0, // D UL
-                                      -0.0, // D LL
-                                      1.0, // Max upper
-                                      -1.0);
+                                            V_WheelVelocity[index],
+                                            &V_WheelSpeedError[index],
+                                            &V_WheelSpeedIntergral[index],
+                                            0.005,   // P Gx 0.0038 0.005
+                                            0.0012, // I Gx 0.0029  0.001
+                                            0.0, // D Gx
+                                            0.9, // P UL
+                                            -0.9, // P LL
+                                            0.7, // I UL
+                                            -0.7, // I LL
+                                            0.2, // D UL
+                                            -0.2, // D LL
+                                            1.0, // Max upper
+                                            -1.0);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
+
+    frc::SmartDashboard::PutNumber("FL Case",(V_WheelAngleCase[E_FrontLeft]));
+    frc::SmartDashboard::PutNumber("FR Case",(V_WheelAngleCase[E_FrontRight]));
+    frc::SmartDashboard::PutNumber("RL Case",(V_WheelAngleCase[E_RearLeft]));
+    frc::SmartDashboard::PutNumber("RR Case",(V_WheelAngleCase[E_RearRight]));
+
+    frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
+    frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
+    frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
+
+    frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
+    frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
+    frc::SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
+    frc::SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
+
+    frc::SmartDashboard::PutNumber("STR", V_STR);
+    frc::SmartDashboard::PutNumber("FWD", V_FWD);
+    frc::SmartDashboard::PutNumber("RCW", V_RCW);
 
     frc::SmartDashboard::PutNumber("Drive Intergral Front Left", V_WheelSpeedIntergral[E_FrontLeft]);
     frc::SmartDashboard::PutNumber("Drive Intergral Front Right", V_WheelSpeedIntergral[E_FrontRight]);
     frc::SmartDashboard::PutNumber("Drive Intergral Rear Left", V_WheelSpeedIntergral[E_RearLeft]);
     frc::SmartDashboard::PutNumber("Drive Intergral Rear Right", V_WheelSpeedIntergral[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("Wheel angle FR", V_WheelAngle[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle FL", V_WheelAngle[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Wheel angle RR", V_WheelAngle[E_RearRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle RL", V_WheelAngle[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
+
+    frc::SmartDashboard::PutNumber("Wheel angle FR", V_WheelAngleArb[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle FL", V_WheelAngleArb[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("Wheel angle RR", V_WheelAngleArb[E_RearRight]);
+    frc::SmartDashboard::PutNumber("Wheel angle RL", V_WheelAngleArb[E_RearLeft]);
 
     frc::SmartDashboard::PutNumber("WS_FR", V_WS[E_FrontRight]);
     frc::SmartDashboard::PutNumber("WS_FL", V_WS[E_FrontLeft]);
@@ -446,11 +471,7 @@ void Robot::TeleopPeriodic() {
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
-    
-    frc::SmartDashboard::PutNumber("Wheel angle integral FR", V_WheelAngleIntegral[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral FL", V_WheelAngleIntegral[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral RR", V_WheelAngleIntegral[E_RearRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle integral RL", V_WheelAngleIntegral[E_RearLeft]);
+    frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
   
     //Shooter mech
@@ -528,7 +549,11 @@ void Robot::TeleopPeriodic() {
     m_rearLeftDriveMotor.Set(V_WheelSpeedCmnd[E_RearLeft]);
     m_rearRightDriveMotor.Set(V_WheelSpeedCmnd[E_RearRight]);
 
-     
+    // m_frontLeftDriveMotor.Set(0);
+    // m_frontRightDriveMotor.Set(0);
+    // m_rearLeftDriveMotor.Set(0);
+    // m_rearRightDriveMotor.Set(0);
+
     m_frontLeftSteerMotor.Set (V_WheelAngleCmnd[E_FrontLeft] * (-1));
     m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (-1));
     m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (-1));
@@ -585,40 +610,7 @@ void Robot::TeleopPeriodic() {
     // m_rearLeftSteerMotor.Set(0);
     // m_rearRightSteerMotor.Set(0);
 
-   /* if (a_joyStick.GetRawButton(0) && driver_mode == false)
-    {
-      table->PutBoolean("driver_mode", true);
-    }
-    else if ((a_joyStick.GetRawButton(0) && driver_mode == true)
-    {
-      table->PutBoolean("driver_mode", false);
-    }
-    */
-   
-    //driverMode = vision->PutBoolean("driver_mode", true);
-
-    // vision->GetBooleanArray()
-
-    // /**
-    //  * Open Smart Dashboard or Shuffleboard to see the color detected by the 
-    //  * sensor.
-    //  */
-    //lw->Add
-  
-    //frc::SmartDashboard::PutNumberArray("Anglealjshdfkjshdfsdhfklsjdfh Desired Array", V_DesiredWheelAngle);
-
-    frc::SmartDashboard::PutBoolean("Wheel Delay",  V_WheelSpeedDelay);
-    frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
-    frc::SmartDashboard::PutBoolean("driver_mode", driverMode.GetBoolean(false));
-   
-    frc::SmartDashboard::PutNumber("Angle Desire Front Left", V_DesiredWheelAngle[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Angle Desire Front Right", V_DesiredWheelAngle[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Angle Desire Rear Left", V_DesiredWheelAngle[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("Angle Desire Rear Right", V_DesiredWheelAngle[E_RearRight]);
-
-
-    
-    frc::Wait(0.1);
+    frc::Wait(0.01);
 }
 
 void Robot::TestPeriodic() {}

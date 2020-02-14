@@ -13,9 +13,9 @@
     "**/.settings": true,
     "**/.factorypath": true
   },
-  "C_Cpp.default.configurationProvider": "vscode-wpilib",
   "files.associations": {
     "math": "cpp",
-    "*.inc": "cpp"
+    "*.inc": "cpp",
+    "optional": "cpp"
   }
 }
