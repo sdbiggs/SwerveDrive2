@@ -19,6 +19,7 @@
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
+#include "SwerveDrive.hpp"
 
 double V_FWD;
 double V_STR;
@@ -50,10 +51,54 @@ double V_WheelAngleCase[E_RobotCornerSz];
 double V_FWD;
 double V_STR;
 double V_RCW;
+double V_GAIN;
+
+bool rotatemode;
+
+double V_ShooterSpeedCurr[E_RoboShooter];
+double V_ShooterSpeedCmnd[E_RoboShooter];
+double V_ShooterSpeedDesired[E_RoboShooter];
+double V_ShooterSpeedIntegral[E_RoboShooter];
+double V_ShooterSpeedError[E_RoboShooter];
+bool   V_ShooterRequest[2] {false, false};
+
+std::shared_ptr<NetworkTable> vision0;
+std::shared_ptr<NetworkTable> vision1;
+std::shared_ptr<NetworkTable> lidar;
+std::shared_ptr<NetworkTable> ledLight;
+
+nt::NetworkTableInstance inst;
+nt::NetworkTableEntry driverMode0;
+nt::NetworkTableEntry targetYaw0;
+nt::NetworkTableEntry targetPitch0;
+nt::NetworkTableEntry targetPose0;
+nt::NetworkTableEntry latency0;
+nt::NetworkTableEntry driverMode1;
+nt::NetworkTableEntry targetYaw1;
+nt::NetworkTableEntry targetPitch1;
+nt::NetworkTableEntry targetPose1;
+nt::NetworkTableEntry latency1;
+nt::NetworkTableEntry lidarDistance;
+nt::NetworkTableEntry ledControl;
+
+const double deg2rad = 0.017453292519943295;
+const double shooterWheelRotation = (2.5555555555555555555555555555555555555555555555 * (2 * C_PI));
+double       distanceTarget;
+double       distanceBall;
+double       distanceFromTargetCenter;
+double       distanceFromBallCenter;
+double       desiredVisionAngle0;
+double       desiredVisionDistance0;
+bool         activeVisionAngle0;
+bool         activeVisionDistance0;
+bool         visionRequest;
+bool         visionStart[2] {false, false};
+enum         VisionAuton {strafe, rotate, complete};
+enum         VisionTarget{high, ball};
+char         autonChoose;
 
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
-nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
 
 
@@ -105,9 +150,8 @@ void Robot::RobotInit() {
     V_RobotInit = false;
 
     GyroRobotInit();
-
     inst = nt::NetworkTableInstance::Create();
-    inst.StartClient("10.55.61.24");
+    inst.StartClient("10.55.61.50");
     inst.StartDSClient();
 
     vision = inst.GetTable("chameleon-vision/Scotty");
@@ -265,6 +309,7 @@ void Robot::TeleopPeriodic()
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
+  V_GAIN = c_joyStick.GetRawAxis(3);
 
   /* Let's place a deadband around the joystick readings */
   V_FWD = DesiredSpeed(V_FWD);
