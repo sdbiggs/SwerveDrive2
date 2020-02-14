@@ -42,6 +42,9 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_rearLeftDriveMotor  {rearLeftDriveDeviceID,   rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rearRightSteerMotor {rearRightSteerDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rearRightDriveMotor {rearRightDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_topShooterMotor     {topShooterID,            rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_bottomShooterMotor  {bottomShooterID,         rev::CANSparkMax::MotorType::kBrushless};
+
 
   rev::CANEncoder m_encoderFrontLeftSteer  = m_frontLeftSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderFrontLeftDrive  = m_frontLeftDriveMotor.GetEncoder();
@@ -51,9 +54,12 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_encoderRearLeftDrive   = m_rearLeftDriveMotor.GetEncoder();
   rev::CANEncoder m_encoderRearRightSteer  = m_rearRightSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderRearRightDrive  = m_rearRightDriveMotor.GetEncoder();
+  rev::CANEncoder m_encoderTopShooter      = m_topShooterMotor.GetEncoder();
+  rev::CANEncoder m_encoderBottomShooter   = m_bottomShooterMotor.GetEncoder();
+
 
   frc::Joystick c_joyStick{0};
-  frc::Joystick a_joyStick{1};
+  frc::Joystick c_joyStick2{1};
 
  private:
   frc::SendableChooser<std::string> m_chooser;

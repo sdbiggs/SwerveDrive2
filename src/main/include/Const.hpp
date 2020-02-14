@@ -1,5 +1,6 @@
 static const int frontLeftSteerDeviceID = 1, frontLeftDriveDeviceID = 2, frontRightSteerDeviceID = 4, frontRightDriveDeviceID = 3;
 static const int rearLeftSteerDeviceID  = 5, rearLeftDriveDeviceID  = 6, rearRightSteerDeviceID  = 7, rearRightDriveDeviceID  = 8;
+static const int topShooterID = 9, bottomShooterID = 10;
 const double reductionRatio = 8.31;
 const int WheelDiamter = 4;
 const double WheelCircufrence = 12.566;
