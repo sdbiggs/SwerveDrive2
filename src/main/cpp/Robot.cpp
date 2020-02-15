@@ -96,9 +96,9 @@ bool         visionStart[2] {false, false};
 enum         VisionAuton {strafe, rotate, complete};
 enum         VisionTarget{high, ball};
 char         autonChoose;
-
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
+// nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
 
 
@@ -151,7 +151,7 @@ void Robot::RobotInit() {
 
     GyroRobotInit();
     inst = nt::NetworkTableInstance::Create();
-    inst.StartClient("10.55.61.50");
+    inst.StartClient("10.55.61.24");
     inst.StartDSClient();
 
     vision = inst.GetTable("chameleon-vision/Scotty");
