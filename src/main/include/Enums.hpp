@@ -26,5 +26,4 @@ typedef enum T_RoboShooter
   E_RoboShooter
 } T_RoboShooter;
 
-
 #endif

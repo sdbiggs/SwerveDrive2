@@ -15,10 +15,10 @@ const double C_PI = 3.14159265358979;
 const double K_InitAngle = 1.4; // This is the absolute angle that all of the wheels need to be sitting at before allowing the robot to exit init
 const double K_WheelMaxSpeed = 200; // This is the max allowed speed for the wheels
 
-const double K_WheelOffsetAngle[E_RobotCornerSz] = {322,    // E_FrontLeft
-                                                    152,    // E_FrontRight 152  104.6
-                                                     14,    // E_RearLeft
-                                                    180.6}; // E_RearRight
+const double K_WheelOffsetAngle[E_RobotCornerSz] = {75.234367,    // E_FrontLeft
+                                                    90.615225,    // E_FrontRight 152  104.6
+                                                     12.041014,    // E_RearLeft
+                                                    180.703106}; // E_RearRight
 
 const double K_DesiredDriveSpeedAxis[20] = {-0.95,
                                             -0.85,

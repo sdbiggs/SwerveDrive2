@@ -29,10 +29,10 @@ class Robot : public frc::TimedRobot {
   void TeleopPeriodic() override;
   void TestPeriodic() override;
 
-  frc::AnalogInput a_encoderFrontLeftSteer{0};
+  frc::AnalogInput a_encoderFrontLeftSteer{2};
   frc::AnalogInput a_encoderFrontRightSteer{1};
-  frc::AnalogInput a_encoderRearLeftSteer{2};
-  frc::AnalogInput a_encoderRearRightSteer{3};
+  frc::AnalogInput a_encoderRearLeftSteer{3};
+  frc::AnalogInput a_encoderRearRightSteer{0};
 
   rev::CANSparkMax m_frontLeftSteerMotor {frontLeftSteerDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_frontLeftDriveMotor {frontLeftDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
@@ -42,9 +42,6 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_rearLeftDriveMotor  {rearLeftDriveDeviceID,   rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rearRightSteerMotor {rearRightSteerDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_rearRightDriveMotor {rearRightDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax m_topShooterMotor     {topShooterID,            rev::CANSparkMax::MotorType::kBrushless};
-  rev::CANSparkMax m_bottomShooterMotor  {bottomShooterID,         rev::CANSparkMax::MotorType::kBrushless};
-
 
   rev::CANEncoder m_encoderFrontLeftSteer  = m_frontLeftSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderFrontLeftDrive  = m_frontLeftDriveMotor.GetEncoder();
@@ -54,12 +51,9 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_encoderRearLeftDrive   = m_rearLeftDriveMotor.GetEncoder();
   rev::CANEncoder m_encoderRearRightSteer  = m_rearRightSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderRearRightDrive  = m_rearRightDriveMotor.GetEncoder();
-  rev::CANEncoder m_encoderTopShooter      = m_topShooterMotor.GetEncoder();
-  rev::CANEncoder m_encoderBottomShooter   = m_bottomShooterMotor.GetEncoder();
-
 
   frc::Joystick c_joyStick{0};
-  frc::Joystick c_joyStick2{1};
+  frc::Joystick a_joyStick{1};
 
  private:
   frc::SendableChooser<std::string> m_chooser;
