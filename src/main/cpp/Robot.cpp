@@ -145,7 +145,7 @@ void Robot::RobotInit() {
 
     GyroRobotInit();
     inst = nt::NetworkTableInstance::Create();
-    inst.StartClient("10.55.61.50");
+    inst.StartClient("10.55.61.24");
     inst.StartDSClient();
 
     vision = inst.GetTable("chameleon-vision/Scotty");
