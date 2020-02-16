@@ -16,6 +16,10 @@
   "files.associations": {
     "math": "cpp",
     "*.inc": "cpp",
-    "optional": "cpp"
+    "optional": "cpp",
+    "cmath": "cpp",
+    "complex": "cpp",
+    "cstdlib": "cpp",
+    "chrono": "cpp"
   }
 }
