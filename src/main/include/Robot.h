@@ -60,7 +60,7 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_encoderBottomShooter   = m_bottomShooterMotor.GetEncoder();
 
   frc::Joystick c_joyStick{0};
-  frc::Joystick a_joyStick{1};
+  frc::Joystick c_joyStick2{1};
 
  private:
   frc::SendableChooser<std::string> m_chooser;

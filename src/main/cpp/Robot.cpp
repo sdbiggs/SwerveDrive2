@@ -19,7 +19,6 @@
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
-#include "SwerveDrive.hpp"
 
 double V_FWD;
 double V_STR;
@@ -53,7 +52,6 @@ double V_STR;
 double V_RCW;
 double V_GAIN;
 
-bool rotatemode;
 
 double V_ShooterSpeedCurr[E_RoboShooter];
 double V_ShooterSpeedCmnd[E_RoboShooter];
@@ -66,7 +64,7 @@ std::shared_ptr<NetworkTable> vision0;
 std::shared_ptr<NetworkTable> vision1;
 std::shared_ptr<NetworkTable> lidar;
 std::shared_ptr<NetworkTable> ledLight;
-
+ 
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode0;
 nt::NetworkTableEntry targetYaw0;
