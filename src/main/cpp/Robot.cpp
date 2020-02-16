@@ -2,7 +2,8 @@
  * Team 5561 2020 Code
  *
  * This code runs the 2020 robot which is capable of the following:
- * - Swerve Drive
+ * - Swerve Drive (beta 02/10/2020)
+ * - Shooting balls (beta 02/15/2020)
  *
  * */
 
@@ -18,7 +19,6 @@
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
-#include "SwerveDrive.hpp"
 
 double V_FWD;
 double V_STR;
@@ -26,6 +26,14 @@ double V_RCW;
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
 double V_WA_Prev[E_RobotCornerSz];
+
+double V_ShooterSpeedCurr[E_RoboShooter];
+double V_ShooterSpeedCmnd[E_RoboShooter];
+double V_ShooterSpeedDesired[E_RoboShooter];
+double V_ShooterSpeedIntegral[E_RoboShooter];
+double V_ShooterSpeedError[E_RoboShooter];
+bool   V_ShooterRequest[2] {false, false};
+const double shooterWheelRotation = (2.5555555555555555555555555555555555555555555555 * (2 * C_PI));
 
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
@@ -38,59 +46,16 @@ bool   V_RobotInit;
 
 double V_WheelAngleCase[E_RobotCornerSz];  // For trouble shooting where the angle is coming from
 
-bool rotatemode;
 
-double V_ShooterSpeedCurr[E_RoboShooter];
-double V_ShooterSpeedCmnd[E_RoboShooter];
-double V_ShooterSpeedDesired[E_RoboShooter];
-double V_ShooterSpeedIntegral[E_RoboShooter];
-double V_ShooterSpeedError[E_RoboShooter];
-bool   V_ShooterRequest[2] {false, false};
-
-std::shared_ptr<NetworkTable> vision0;
-std::shared_ptr<NetworkTable> vision1;
-std::shared_ptr<NetworkTable> lidar;
-std::shared_ptr<NetworkTable> ledLight;
-
-nt::NetworkTableInstance inst;
-nt::NetworkTableEntry driverMode0;
-nt::NetworkTableEntry targetYaw0;
-nt::NetworkTableEntry targetPitch0;
-nt::NetworkTableEntry targetPose0;
-nt::NetworkTableEntry latency0;
-nt::NetworkTableEntry driverMode1;
-nt::NetworkTableEntry targetYaw1;
-nt::NetworkTableEntry targetPitch1;
-nt::NetworkTableEntry targetPose1;
-nt::NetworkTableEntry latency1;
-nt::NetworkTableEntry lidarDistance;
-nt::NetworkTableEntry ledControl;
-
-const double deg2rad = 0.017453292519943295;
-const double shooterWheelRotation = (2.5555555555555555555555555555555555555555555555 * (2 * C_PI));
-double       distanceTarget;
-double       distanceBall;
-double       distanceFromTargetCenter;
-double       distanceFromBallCenter;
-double       desiredVisionAngle0;
-double       desiredVisionDistance0;
-bool         activeVisionAngle0;
-bool         activeVisionDistance0;
-bool         visionRequest;
-bool         visionStart[2] {false, false};
-enum         VisionAuton {strafe, rotate, complete};
-enum         VisionTarget{high, ball};
-char         autonChoose;
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
-// nt::NetworkTableInstance inst;
+nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode;
 
 /******************************************************************************
- * Function:     Control_PID
+ * Function:     CriteriaMet
  *
- * Description:  This function provides PID control.  This will also limit the
- *               the three controllers (P I D) by the calibrated thresholds.
+ * Description:  This function checks to see if certain criteria is met.
  ******************************************************************************/
 bool CriteriaMet(double  L_Desired,
                  double  L_Current,
@@ -106,6 +71,11 @@ bool CriteriaMet(double  L_Desired,
   return (L_CriteriaMet);
   }
 
+/******************************************************************************
+ * Function:     RobotInit
+ *
+ * Description:  Called during initialization of the robot.
+ ******************************************************************************/
 void Robot::RobotInit() {
 //  m_chooser.SetDefaultOption(kAutoNameDefault, kAutoNameDefault);
 //  m_chooser.AddOption(kAutoNameCustom, kAutoNameCustom);
@@ -245,9 +215,6 @@ void Robot::TeleopPeriodic()
   double L_WA_REV;
   double L_WA_REV_Delta;
   T_RobotCorner index;
-  double L_FWD;
-  double L_STR;
-  double L_RCW;
 
   ColorSensor(false);
   Gyro();
@@ -266,19 +233,89 @@ void Robot::TeleopPeriodic()
                 m_encoderRearLeftDrive,
                 m_encoderRearRightDrive);
 
-  /* Let's place a deadband around the joystick readings */
-  L_FWD = DesiredSpeed(c_joyStick.GetRawAxis(1) * -1);
-  L_STR = DesiredSpeed(c_joyStick.GetRawAxis(0));
-  L_RCW = DesiredSpeed(c_joyStick.GetRawAxis(4));
-  L_Gain = c_joyStick.GetRawAxis(3);
+  V_FWD = c_joyStick.GetRawAxis(1) * -1;
+  V_STR = c_joyStick.GetRawAxis(0);
+  V_RCW = c_joyStick.GetRawAxis(4);
 
-  SwerveDriveWheelOutput(L_FWD,
-                        L_STR,
-                        L_RCW,
-                            L_Gain,
-                            &V_WheelAngleArb[0],
-                            &V_WA[0],
-                            &V_WS[0]);
+  /* Let's place a deadband around the joystick readings */
+  V_FWD = DesiredSpeed(V_FWD);
+  V_STR = DesiredSpeed(V_STR);
+  V_RCW = DesiredSpeed(V_RCW);
+
+  L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
+  V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
+  V_FWD = L_temp;
+
+  //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
+  L_A = V_STR - V_RCW * (C_L/C_R);
+  L_B = V_STR + V_RCW * (C_L/C_R);
+  L_C = V_FWD - V_RCW * (C_W/C_R);
+  L_D = V_FWD + V_RCW * (C_W/C_R);
+
+  V_WS[E_FrontRight] = pow((L_B * L_B + L_C * L_C), 0.5);
+  V_WS[E_FrontLeft]  = pow((L_B * L_B + L_D * L_D), 0.5);
+  V_WS[E_RearLeft]   = pow((L_A * L_A + L_D * L_D), 0.5);
+  V_WS[E_RearRight]  = pow((L_A * L_A + L_C * L_C), 0.5);
+
+  V_WA[E_FrontRight] = atan2(L_B, L_C) *180/C_PI;
+  V_WA[E_FrontLeft]  = atan2(L_B, L_D) *180/C_PI;
+  V_WA[E_RearLeft]   = atan2(L_A, L_D) *180/C_PI;
+  V_WA[E_RearRight]  = atan2(L_A, L_C) *180/C_PI;
+
+  L_Max = V_WS[E_FrontRight];
+
+  if (V_WS[E_FrontLeft] > L_Max) {
+    L_Max = V_WS[E_FrontLeft];
+  }
+ if (V_WS[E_RearLeft] > L_Max) {
+   L_Max = V_WS[E_RearLeft];
+  }
+   if (V_WS[E_RearRight] > L_Max) {
+     L_Max = V_WS[E_RearRight];
+  }
+  if (L_Max > 1) {
+      V_WS[E_FrontRight] /= L_Max;
+      V_WS[E_FrontLeft] /= L_Max;
+      V_WS[E_RearLeft] /= L_Max;
+      V_WS[E_RearRight] /= L_Max;
+  }
+
+  L_Gain = 0.1;
+  if (c_joyStick.GetRawAxis(3) > L_Gain)
+    {
+    L_Gain = c_joyStick.GetRawAxis(3);
+    }
+
+  V_WS[E_FrontRight] *= (K_WheelMaxSpeed * L_Gain);
+  V_WS[E_FrontLeft]  *= (K_WheelMaxSpeed * L_Gain);
+  V_WS[E_RearLeft]   *= (K_WheelMaxSpeed * L_Gain);
+  V_WS[E_RearRight]  *= (K_WheelMaxSpeed * L_Gain);
+
+  for (index = E_FrontLeft;
+       index < E_RobotCornerSz;
+       index = T_RobotCorner(int(index) + 1))
+  {
+    L_WA_FWD = DtrmnEncoderRelativeToCmnd(V_WA[index],
+                                          V_WheelAngleFwd[index]);
+
+    L_WA_FWD_Delta = fabs(V_WA[index] - L_WA_FWD);
+
+    L_WA_REV = DtrmnEncoderRelativeToCmnd(V_WA[index],
+                                          V_WheelAngleRev[index]);
+
+    L_WA_REV_Delta = fabs(V_WA[index] - L_WA_REV);
+
+    if (L_WA_FWD_Delta <= L_WA_REV_Delta)
+      {
+        V_WheelAngleArb[index] = L_WA_FWD;
+      }
+    else
+      {
+        V_WheelAngleArb[index] = L_WA_REV;
+        V_WS[index] *= (-1); // Need to flip sign of drive wheel to acount for reverse direction
+      }
+  }
+
   //8.31 : 1
   //11.9 m/s
 
@@ -385,6 +422,89 @@ void Robot::TeleopPeriodic()
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
+    if(c_joyStick2.GetRawButton(4))
+    {
+      m_intake.Set(ControlMode::PercentOutput, 0.5);
+    } else {
+      m_intake.Set(ControlMode::PercentOutput, 0);
+    }
+    
+        //Shooter mech
+    T_RoboShooter dex;
+    V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
+    V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
+
+    frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
+    frc::SmartDashboard::PutNumber("Bottom Speed", V_ShooterSpeedCurr[E_BottomShooter]);
+
+    
+    //Shooter mech controls
+    V_ShooterSpeedCmnd[E_TopShooter]    = c_joyStick2.GetRawAxis(1);
+    V_ShooterSpeedCmnd[E_BottomShooter] = c_joyStick2.GetRawAxis(5);
+
+
+    
+    if (c_joyStick2.GetRawButton(1) == true)
+    {
+        V_ShooterSpeedCmnd[E_TopShooter] = -.75;
+        V_ShooterSpeedCmnd[E_BottomShooter] = -1.0;
+    }
+
+    // if (c_joyStick2.GetRawButton(2) == true)
+    // {
+    //     V_ShooterRequest[1] = true;
+    // }
+
+    // if (c_joyStick2.GetRawButton(3) == true)
+    // {
+    //     V_ShooterRequest[1] = false; V_ShooterRequest[2] = false;
+    // }
+
+
+    //Shooter mech logic
+    // for (dex = E_TopShooter;
+    //      dex < E_RoboShooter;
+    //      dex = T_RoboShooter(int(dex) + 1))
+    // {
+    //     V_ShooterSpeedCmnd[dex] = Control_PID(V_ShooterSpeedDesired[dex],
+    //                                           V_ShooterSpeedCurr[dex],
+    //                                           &V_ShooterSpeedError[dex],
+    //                                           &V_ShooterSpeedIntegral[dex],
+    //                                           0.0069, // P Gx
+    //                                           0.000069, // I Gx
+    //                                           0.0, // D Gx
+    //                                           0.069, // P UL
+    //                                          -0.069, // P LL
+    //                                           0.0069, // I UL
+    //                                          -0.0069, // I LL
+    //                                           0.0, // D UL
+    //                                          -0.0, // D LL
+    //                                           0.69, // Max upper
+    //                                          -0.69); // Max lower
+    // }
+
+
+    //Shooter mech w/ vision assist
+    // if (V_ShooterRequest[1] == true)
+    // {
+    //     for (dex = E_TopShooter;
+    //          dex < E_RoboShooter;
+    //          dex = T_RoboShooter(int(dex) + 1))
+    //     {
+    //          V_ShooterSpeedDesired[dex] = (distanceTarget * sqrt(-9.807 / (2 * cos(C_PI / 4) * cos(C_PI / 4) * (1.56845 - (distanceTarget * tan(C_PI / 4))))));
+    //          V_ShooterRequest[2] = true;
+    //     }
+    // }
+
+    // if (V_ShooterRequest[2] == true)
+    // {
+    //     //starrt loading balls
+    // }
+
+
+
+    m_topShooterMotor.Set(V_ShooterSpeedCmnd[E_TopShooter]);
+    m_bottomShooterMotor.Set(V_ShooterSpeedCmnd[E_BottomShooter]);  
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
@@ -409,6 +529,12 @@ void Robot::TeleopPeriodic()
     frc::Wait(0.01);
 }
 
+
+/******************************************************************************
+ * Function:     TestPeriodic
+ *
+ * Description:  Called druing the test phase initiated on the driver station.
+ ******************************************************************************/
 void Robot::TestPeriodic() {}
 
 #ifndef RUNNING_FRC_TESTS

@@ -1,14 +1,16 @@
 #include "Const.hpp"
 
+/******************************************************************************
+ * Function:     LookUp1D_Table
+ *
+ * Description:  Single dimension lookup table.
+ ******************************************************************************/
 double LookUp1D_Table(const double *L_X_Axis,
                       const double *L_TableData1D,
                             int     L_AxisSize,
                             int     L_CalArraySize,
                             double  L_Input)
   {
-
-
-
   int    L_Index        = 0;
   double L_LookupX1     = 0.0;
   double L_LookupX2     = 0.0;
@@ -75,7 +77,13 @@ double LookUp1D_Table(const double *L_X_Axis,
   return 0;
   }
 
-  double DesiredSpeed(double L_JoystickAxis)
+/******************************************************************************
+ * Function:     DesiredSpeed
+ *
+ * Description:  Function to scale the joystick input.
+ *               Primarily used for smooth debouncing.
+ ******************************************************************************/
+double DesiredSpeed(double L_JoystickAxis)
   {
   double L_DesiredDriveSpeed = 0.0;
   int L_AxisSize = (int)(sizeof(K_DesiredDriveSpeedAxis) / sizeof(K_DesiredDriveSpeed[0]));
