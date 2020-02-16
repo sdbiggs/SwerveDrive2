@@ -19,6 +19,7 @@
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
+#include "SwerveDrive.hpp"
 
 double V_FWD;
 double V_STR;
@@ -52,6 +53,7 @@ double V_STR;
 double V_RCW;
 double V_GAIN;
 
+bool rotatemode;
 
 double V_ShooterSpeedCurr[E_RoboShooter];
 double V_ShooterSpeedCmnd[E_RoboShooter];
