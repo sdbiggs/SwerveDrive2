@@ -21,5 +21,6 @@
     "complex": "cpp",
     "cstdlib": "cpp",
     "chrono": "cpp"
-  }
+  },
+  "C_Cpp.default.configurationProvider": "vscode-wpilib"
 }

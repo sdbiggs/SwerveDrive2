@@ -4,6 +4,7 @@
  * This code runs the 2020 robot which is capable of the following:
  * - Swerve Drive (beta 02/10/2020)
  * - Shooting balls (beta 02/15/2020)
+ *   - Open loop launching.  First launched on 2/15!
  *
  * */
 
