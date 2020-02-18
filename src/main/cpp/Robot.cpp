@@ -46,6 +46,11 @@ bool   V_RobotInit;
 
 double V_WheelAngleCase[E_RobotCornerSz];  // For trouble shooting where the angle is coming from
 
+bool rotateMode; 
+double desiredAngle;
+double rotateDeBounce;
+double rotateErrorCalc;
+double rotateErrorIntegral;
 
 frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision;
@@ -196,6 +201,7 @@ void Robot::TeleopInit()
 }
 
 
+
 /******************************************************************************
  * Function:     TeleopPeriodic
  *
@@ -241,6 +247,77 @@ void Robot::TeleopPeriodic()
   V_FWD = DesiredSpeed(V_FWD);
   V_STR = DesiredSpeed(V_STR);
   V_RCW = DesiredSpeed(V_RCW);
+
+
+  //button that changes wheel angle to +-90
+ 
+
+  //determining the faster route
+  // if (gyro_yawangledegrees >= 0) {
+  //   desiredAngle = 90;
+  // }
+  // else {
+  //   desiredAngle = -90;
+  // }
+
+
+
+ //turning rotatemode on/off & setting desired angle
+  if (c_joyStick.GetRawButton(4)) {
+    rotateMode = true;
+    desiredAngle = 90;
+  }
+  else if (c_joyStick.GetRawButton(3)) {
+    rotateMode = true;
+    desiredAngle = 0;
+  }
+  else if (c_joyStick.GetRawButton(1)) {
+    rotateMode = true;
+    desiredAngle = 112.5;
+  }
+
+
+//error calculation section
+  double errorCalc = desiredAngle - gyro_yawangledegrees;
+
+
+  if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce <= 0.25) {
+    rotateMode = true;
+    rotateDeBounce += 0.01;
+  }
+  else if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce >= 0.25) {
+    rotateMode = false;
+    rotateDeBounce = 0;
+  }
+
+  if (rotateMode == true) {
+      V_RCW = Control_PID(desiredAngle,
+                                            gyro_yawangledegrees,
+                                            &rotateErrorCalc,
+                                            &rotateErrorIntegral,
+                                            0.08,   // P Gx 0.0038 0.005
+                                            0.0007, // I Gx 0.0029  0.001
+                                            0, // D Gx
+                                            0.9, // P UL
+                                            -0.9, // P LL
+                                            0.5, // I UL
+                                            -0.5, // I LL
+                                            0.2, // D UL
+                                            -0.2, // D LL
+                                            1.0, // Max upper
+                                            -1.0);
+
+    // if (errorCalc > 0) {
+    // V_RCW = 0.8;
+    
+    // }
+    // else if (errorCalc < 0) {
+    // V_RCW = -0.8;
+    // }
+  }
+
+
+
 
   L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
   V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
@@ -376,6 +453,13 @@ void Robot::TeleopPeriodic()
                                             -1.0);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
+
+
+
+
+    frc::SmartDashboard::PutBoolean("rotateMode",rotateMode);
+    frc::SmartDashboard::PutNumber("errorCalc",errorCalc);
+    frc::SmartDashboard::PutNumber("desiredAngle",desiredAngle);
 
     frc::SmartDashboard::PutNumber("FL Case",(V_WheelAngleCase[E_FrontLeft]));
     frc::SmartDashboard::PutNumber("FR Case",(V_WheelAngleCase[E_FrontRight]));
