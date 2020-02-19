@@ -48,6 +48,11 @@ class Robot : public frc::TimedRobot {
 
   VictorSPX m_intake {12};
 
+  
+  rev::CANPIDController m_topShooterpid = m_topShooterMotor.GetPIDController();
+  rev::CANPIDController m_bottomShooterpid = m_bottomShooterMotor.GetPIDController();
+
+
   rev::CANEncoder m_encoderFrontLeftSteer  = m_frontLeftSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderFrontLeftDrive  = m_frontLeftDriveMotor.GetEncoder();
   rev::CANEncoder m_encoderFrontRightSteer = m_frontRightSteerMotor.GetEncoder();
@@ -61,6 +66,9 @@ class Robot : public frc::TimedRobot {
 
   frc::Joystick c_joyStick{0};
   frc::Joystick c_joyStick2{1};
+
+  double Upper_P_Gx = 0, Upper_I_Gx = 0, Upper_D_Gx = 0, Upper_I_Zone = 0, Upper_FF = 0, Upper_Max = 1, Upper_Min = -1;
+  double Lower_P_Gx = 0, Lower_I_Gx = 0, Lower_D_Gx = 0, Lower_I_Zone = 0, Lower_FF = 0, Lower_Max = 1, Lower_Min = -1;
 
  private:
   frc::SendableChooser<std::string> m_chooser;

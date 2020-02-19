@@ -43,8 +43,6 @@ void Read_Encoders(bool            L_RobotInit,
   {
   T_RobotCorner index;
 
-T_RobotCorner index;
-
   if (L_RobotInit == true)
     {
     V_WheelAngleRaw[E_FrontLeft]  = a_encoderFrontLeftSteerVoltage * 72 - K_WheelOffsetAngle[E_FrontLeft];
@@ -113,39 +111,6 @@ T_RobotCorner index;
   V_WheelVelocity[E_FrontRight] = ((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
   V_WheelVelocity[E_RearRight]  = ((m_encoderRearRightDrive.GetVelocity()  / reductionRatio) / 60) * WheelCircufrence;
   V_WheelVelocity[E_RearLeft]   = ((m_encoderRearLeftDrive.GetVelocity()   / reductionRatio) / 60) * WheelCircufrence;
-  }
-
-/******************************************************************************
- * Function:     DtrmnEncoderRelativeToCmnd
- *
- * Description:  tbd
- ******************************************************************************/
-double DtrmnEncoderRelativeToCmnd(double          L_JoystickCmnd,
-                                  double          L_EncoderReading)
-  {
-    double L_Opt1;
-    double L_Opt2;
-    double L_Opt3;
-    double L_Output;
-
-    L_Opt1 = fabs(L_JoystickCmnd - L_EncoderReading);
-    L_Opt2 = fabs(L_JoystickCmnd - (L_EncoderReading + 360));
-    L_Opt3 = fabs(L_JoystickCmnd - (L_EncoderReading - 360));
-
-    if ((L_Opt1 < L_Opt2) && (L_Opt1 < L_Opt3))
-      {
-        L_Output = L_EncoderReading;
-      }
-    else if ((L_Opt2 < L_Opt1) && (L_Opt2 < L_Opt3))
-      {
-        L_Output = L_EncoderReading + 360;
-      }
-    else
-      {
-        L_Output = L_EncoderReading - 360;
-      }
-      
-    return (L_Output);
   }
 
 /******************************************************************************
