@@ -1,25 +1,22 @@
-/*----------------------------------------------------------------------------*/
-/* Copyright (c) 2017-2018 FIRST. All Rights Reserved.                        */
-/* Open Source Software - may be modified and shared by FRC teams. The code   */
-/* must be accompanied by the FIRST BSD license file in the root directory of */
-/* the project.                                                               */
-/*----------------------------------------------------------------------------*/
-
 #pragma once
 
 #include <string>
 
-#include <frc/TimedRobot.h>
-#include <frc/smartdashboard/SendableChooser.h>
-#include <frc/Joystick.h>
-#include <frc/drive/DifferentialDrive.h>
-#include "rev/CANSparkMax.h"
 #include <frc/AnalogInput.h>
+#include <frc/drive/DifferentialDrive.h>
+#include <frc/Joystick.h>
+#include <frc/smartdashboard/SendableChooser.h>
+#include <frc/TimedRobot.h>
+#include <frc/PowerDistributionPanel.h>
+
 #include <networktables/NetworkTableInstance.h>
 #include <networktables/NetworkTableEntry.h>
-#include "Const.hpp"
+
 #include "ctre/Phoenix.h"
+#include "rev/CANSparkMax.h"
  
+#include "Const.hpp"
+
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -66,6 +63,8 @@ class Robot : public frc::TimedRobot {
 
   frc::Joystick c_joyStick{0};
   frc::Joystick c_joyStick2{1};
+
+  PowerDistributionPanel PDP {0};
 
   double Upper_P_Gx = 0, Upper_I_Gx = 0, Upper_D_Gx = 0, Upper_I_Zone = 0, Upper_FF = 0, Upper_Max = 1, Upper_Min = -1;
   double Lower_P_Gx = 0, Lower_I_Gx = 0, Lower_D_Gx = 0, Lower_I_Zone = 0, Lower_FF = 0, Lower_Max = 1, Lower_Min = -1;
