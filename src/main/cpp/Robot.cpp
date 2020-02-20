@@ -95,6 +95,13 @@ double I_UL;
 double I_LL;
 double SpeedRecommend;
 
+double PDP_Current_UpperShooter = 0;
+double PDP_Current_LowerShooter = 0;
+double PDP_Current_UpperShooter_last = 0;
+double PDP_Current_LowerShooter_last = 0;
+
+double BallsShot = 0;
+
 /******************************************************************************
  * Function:     visionInit
  *
@@ -312,27 +319,13 @@ void Robot::RobotInit() {
 
 void Robot::RobotPeriodic() {}
 
-
 /******************************************************************************
  * Function:     AutonomousInit
  *
  * Description:  Function called at init while in autonomous.  This is where we
  *               should zero out anything that we need to before autonomous mode.
  ******************************************************************************/
-void Robot::AutonomousInit()
-  {
-//  m_autoSelected = m_chooser.GetSelected();
-//  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-//  //     kAutoNameDefault);
-//  std::cout << "Auto selected: " << m_autoSelected << std::endl;
-//
-//  if (m_autoSelected == kAutoNameCustom) {
-//    // Custom Auto goes here
-//  } else {
-//    // Default Auto goes here
-//  }
-  }
-
+void Robot::AutonomousInit(){}
 
 /******************************************************************************
  * Function:     AutonomousPeriodic
@@ -340,14 +333,7 @@ void Robot::AutonomousInit()
  * Description:  Function called periodically in autonomous.  This is where we
  *               should place our primary autonomous control code.
  ******************************************************************************/
-void Robot::AutonomousPeriodic()
-  {
-//  if (m_autoSelected == kAutoNameCustom) {
-//    // Custom Auto goes here
-//  } else {
-//    // Default Auto goes here
-//  }
-  }
+void Robot::AutonomousPeriodic(){}
 
 
 /******************************************************************************
@@ -399,6 +385,8 @@ void Robot::TeleopInit()
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
 
+  BallsShot = 0;
+
   GyroTeleInit();
 }
 
@@ -444,6 +432,17 @@ void Robot::TeleopPeriodic()
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
   
+  //PDP top shooter port 13
+  //PDP bottom shooter port 12
+  PDP_Current_UpperShooter = PDP.getCurrent(13);
+  PDP_Current_LowerShooter = PDP.getCurrent(12);
+  if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
+  {
+    BallsShot += 1;
+  }
+  PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
+  PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
+
 
   /* Let's place a deadband around the joystick readings */
   V_FWD = DesiredSpeed(V_FWD);
@@ -532,10 +531,10 @@ void Robot::TeleopPeriodic()
     L_Max = V_WS[E_FrontLeft];
   }
  if (V_WS[E_RearLeft] > L_Max) {
-   L_Max = V_WS[E_RearLeft];
+    L_Max = V_WS[E_RearLeft];
   }
-   if (V_WS[E_RearRight] > L_Max) {
-     L_Max = V_WS[E_RearRight];
+  if (V_WS[E_RearRight] > L_Max) {
+    L_Max = V_WS[E_RearRight];
   }
   if (L_Max > 1) {
       V_WS[E_FrontRight] /= L_Max;
@@ -641,9 +640,6 @@ void Robot::TeleopPeriodic()
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
-
-
-
     frc::SmartDashboard::PutBoolean("rotateMode",rotateMode);
     frc::SmartDashboard::PutNumber("errorCalc",errorCalc);
     frc::SmartDashboard::PutNumber("desiredAngle",desiredAngle);
@@ -685,12 +681,12 @@ void Robot::TeleopPeriodic()
 
     if(c_joyStick2.GetRawButton(4))
     {
-      m_intake.Set(ControlMode::PercentOutput, 0.9);
+    	m_intake.Set(ControlMode::PercentOutput, 0.9);
     } else {
-      m_intake.Set(ControlMode::PercentOutput, 0);
+    	m_intake.Set(ControlMode::PercentOutput, 0);
     }
     
-        //Shooter mech
+    //Shooter mech
     T_RoboShooter dex;
     V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
     V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
@@ -785,8 +781,8 @@ void Robot::TeleopPeriodic()
     double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
     double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
 
-    
 
+    
     // m_topShooterMotor.Set(V_ShooterSpeedCmnd[E_TopShooter]);
     // m_bottomShooterMotor.Set(V_ShooterSpeedCmnd[E_BottomShooter]);  
 
@@ -828,7 +824,7 @@ void Robot::TeleopPeriodic()
     // m_rearLeftDriveMotor.Set(0);
     // m_rearRightDriveMotor.Set(0);
 
-    m_frontLeftSteerMotor.Set (V_WheelAngleCmnd[E_FrontLeft] * (-1));
+    m_frontLeftSteerMotor.Set(V_WheelAngleCmnd[E_FrontLeft] * (-1));
     m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (-1));
     m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (-1));
     m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (-1));
@@ -847,7 +843,7 @@ void Robot::TeleopPeriodic()
     distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (deg2rad));
     distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-deg2rad));
 
-frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
+	frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
     //Finds robot's distance from target's center view.
     distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * deg2rad);
     distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad); 
@@ -885,7 +881,7 @@ frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
         visionRun(targetYaw0, -distanceFromBallCenter, ball, vision0, ledLight);
     }
 
-    frc::Wait(0.01);
+    frc::Wait(C_ExeTime);
 }
 
 
