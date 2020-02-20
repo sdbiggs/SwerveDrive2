@@ -449,6 +449,8 @@ void Robot::TeleopPeriodic()
   V_FWD = DesiredSpeed(V_FWD);
   V_STR = DesiredSpeed(V_STR);
   V_RCW = DesiredSpeed(V_RCW);
+
+
  //turning rotatemode on/off & setting desired angle
   if (c_joyStick.GetRawButton(4)) {
     rotateMode = true;
@@ -460,7 +462,7 @@ void Robot::TeleopPeriodic()
   }
   else if (c_joyStick.GetRawButton(1)) {
     rotateMode = true;
-    desiredAngle = 112.5;
+    desiredAngle = 67.5;
   }
 
 
@@ -493,14 +495,6 @@ void Robot::TeleopPeriodic()
                                             -0.2, // D LL
                                             1.0, // Max upper
                                             -1.0);
-
-    // if (errorCalc > 0) {
-    // V_RCW = 0.8;
-    
-    // }
-    // else if (errorCalc < 0) {
-    // V_RCW = -0.8;
-    // }
   }
 
 
@@ -725,6 +719,7 @@ void Robot::TeleopPeriodic()
     // {
     //     V_ShooterRequest[1] = false; V_ShooterRequest[2] = false;
     // }
+    //if you use this please change the first button thank
 
 
     //Shooter mech logic
