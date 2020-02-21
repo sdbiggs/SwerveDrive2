@@ -1,5 +1,4 @@
 #include <string>
 
-extern std::string colorString;
-
 void ColorSensor (bool init);
+extern std::string colorString;

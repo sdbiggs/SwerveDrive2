@@ -321,7 +321,7 @@ void Robot::RobotPeriodic() {}
 
 /******************************************************************************
  * Function:     AutonomousInit
- *
+ *S
  * Description:  Function called at init while in autonomous.  This is where we
  *               should zero out anything that we need to before autonomous mode.
  ******************************************************************************/
@@ -414,6 +414,7 @@ void Robot::TeleopPeriodic()
   ColorSensor(false);
   Gyro();
 
+
   Read_Encoders(V_RobotInit,
                 a_encoderFrontLeftSteer.GetVoltage(),
                 a_encoderFrontRightSteer.GetVoltage(),
@@ -434,8 +435,8 @@ void Robot::TeleopPeriodic()
   
   //PDP top shooter port 13
   //PDP bottom shooter port 12
-  PDP_Current_UpperShooter = PDP.getCurrent(13);
-  PDP_Current_LowerShooter = PDP.getCurrent(12);
+  PDP_Current_UpperShooter = PDP.GetCurrent(13);
+  PDP_Current_LowerShooter = PDP.GetCurrent(12);
   if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
   {
     BallsShot += 1;
@@ -715,7 +716,7 @@ void Robot::TeleopPeriodic()
     // {
     //     V_ShooterRequest[1] = false; V_ShooterRequest[2] = false;
     // }
-    //if you use this please change the first button thank
+    //if you use this please change the first & second button thank
 
 
     //Shooter mech logic
