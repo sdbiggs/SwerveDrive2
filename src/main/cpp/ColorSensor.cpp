@@ -1,18 +1,22 @@
-#include "rev/ColorSensorV3.h"
-#include "rev/ColorMatch.h"
+// #include "rev/ColorSensorV3.h"
+// #include "rev/ColorMatch.h"
 #include "frc/smartdashboard/SmartDashboard.h"
 #include "ColorSensor.hpp"
+#include "Enums.hpp"
 
 static constexpr auto i2cPort = frc::I2C::Port::kOnboard;
 std::string colorString;
 rev::ColorSensorV3 m_colorSensor{i2cPort};
 rev::ColorMatch m_colorMatcher;
-static constexpr frc::Color kBlueTarget = frc::Color(0.143, 0.427, 0.429);
-static constexpr frc::Color kGreenTarget = frc::Color(0.197, 0.561, 0.240);
-static constexpr frc::Color kRedTarget = frc::Color(0.561, 0.232, 0.114);
-static constexpr frc::Color kYellowTarget = frc::Color(0.361, 0.524, 0.113);
+// static constexpr frc::Color kBlueTarget = frc::Color(0.143, 0.427, 0.429);
+// static constexpr frc::Color kGreenTarget = frc::Color(0.197, 0.561, 0.240);
+// static constexpr frc::Color kRedTarget = frc::Color(0.561, 0.232, 0.114);
+// static constexpr frc::Color kYellowTarget = frc::Color(0.361, 0.524, 0.113);
 
-void ColorSensor(bool init) {
+T_WheelOfFortuneColor ColorSensor(bool init)
+  {
+    T_WheelOfFortuneColor L_WheelOfFortuneColor;
+
     m_colorMatcher.AddColorMatch(kBlueTarget);
     m_colorMatcher.AddColorMatch(kGreenTarget);
     m_colorMatcher.AddColorMatch(kRedTarget);
@@ -32,17 +36,23 @@ void ColorSensor(bool init) {
     if (proximity_1 > 450) {
         if (matchedColor == kBlueTarget) {
                 colorString = "Blue";
+                L_WheelOfFortuneColor = E_Blue;
             } else if (matchedColor == kRedTarget) {
                 colorString = "Red";
+                L_WheelOfFortuneColor = E_Red;
             } else if (matchedColor == kGreenTarget) {
                 colorString = "Green";
+                L_WheelOfFortuneColor = E_Green;
             } else if (matchedColor == kYellowTarget) {
                 colorString = "Yellow";
+                L_WheelOfFortuneColor = E_Yellow;
             } else {
                 colorString = "Unknown";
+                L_WheelOfFortuneColor = E_Unknown;
             } 
         } else {
             colorString = "Too far away";
+            L_WheelOfFortuneColor = E_Unknown;
         } 
 
     frc::SmartDashboard::PutNumber("Proximity", proximity_1);
@@ -52,4 +62,6 @@ void ColorSensor(bool init) {
     frc::SmartDashboard::PutNumber("Blue", detectedColor.blue);
     frc::SmartDashboard::PutNumber("Confidence", confidence);
     frc::SmartDashboard::PutString("Detected Color", colorString);
+
+    return (L_WheelOfFortuneColor);
 }

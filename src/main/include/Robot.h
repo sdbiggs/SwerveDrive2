@@ -48,7 +48,6 @@ class Robot : public frc::TimedRobot {
 
   VictorSPX m_intake {12};
   VictorSPX m_fortuneWheel {13};
-
   
   rev::CANPIDController m_topShooterpid = m_topShooterMotor.GetPIDController();
   rev::CANPIDController m_bottomShooterpid = m_bottomShooterMotor.GetPIDController();

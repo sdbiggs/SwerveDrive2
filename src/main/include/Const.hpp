@@ -15,6 +15,8 @@ const double C_PI = 3.14159265358979;
 const double K_InitAngle = 1.4; // This is the absolute angle that all of the wheels need to be sitting at before allowing the robot to exit init
 const double K_WheelMaxSpeed = 200; // This is the max allowed speed for the wheels
 
+const double K_WheelOfFortunePwr = 0.1; // This is the constant power command sent to the wheel of fortune spinner
+
 const double K_WheelOffsetAngle[E_RobotCornerSz] = {75.234367,    // E_FrontLeft
                                                     90.615225,    // E_FrontRight 152  104.6
                                                      12.041014,    // E_RearLeft

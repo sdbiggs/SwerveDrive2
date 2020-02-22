@@ -20,6 +20,8 @@
 #include "Gyro.hpp"
 #include "Lookup.hpp"
 
+T_WheelOfFortuneColor V_ColorWheelColor;
+
 double V_FWD;
 double V_STR;
 double V_RCW;
@@ -127,7 +129,7 @@ void visionOff(std::shared_ptr<NetworkTable> ntTable0,
     ntTable0->PutBoolean("driverMode", true);
     inst.Flush();
     visionRequest = false;
-    visionStart[1] = false; visionStart[2] = false;
+    visionStart[0] = false; visionStart[1] = false;
     activeVisionAngle0 = false;
     activeVisionDistance0 = false;
 }
@@ -682,7 +684,6 @@ void Robot::TeleopPeriodic()
     }
     
     //Shooter mech
-    T_RoboShooter dex;
     V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
     V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
 
@@ -848,13 +849,13 @@ void Robot::TeleopPeriodic()
     if(c_joyStick.GetRawButton(1) == true)
      {
          visionInit(vision0, ledLight);
-         visionStart[1] = true;
+         visionStart[0] = true;
      }
 
      if(c_joyStick.GetRawButton(2) == true)
      {
          visionInit(vision0, ledLight);
-         visionStart[2] = true;
+         visionStart[1] = true;
      }
 
      if(c_joyStick.GetRawButton(3) == true)
@@ -864,15 +865,15 @@ void Robot::TeleopPeriodic()
 
      if(c_joyStick.GetRawButton(4) == true)
      {
-        visionStart[1] = false; visionStart[2] = false;
+        visionStart[0] = false; visionStart[1] = false;
      }
 
-     if(visionStart[1] == true && visionStart[2] == false)
+     if(visionStart[0] == true && visionStart[1] == false)
      {
         visionRun(targetYaw0, distanceFromTargetCenter, high, vision0, ledLight);
      }
 
-    if(visionStart[2] == true && visionStart[1] == false)
+    if(visionStart[1] == true && visionStart[0] == false)
     {
         visionRun(targetYaw0, -distanceFromBallCenter, ball, vision0, ledLight);
     }
