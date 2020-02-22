@@ -11,12 +11,14 @@
 double desiredColor;
 double spinNumberActual;
 // double spinNumberDesired = frc::SmartDashboard::GetNumber("Wheel Spin Number", 0);
-double spinNumberDesired;
+// double spinNumberDesired;
 // m_fortuneWheel.Set(ControlMode::PercentOutput, 0.1);
 
 // std::string gameData;
 // std::string gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 std::string gameData;
+
+//make sure L_Blue etc is actually connected to a color
 
 
 /******************************************************************************
@@ -25,34 +27,52 @@ std::string gameData;
  * Description:  This function controls the control panel, aka Wheel of Fortune.
  ******************************************************************************/
 double WheelOfFortune(T_WheelOfFortuneColor L_WheelOfFortuneColor,
-                      double                L_SpinNumberDesired,
                       bool                  L_AutoControl,
                       bool                  L_ManualFwd,
                       bool                  L_ManualRev)
   {
   double L_FortuneWheelPower = 0;
+  double L_SpinNumberDesired;
 
-// L_AutoControl = c_joyStick2.GetRawButton(2);
-// L_ManualFwd = c_joyStick2.GetRawButton(1)
-  spinNumberDesired = frc::SmartDashboard::GetNumber("Wheel Spin Number", 0);
+  L_SpinNumberDesired = frc::SmartDashboard::GetNumber("Wheel Spin Number", 0);
   gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
 
-  // if (L_ManualFwd == true)
-  //   {
-  //   if(detectedColor == kBlueTarget && spinNumberActual > spinNumberDesired)
-  //     {
-  //     spinNumberActual = spinNumberActual + 1/2;
-  //     L_FortuneWheelPower = 0.1;
-  //     }
-  //   else if(spinNumberActual == spinNumberDesired)
-  //     {
-  //     L_FortuneWheelPower = 0.0;
-  //     }
-  //   }
-  // else
-  //   {
-  //   L_FortuneWheelPower = 0.0;
-  //   }
+
+
+if (L_ManualFwd == true && L_AutoControl == false && L_ManualRev == false) {
+    L_FortuneWheelPower = K_WheelOfFortunePwr;
+}
+else if (L_ManualRev == true && L_ManualRev == false && L_AutoControl == false) {
+    L_FortuneWheelPower = -K_WheelOfFortunePwr;
+}
+else if (L_ManualFwd == false && L_AutoControl == false && L_ManualRev == false) {
+    L_FortuneWheelPower = 0.0;
+}
+
+
+
+
+if (L_AutoControl == true) {
+    if (L_WheelOfFortuneColor == E_Blue && spinNumberActual > L_SpinNumberDesired)
+      {
+      spinNumberActual = spinNumberActual + 1/2;
+      L_FortuneWheelPower = 0.1;
+      }
+    else if(spinNumberActual == L_SpinNumberDesired)
+      {
+      L_FortuneWheelPower = 0.0;
+      }
+    else {
+   L_FortuneWheelPower = K_WheelOfFortunePwr;
+    }
+}
+else
+{
+L_FortuneWheelPower = 0.0;
+}
+
+
+
 
   if(L_AutoControl == true)
     {
@@ -110,15 +130,14 @@ double WheelOfFortune(T_WheelOfFortuneColor L_WheelOfFortuneColor,
       L_FortuneWheelPower = 0.0;
       }
     }
-    else if (L_ManualFwd == true)
-    {
-      L_FortuneWheelPower = K_WheelOfFortunePwr;
-    }
-    else if (L_ManualRev == true)
-    {
-      L_FortuneWheelPower = -K_WheelOfFortunePwr;
-    }
+    // else if (L_ManualFwd == true)
+    // {
+    //   L_FortuneWheelPower = K_WheelOfFortunePwr;
+    // }
+    // else if (L_ManualRev == true)
+    // {
+    //   L_FortuneWheelPower = -K_WheelOfFortunePwr;
+    // }
 
     return (L_FortuneWheelPower);
   }
-

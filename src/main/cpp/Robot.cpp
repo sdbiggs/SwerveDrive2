@@ -19,6 +19,7 @@
 #include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
+#include "WheelOfFortune.hpp"
 
 T_WheelOfFortuneColor V_ColorWheelColor;
 
@@ -412,9 +413,16 @@ void Robot::TeleopPeriodic()
   double L_WA_REV;
   double L_WA_REV_Delta;
   T_RobotCorner index;
+  double L_FortuneMotor;
+  T_WheelOfFortuneColor L_Color;
 
-  ColorSensor(false);
+  L_Color = ColorSensor(false);
   Gyro();
+  L_FortuneMotor = WheelOfFortune (L_Color,
+                     c_joyStick2.GetRawButton(2),
+                     c_joyStick2.GetRawButton(1),
+                     c_joyStick2.GetRawButton(3));                   
+  
 
 
   Read_Encoders(V_RobotInit,
@@ -810,6 +818,8 @@ void Robot::TeleopPeriodic()
 
     m_topShooterpid.SetReference(V_ShooterSpeedDesired[E_TopShooter], rev::ControlType::kVelocity);
     m_bottomShooterpid.SetReference(V_ShooterSpeedDesired[E_BottomShooter], rev::ControlType::kVelocity);
+
+    m_fortuneWheel.Set(ControlMode::PercentOutput, L_FortuneMotor);
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
