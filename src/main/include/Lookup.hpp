@@ -15,4 +15,8 @@ extern double LookUp1D_Table(const double *L_X_Axis,
 
 extern double DesiredSpeed(double L_JoystickAxis);
 
+extern   double RampTo(
+            double  L_Final,
+            double  L_Current,
+            double  L_Slope);
 #endif /* SRC_ROBORIO2018_LOOKUP_HPP_ */

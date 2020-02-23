@@ -97,3 +97,45 @@ double DesiredSpeed(double L_JoystickAxis)
 
   return L_DesiredDriveSpeed;
   }
+
+
+  double RampTo(
+      double  L_Final,
+      double  L_Current,
+      double  L_Slope) {
+
+      // if (V_ShooterSpeedDesired[E_TopShooter] = 0) {
+      //   L_Final = V_ShooterSpeedDesired[E_TopShooter];
+      //   L_Current = V_ShooterSpeedCurr[E_TopShooter];
+      //   L_Increment = 5
+      // }
+
+      // if (V_ShooterSpeedDesired[E_BottomShooter] = 0) {
+      //   L_Final = V_ShooterSpeedDesired[E_BottomShooter];
+      //   L_Current = V_ShooterSpeedCurr[E_BottomShooter];
+      //   L_Increment = 5
+      // }
+
+
+
+      // L_Slope = (L_Final / L_Increment);
+
+    
+      if (L_Final - L_Current > 0) {
+        L_Current += L_Slope;
+        if (L_Current >= L_Final) {
+          L_Current = L_Final;
+        }
+      }
+      else if (L_Final - L_Current < 0) {
+        L_Current -= L_Slope;
+        if (L_Current <= L_Final) {
+          L_Current = L_Final;
+        }
+      }
+      else {
+        L_Current = L_Final;
+      }
+
+      return (L_Current);
+    }

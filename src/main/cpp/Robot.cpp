@@ -45,6 +45,7 @@ double V_WheelSpeedCmnd[E_RobotCornerSz];
 double V_WheelSpeedError[E_RobotCornerSz];
 double V_WheelSpeedIntergral[E_RobotCornerSz];
 
+
 bool   V_RobotInit;
 
 double V_WheelAngleCase[E_RobotCornerSz];  // For trouble shooting where the angle is coming from
@@ -684,6 +685,8 @@ void Robot::TeleopPeriodic()
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
+
+
     if(c_joyStick2.GetRawButton(4))
     {
     	m_intake.Set(ControlMode::PercentOutput, 0.9);
@@ -709,6 +712,15 @@ void Robot::TeleopPeriodic()
     V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
     V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
 
+    V_ShooterSpeedDesired[E_TopShooter] =RampTo(
+            frc::SmartDashboard::GetNumber("Speed Desired Top", 0),
+            V_ShooterSpeedDesired[E_TopShooter],
+            30);
+    
+    V_ShooterSpeedDesired[E_BottomShooter] =RampTo(
+            frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0),
+            V_ShooterSpeedDesired[E_BottomShooter],
+            30);
     
     // if (c_joyStick2.GetRawButton(1) == true)
     // {
