@@ -20,6 +20,8 @@
  
 #include "Const.hpp"
 
+#include <frc/DoubleSolenoid.h>
+#include <frc/Compressor.h>
 class Robot : public frc::TimedRobot {
  public:
   void RobotInit() override;
@@ -45,12 +47,21 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_rearRightDriveMotor {rearRightDriveDeviceID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_topShooterMotor     {topShooterID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_bottomShooterMotor  {bottomShooterID,  rev::CANSparkMax::MotorType::kBrushless};
+  rev::CANSparkMax m_liftMotor           {liftID,                  rev::CANSparkMax::MotorType::kBrushless};
 
-  VictorSPX m_intake {12};
+  VictorSPX m_belt {12};
   VictorSPX m_fortuneWheel {13};
+  VictorSPX m_intake {15};
+
+  frc::Compressor compressor {14};
+
+  frc::DoubleSolenoid lift {14, 0, 1};
+  frc::DoubleSolenoid intake {14, 2, 3};
   
   rev::CANPIDController m_topShooterpid = m_topShooterMotor.GetPIDController();
   rev::CANPIDController m_bottomShooterpid = m_bottomShooterMotor.GetPIDController();
+  rev::CANPIDController m_liftpid          = m_liftMotor.GetPIDController();
+
 
 
   rev::CANEncoder m_encoderFrontLeftSteer  = m_frontLeftSteerMotor.GetEncoder();
@@ -63,6 +74,7 @@ class Robot : public frc::TimedRobot {
   rev::CANEncoder m_encoderRearRightDrive  = m_rearRightDriveMotor.GetEncoder();
   rev::CANEncoder m_encoderTopShooter      = m_topShooterMotor.GetEncoder();
   rev::CANEncoder m_encoderBottomShooter   = m_bottomShooterMotor.GetEncoder();
+  rev::CANEncoder m_encoderLift            = m_liftMotor.GetEncoder();
 
   frc::Joystick c_joyStick{0};
   frc::Joystick c_joyStick2{1};
@@ -71,6 +83,7 @@ class Robot : public frc::TimedRobot {
 
   double Upper_P_Gx = 0, Upper_I_Gx = 0, Upper_D_Gx = 0, Upper_I_Zone = 0, Upper_FF = 0, Upper_Max = 1, Upper_Min = -1;
   double Lower_P_Gx = 0, Lower_I_Gx = 0, Lower_D_Gx = 0, Lower_I_Zone = 0, Lower_FF = 0, Lower_Max = 1, Lower_Min = -1;
+  double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0, kMaxOutput = 1, kMinOutput = -1;
 
  private:
   frc::SendableChooser<std::string> m_chooser;
