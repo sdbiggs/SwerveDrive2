@@ -55,7 +55,7 @@ std::shared_ptr<NetworkTable> vision0;
 std::shared_ptr<NetworkTable> vision1;
 std::shared_ptr<NetworkTable> lidar;
 std::shared_ptr<NetworkTable> ledLight;
- 
+
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode0;
 nt::NetworkTableEntry targetYaw0;
@@ -94,7 +94,7 @@ bool rotateMode;
 double P_Gx;
 double I_Gx;
 double P_UL;
-double P_LL; 
+double P_LL;
 double I_UL;
 double I_LL;
 double SpeedRecommend;
@@ -135,7 +135,7 @@ void visionOff(std::shared_ptr<NetworkTable> ntTable0,
     activeVisionAngle0 = false;
     activeVisionDistance0 = false;
 }
-    
+
 /******************************************************************************
  * Function:     visionRun
  *
@@ -176,7 +176,7 @@ void visionRun(nt::NetworkTableEntry ntEntry,
             }
             break;
       }
-      
+
       switch (autonChoose)
       {
           case strafe:
@@ -191,7 +191,7 @@ void visionRun(nt::NetworkTableEntry ntEntry,
                 activeVisionDistance0 = false;
             }
             break;
-          
+
           case rotate:
             if (activeVisionDistance0 == false)
             {
@@ -204,7 +204,7 @@ void visionRun(nt::NetworkTableEntry ntEntry,
                 activeVisionDistance0 = false;
             }
             break;
-          
+
           case complete:
             visionOff(ntTable0, ntTable1);
       }
@@ -260,8 +260,8 @@ void Robot::RobotInit() {
     vision1  = inst.GetTable("chameleon-vision/LifeCam 1");
     lidar    = inst.GetTable("lidar");
     ledLight = inst.GetTable("ledLight");
-   
-    
+
+
     driverMode0           = vision0->GetEntry("driverMode");
     targetPitch0          = vision0->GetEntry("targetPitch");
     targetYaw0            = vision0->GetEntry("targetYaw");
@@ -321,7 +321,15 @@ void Robot::RobotInit() {
 
 }
 
+
+/******************************************************************************
+ * Function:     RobotPeriodic
+ *S
+ * Description:  Function called periodically (not defined well as to what
+ *               "periodically" means).
+ ******************************************************************************/
 void Robot::RobotPeriodic() {}
+
 
 /******************************************************************************
  * Function:     AutonomousInit
@@ -330,6 +338,7 @@ void Robot::RobotPeriodic() {}
  *               should zero out anything that we need to before autonomous mode.
  ******************************************************************************/
 void Robot::AutonomousInit(){}
+
 
 /******************************************************************************
  * Function:     AutonomousPeriodic
@@ -422,8 +431,8 @@ void Robot::TeleopPeriodic()
   L_FortuneMotor = WheelOfFortune (L_Color,
                      c_joyStick2.GetRawButton(2),
                      c_joyStick2.GetRawButton(1),
-                     c_joyStick2.GetRawButton(3));                   
-  
+                     c_joyStick2.GetRawButton(3));
+
 
 
   Read_Encoders(V_RobotInit,
@@ -443,7 +452,7 @@ void Robot::TeleopPeriodic()
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
   V_RCW = c_joyStick.GetRawAxis(4);
-  
+
   //PDP top shooter port 13
   //PDP bottom shooter port 12
   PDP_Current_UpperShooter = PDP.GetCurrent(13);
@@ -507,9 +516,6 @@ void Robot::TeleopPeriodic()
                                             1.0, // Max upper
                                             -1.0);
   }
-
-
-
 
   L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
   V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
@@ -693,7 +699,7 @@ void Robot::TeleopPeriodic()
     } else {
     	m_intake.Set(ControlMode::PercentOutput, 0);
     }
-    
+
     //Shooter mech
     V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
     V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
@@ -704,83 +710,26 @@ void Robot::TeleopPeriodic()
     SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
     frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
 
-    
+    double L_RequestedSpeed;
+
     //Shooter mech controls
     // V_ShooterSpeedDesired[E_TopShooter]    = c_joyStick2.GetRawAxis(1) * 10000;
     // V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5) * 10000;
 
-    V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
-    V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
+//    V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
+//    V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
 
-    V_ShooterSpeedDesired[E_TopShooter] =RampTo(
-            frc::SmartDashboard::GetNumber("Speed Desired Top", 0),
-            V_ShooterSpeedDesired[E_TopShooter],
-            30);
-    
-    V_ShooterSpeedDesired[E_BottomShooter] =RampTo(
-            frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0),
-            V_ShooterSpeedDesired[E_BottomShooter],
-            30);
-    
-    // if (c_joyStick2.GetRawButton(1) == true)
-    // {
-    //     V_ShooterSpeedCmnd[E_TopShooter] = -.75;
-    //     V_ShooterSpeedCmnd[E_BottomShooter] = -1.0;
-    // }
+    L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
 
-    // if (c_joyStick2.GetRawButton(2) == true)
-    // {
-    //     V_ShooterRequest[1] = true;
-    // }
+    V_ShooterSpeedDesired[E_TopShooter] =RampTo(L_RequestedSpeed,
+                                                V_ShooterSpeedDesired[E_TopShooter],
+                                                30);
 
-    // if (c_joyStick2.GetRawButton(3) == true)
-    // {
-    //     V_ShooterRequest[1] = false; V_ShooterRequest[2] = false;
-    // }
-    //if you use this please change the first & second button thank
+    L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
 
-
-    //Shooter mech logic
-    P_Gx = frc::SmartDashboard::GetNumber("P_Gx", 0);
-    I_Gx = frc::SmartDashboard::GetNumber("I_Gx", 0);
-    // for (dex = E_TopShooter;
-    //      dex < E_RoboShooter;
-    //      dex = T_RoboShooter(int(dex) + 1))
-    // {
-    //     V_ShooterSpeedCmnd[dex] = Control_PID(V_ShooterSpeedDesired[dex],
-    //                                           V_ShooterSpeedCurr[dex],
-    //                                           &V_ShooterSpeedError[dex],
-    //                                           &V_ShooterSpeedIntegral[dex],
-    //                                           0.0069, // P Gx
-    //                                           0.000069, // I Gx
-    //                                           0.0, // D Gx
-    //                                           0.069, // P UL
-    //                                          -0.069, // P LL
-    //                                           0.0069, // I UL
-    //                                          -0.0069, // I LL
-    //                                           0.0, // D UL
-    //                                          -0.0, // D LL
-    //                                           0.69, // Max upper
-    //                                          -0.69); // Max lower
-    // }
-
-
-    //Shooter mech w/ vision assist
-    // if (V_ShooterRequest[1] == true)
-    // {
-    //     for (dex = E_TopShooter;
-    //          dex < E_RoboShooter;
-    //          dex = T_RoboShooter(int(dex) + 1))
-    //     {
-    //          V_ShooterSpeedDesired[dex] = (distanceTarget * sqrt(-9.807 / (2 * cos(C_PI / 4) * cos(C_PI / 4) * (1.56845 - (distanceTarget * tan(C_PI / 4))))));
-    //          V_ShooterRequest[2] = true;
-    //     }
-    // }
-
-    // if (V_ShooterRequest[2] == true)
-    // {
-    //     //starrt loading balls
-    // }
+    V_ShooterSpeedDesired[E_BottomShooter] =RampTo(L_RequestedSpeed,
+                                                   V_ShooterSpeedDesired[E_BottomShooter],
+                                                   30);
 
     double upper_P_Gx = frc::SmartDashboard::GetNumber("Upper_P_Gx", 0);
     double upper_I_Gx = frc::SmartDashboard::GetNumber("Upper_I_Gx", 0);
@@ -798,10 +747,8 @@ void Robot::TeleopPeriodic()
     double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
     double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
 
-
-    
     // m_topShooterMotor.Set(V_ShooterSpeedCmnd[E_TopShooter]);
-    // m_bottomShooterMotor.Set(V_ShooterSpeedCmnd[E_BottomShooter]);  
+    // m_bottomShooterMotor.Set(V_ShooterSpeedCmnd[E_BottomShooter]);
 
     if(upper_P_Gx != Upper_P_Gx) { m_topShooterpid.SetP(upper_P_Gx); Upper_P_Gx = upper_P_Gx; }
     if(upper_I_Gx != Upper_I_Gx) { m_topShooterpid.SetI(upper_I_Gx); Upper_I_Gx = upper_I_Gx; }
@@ -865,7 +812,7 @@ void Robot::TeleopPeriodic()
 	frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
     //Finds robot's distance from target's center view.
     distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * deg2rad);
-    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad); 
+    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad);
 
     //Toggle for target adjust
     if(c_joyStick.GetRawButton(1) == true)
@@ -907,7 +854,7 @@ void Robot::TeleopPeriodic()
 /******************************************************************************
  * Function:     TestPeriodic
  *
- * Description:  Called druing the test phase initiated on the driver station.
+ * Description:  Called during the test phase initiated on the driver station.
  ******************************************************************************/
 void Robot::TestPeriodic() {}
 

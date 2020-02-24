@@ -63,3 +63,29 @@ const double K_DesiredDriveSpeed[20] = {-1,  //-0.95
                                           0.77,  // 0.75
                                          0.88,  // 0.85
                                          1}; // 0.95
+
+
+#define K_BallLauncherDistanceSz 5
+#define K_BallLauncherAngleSz 3
+
+const double K_BallLauncherDistanceAxis[K_BallLauncherDistanceSz] = {5, 10, 15, 20, 25};
+
+const double K_BallLauncherAngleAxis[K_BallLauncherAngleSz] = {-45, 0, 45};
+
+const double K_BallLauncherUpperSpeed[K_BallLauncherDistanceSz][K_BallLauncherAngleSz] =
+  {
+    {2000, 2100, 2200},
+    {2300, 2400, 2500},
+    {2600, 2700, 2800},
+    {2900, 3100, 3200},
+    {3300, 3400, 3500}
+  };
+
+const double K_BallLauncherLowerSpeed[K_BallLauncherDistanceSz][K_BallLauncherAngleSz] =
+  {
+    {2000, 2100, 2200},
+    {2300, 2400, 2500},
+    {2600, 2700, 2800},
+    {2900, 3100, 3200},
+    {3300, 3400, 3500}
+  };
