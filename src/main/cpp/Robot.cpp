@@ -66,7 +66,7 @@ const double shooterWheelRotation = (2.55555555555555555555555555555555555555555
 double       distanceTarget;
 double       distanceBall;
 double       distanceFromTargetCenter;
-double       distanceFromBallCenter;
+double       distanceFromBallCenter; //Go to line 666
 double       desiredVisionAngle0;
 double       desiredVisionDistance0;
 bool         activeVisionAngle0;
@@ -382,7 +382,7 @@ void Robot::TeleopPeriodic()
   PDP_Current_LowerShooter = PDP.GetCurrent(12);
   if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
   {
-    BallsShot += 1;
+    BallsShot += 1;b
   }
   PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
   PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
@@ -416,7 +416,7 @@ void Robot::TeleopPeriodic()
   if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce <= 0.25) {
     rotateMode = true;
     rotateDeBounce += 0.01;
-  }
+  } // go to line 69
   else if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce >= 0.25) {
     rotateMode = false;
     rotateDeBounce = 0;
@@ -663,7 +663,7 @@ void Robot::TeleopPeriodic()
     double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
     double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
     double max = frc::SmartDashboard::GetNumber("Max Output", 0);
-    double min = frc::SmartDashboard::GetNumber("Min Output", 0);
+    double min = frc::SmartDashboard::GetNumber("Min Output", 0); //go back to heck dose watamelonns //https://www.youtube.com/watch?v=oHg5SJYRHA0
 
     if(upper_P_Gx != Upper_P_Gx) { m_topShooterpid.SetP(upper_P_Gx); Upper_P_Gx = upper_P_Gx; }
     if(upper_I_Gx != Upper_I_Gx) { m_topShooterpid.SetI(upper_I_Gx); Upper_I_Gx = upper_I_Gx; }
