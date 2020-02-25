@@ -21,6 +21,8 @@ double V_WheelAnglePrev[E_RobotCornerSz];
 double V_WheelAngleLoop[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
 double V_WheelVelocity[E_RobotCornerSz]; // Velocity of drive wheels, in in/sec
+double V_ShooterSpeedCurr[E_RoboShooter];
+
 
 /******************************************************************************
  * Function:     Read_Encoders
@@ -39,7 +41,9 @@ void Read_Encoders(bool            L_RobotInit,
                    rev::CANEncoder m_encoderFrontLeftDrive,
                    rev::CANEncoder m_encoderFrontRightDrive,
                    rev::CANEncoder m_encoderRearLeftDrive,
-                   rev::CANEncoder m_encoderRearRightDrive)
+                   rev::CANEncoder m_encoderRearRightDrive,
+                   rev::CANEncoder m_encoderTopShooter,
+                   rev::CANEncoder m_encoderBottomShooter)
   {
   T_RobotCorner index;
 
@@ -107,10 +111,13 @@ void Read_Encoders(bool            L_RobotInit,
       }
     }
 
-  V_WheelVelocity[E_FrontLeft]  = ((m_encoderFrontLeftDrive.GetVelocity()  / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_FrontRight] = ((m_encoderFrontRightDrive.GetVelocity() / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_RearRight]  = ((m_encoderRearRightDrive.GetVelocity()  / reductionRatio) / 60) * WheelCircufrence;
-  V_WheelVelocity[E_RearLeft]   = ((m_encoderRearLeftDrive.GetVelocity()   / reductionRatio) / 60) * WheelCircufrence;
+  V_WheelVelocity[E_FrontLeft]  = ((m_encoderFrontLeftDrive.GetVelocity()  / K_ReductionRatio) / 60) * K_WheelCircufrence;
+  V_WheelVelocity[E_FrontRight] = ((m_encoderFrontRightDrive.GetVelocity() / K_ReductionRatio) / 60) * K_WheelCircufrence;
+  V_WheelVelocity[E_RearRight]  = ((m_encoderRearRightDrive.GetVelocity()  / K_ReductionRatio) / 60) * K_WheelCircufrence;
+  V_WheelVelocity[E_RearLeft]   = ((m_encoderRearLeftDrive.GetVelocity()   / K_ReductionRatio) / 60) * K_WheelCircufrence;
+
+  V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * K_ShooterWheelRotation[E_TopShooter]);
+  V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * K_ShooterWheelRotation[E_BottomShooter]);
   }
 
 /******************************************************************************
@@ -142,6 +149,6 @@ double DtrmnEncoderRelativeToCmnd(double          L_JoystickCmnd,
       {
         L_Output = L_EncoderReading - 360;
       }
-      
+
     return (L_Output);
   }

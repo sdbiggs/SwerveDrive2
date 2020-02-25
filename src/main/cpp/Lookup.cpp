@@ -8,6 +8,7 @@
 
  */
 #include "Const.hpp"
+#include <math.h>
 
 /******************************************************************************
  * Function:     LookUp1D_Table
@@ -120,6 +121,26 @@ double RampTo(double  L_Final,
     L_Current = L_Final;
     }
   return (L_Current);
+  }
+
+
+/******************************************************************************
+ * Function:     CriteriaMet
+ *
+ * Description:  This function checks to see if certain criteria is met.
+ ******************************************************************************/
+bool CriteriaMet(double  L_Desired,
+                 double  L_Current,
+                 double  L_AllowedError)
+  {
+  bool L_CriteriaMet = true;
+
+  if (fabs(L_Current - L_Desired) <= L_AllowedError)
+    {
+    L_CriteriaMet = false;
+    }
+
+  return (L_CriteriaMet);
   }
 
 

@@ -21,6 +21,7 @@
 #include "Lookup.hpp"
 #include "WheelOfFortune.hpp"
 #include "vision.hpp"
+
 T_WheelOfFortuneColor V_ColorWheelColor;
 
 double V_FWD;
@@ -28,10 +29,7 @@ double V_STR;
 double V_RCW;
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
-double V_WA_Prev[E_RobotCornerSz];
 
-double V_ShooterSpeedCurr[E_RoboShooter];
-double V_ShooterSpeedDesired[E_RoboShooter];
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
 double V_WheelAngleIntegral[E_RobotCornerSz];
@@ -39,6 +37,7 @@ double V_WheelSpeedCmnd[E_RobotCornerSz];
 double V_WheelSpeedError[E_RobotCornerSz];
 double V_WheelSpeedIntergral[E_RobotCornerSz];
 
+double V_ShooterSpeedDesired[E_RoboShooter];
 
 bool   V_RobotInit;
 
@@ -62,11 +61,10 @@ nt::NetworkTableEntry latency1;
 nt::NetworkTableEntry lidarDistance;
 nt::NetworkTableEntry ledControl;
 
-const double shooterWheelRotation = (2.5555555555555555555555555555555555555555555555 * (2 * C_PI));
 double       distanceTarget;
 double       distanceBall;
 double       distanceFromTargetCenter;
-double       distanceFromBallCenter; //Go to line 666
+double       distanceFromBallCenter;
 double       desiredVisionAngle0;
 double       desiredVisionDistance0;
 bool         activeVisionAngle0;
@@ -74,19 +72,14 @@ bool         activeVisionDistance0;
 bool         visionRequest;
 bool         visionStart1;
 bool         visionStart2;
+
 char         autonChoose;
 
 double desiredAngle;
 double rotateDeBounce;
 double rotateErrorCalc;
 double rotateErrorIntegral;
-bool rotateMode;
-double P_Gx;
-double I_Gx;
-double P_UL;
-double P_LL;
-double I_UL;
-double I_LL;
+bool   rotateMode;
 double SpeedRecommend;
 
 double PDP_Current_UpperShooter = 0;
@@ -96,25 +89,6 @@ double PDP_Current_LowerShooter_last = 0;
 
 double BallsShot = 0;
 
-
-/******************************************************************************
- * Function:     CriteriaMet
- *
- * Description:  This function checks to see if certain criteria is met.
- ******************************************************************************/
-bool CriteriaMet(double  L_Desired,
-                 double  L_Current,
-                 double  L_AllowedError)
-  {
-  bool L_CriteriaMet = true;
-
-  if (fabs(L_Current - L_Desired) <= L_AllowedError)
-    {
-    L_CriteriaMet = false;
-    }
-
-  return (L_CriteriaMet);
-  }
 
 /******************************************************************************
  * Function:     RobotInit
@@ -229,7 +203,7 @@ void Robot::RobotInit() {
  * Description:  Function called periodically (not defined well as to what
  *               "periodically" means).
  ******************************************************************************/
-void Robot::RobotPeriodic() 
+void Robot::RobotPeriodic()
 {
   frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 }
@@ -352,11 +326,9 @@ void Robot::TeleopPeriodic()
   L_Color = ColorSensor(false);
   Gyro();
   L_FortuneMotor = WheelOfFortune (L_Color,
-                     c_joyStick2.GetRawButton(2),
-                     c_joyStick2.GetRawButton(4),
-                     c_joyStick2.GetRawButton(3));
-
-
+                                   c_joyStick2.GetRawButton(2),
+                                   c_joyStick2.GetRawButton(4),
+                                   c_joyStick2.GetRawButton(3));
 
   Read_Encoders(V_RobotInit,
                 a_encoderFrontLeftSteer.GetVoltage(),
@@ -370,7 +342,9 @@ void Robot::TeleopPeriodic()
                 m_encoderFrontLeftDrive,
                 m_encoderFrontRightDrive,
                 m_encoderRearLeftDrive,
-                m_encoderRearRightDrive);
+                m_encoderRearRightDrive,
+                m_encoderTopShooter,
+                m_encoderBottomShooter);
 
   V_FWD = c_joyStick.GetRawAxis(1) * -1;
   V_STR = c_joyStick.GetRawAxis(0);
@@ -382,7 +356,7 @@ void Robot::TeleopPeriodic()
   PDP_Current_LowerShooter = PDP.GetCurrent(12);
   if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
   {
-    BallsShot += 1;b
+    BallsShot += 1;
   }
   PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
   PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
@@ -416,29 +390,30 @@ void Robot::TeleopPeriodic()
   if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce <= 0.25) {
     rotateMode = true;
     rotateDeBounce += 0.01;
-  } // go to line 69
+  }
   else if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce >= 0.25) {
     rotateMode = false;
     rotateDeBounce = 0;
   }
 
-  if (rotateMode == true) {
-      V_RCW = Control_PID(desiredAngle,
-                                            gyro_yawangledegrees,
-                                            &rotateErrorCalc,
-                                            &rotateErrorIntegral,
-                                            0.08,   // P Gx 0.0038 0.005
-                                            0.0007, // I Gx 0.0029  0.001
-                                            0, // D Gx
-                                            0.9, // P UL
-                                            -0.9, // P LL
-                                            0.5, // I UL
-                                            -0.5, // I LL
-                                            0.2, // D UL
-                                            -0.2, // D LL
-                                            1.0, // Max upper
-                                            -1.0);
-  }
+  if (rotateMode == true)
+    {
+    V_RCW = Control_PID(desiredAngle,
+                        gyro_yawangledegrees,
+                        &rotateErrorCalc,
+                        &rotateErrorIntegral,
+                        K_RobotRotationPID_Gx[E_P_Gx],
+                        K_RobotRotationPID_Gx[E_I_Gx],
+                        K_RobotRotationPID_Gx[E_D_Gx],
+                        K_RobotRotationPID_Gx[E_P_Ul],
+                        K_RobotRotationPID_Gx[E_P_Ll],
+                        K_RobotRotationPID_Gx[E_I_Ul],
+                        K_RobotRotationPID_Gx[E_I_Ll],
+                        K_RobotRotationPID_Gx[E_D_Ul],
+                        K_RobotRotationPID_Gx[E_D_Ll],
+                        K_RobotRotationPID_Gx[E_Max_Ul],
+                        K_RobotRotationPID_Gx[E_Max_Ll]);
+    }
 
   L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
   V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
@@ -473,9 +448,9 @@ void Robot::TeleopPeriodic()
   }
   if (L_Max > 1) {
       V_WS[E_FrontRight] /= L_Max;
-      V_WS[E_FrontLeft] /= L_Max;
-      V_WS[E_RearLeft] /= L_Max;
-      V_WS[E_RearRight] /= L_Max;
+      V_WS[E_FrontLeft]  /= L_Max;
+      V_WS[E_RearLeft]   /= L_Max;
+      V_WS[E_RearRight]  /= L_Max;
   }
 
   L_Gain = 0.1;
@@ -541,37 +516,37 @@ void Robot::TeleopPeriodic()
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID(V_WA[index],
-                                             V_WheelAngleArb[index],
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
+                                              V_WheelAngleArb[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
-                                              0.007, // P Gx 0.0045
-                                              0.0005, // I Gx 0001
-                                              0.0000005, // D Gx
-                                              0.4, // P UL
-                                             -0.4, // P LL
-                                              0.12, // I UL
-                                             -0.12, // I LL
-                                              0.5, // D UL
-                                             -0.5, // D LL
-                                              0.9, // Max upper
-                                             -0.9); // Max lower
+                                              K_WheelAnglePID_Gx[E_P_Gx],
+                                              K_WheelAnglePID_Gx[E_I_Gx],
+                                              K_WheelAnglePID_Gx[E_D_Gx],
+                                              K_WheelAnglePID_Gx[E_P_Ul],
+                                              K_WheelAnglePID_Gx[E_P_Ll],
+                                              K_WheelAnglePID_Gx[E_I_Ul],
+                                              K_WheelAnglePID_Gx[E_I_Ll],
+                                              K_WheelAnglePID_Gx[E_D_Ul],
+                                              K_WheelAnglePID_Gx[E_D_Ll],
+                                              K_WheelAnglePID_Gx[E_Max_Ul],
+                                              K_WheelAnglePID_Gx[E_Max_Ll]);
 
-      V_WheelSpeedCmnd[index] = Control_PID(V_WS[index],
-                                            V_WheelVelocity[index],
+      V_WheelSpeedCmnd[index] = Control_PID( V_WS[index],
+                                             V_WheelVelocity[index],
                                             &V_WheelSpeedError[index],
                                             &V_WheelSpeedIntergral[index],
-                                            0.0055,   // P Gx 0.0038 0.005
-                                            0.0009, // I Gx 0.0029  0.001
-                                            0.00000005, // D Gx
-                                            0.9, // P UL
-                                            -0.9, // P LL
-                                            0.5, // I UL
-                                            -0.5, // I LL
-                                            0.2, // D UL
-                                            -0.2, // D LL
-                                            1.0, // Max upper
-                                            -1.0);
+                                             K_WheelSpeedPID_Gx[E_P_Gx],
+                                             K_WheelSpeedPID_Gx[E_I_Gx],
+                                             K_WheelSpeedPID_Gx[E_D_Gx],
+                                             K_WheelSpeedPID_Gx[E_P_Ul],
+                                             K_WheelSpeedPID_Gx[E_P_Ll],
+                                             K_WheelSpeedPID_Gx[E_I_Ul],
+                                             K_WheelSpeedPID_Gx[E_I_Ll],
+                                             K_WheelSpeedPID_Gx[E_D_Ul],
+                                             K_WheelSpeedPID_Gx[E_D_Ll],
+                                             K_WheelSpeedPID_Gx[E_Max_Ul],
+                                             K_WheelSpeedPID_Gx[E_Max_Ll]);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
@@ -608,16 +583,11 @@ void Robot::TeleopPeriodic()
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
-
-
     //Shooter mech
-    V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
-    V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
-
     frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
     frc::SmartDashboard::PutNumber("Bottom Speed", V_ShooterSpeedCurr[E_BottomShooter]);
 
-    SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
+    SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * C_Deg2Rad) * cos(35 * C_Deg2Rad) * (1.56845 - (distanceTarget * tan(35 * C_Deg2Rad))))));
     frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
 
     double L_RequestedSpeed;
@@ -663,7 +633,7 @@ void Robot::TeleopPeriodic()
     double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
     double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
     double max = frc::SmartDashboard::GetNumber("Max Output", 0);
-    double min = frc::SmartDashboard::GetNumber("Min Output", 0); //go back to heck dose watamelonns //https://www.youtube.com/watch?v=oHg5SJYRHA0
+    double min = frc::SmartDashboard::GetNumber("Min Output", 0);
 
     if(upper_P_Gx != Upper_P_Gx) { m_topShooterpid.SetP(upper_P_Gx); Upper_P_Gx = upper_P_Gx; }
     if(upper_I_Gx != Upper_I_Gx) { m_topShooterpid.SetI(upper_I_Gx); Upper_I_Gx = upper_I_Gx; }
@@ -692,10 +662,10 @@ void Robot::TeleopPeriodic()
     if((d != kD)) { m_liftpid.SetD(d); kD = d; }
     if((iz != kIz)) { m_liftpid.SetIZone(iz); kIz = iz; }
     if((ff != kFF)) { m_liftpid.SetFF(ff); kFF = ff; }
-    if((max != kMaxOutput) || (min != kMinOutput)) 
-    { 
-      m_liftpid.SetOutputRange(min, max); 
-      kMinOutput = min; kMaxOutput = max; 
+    if((max != kMaxOutput) || (min != kMinOutput))
+    {
+      m_liftpid.SetOutputRange(min, max);
+      kMinOutput = min; kMaxOutput = max;
     }
     m_liftpid.SetIMaxAccum(0.1);
     double desiredlevel = frc::SmartDashboard::GetNumber("Desired Level", 0);
@@ -774,14 +744,14 @@ void Robot::TeleopPeriodic()
       and camera height relative to ground for ball distance.
       Make sure it's in meters.
     */
-    distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (deg2rad));
-    distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-deg2rad));
+    distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (C_Deg2Rad));
+    distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-C_Deg2Rad));
 
     //Finds robot's distance from target's center view.
-    distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * deg2rad);
-    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad);
+    distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * C_Deg2Rad);
+    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * C_Deg2Rad);
 
-    frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget); 
+    frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
 
     // Toggle for target adjust
     if(c_joyStick.GetRawButton(1) == true)
@@ -802,7 +772,7 @@ void Robot::TeleopPeriodic()
 
     //Toggle for autoshoot
 
-    
+
 
     //  if(c_joyStick.GetRawButton(2) == true)
     //  {
