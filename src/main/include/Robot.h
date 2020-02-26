@@ -60,9 +60,6 @@ class Robot : public frc::TimedRobot {
   
   rev::CANPIDController m_topShooterpid = m_topShooterMotor.GetPIDController();
   rev::CANPIDController m_bottomShooterpid = m_bottomShooterMotor.GetPIDController();
-  rev::CANPIDController m_liftpid          = m_liftMotor.GetPIDController();
-
-
 
   rev::CANEncoder m_encoderFrontLeftSteer  = m_frontLeftSteerMotor.GetEncoder();
   rev::CANEncoder m_encoderFrontLeftDrive  = m_frontLeftDriveMotor.GetEncoder();
@@ -83,8 +80,7 @@ class Robot : public frc::TimedRobot {
 
   double Upper_P_Gx = 0, Upper_I_Gx = 0, Upper_D_Gx = 0, Upper_I_Zone = 0, Upper_FF = 0, Upper_Max = 1, Upper_Min = -1;
   double Lower_P_Gx = 0, Lower_I_Gx = 0, Lower_D_Gx = 0, Lower_I_Zone = 0, Lower_FF = 0, Lower_Max = 1, Lower_Min = -1;
-  double kP = 0.1, kI = 1e-4, kD = 1, kIz = 0, kFF = 0, kMaxOutput = 1, kMinOutput = -1;
-
+  
  private:
   frc::SendableChooser<std::string> m_chooser;
   const std::string kAutoNameDefault = "Default";
