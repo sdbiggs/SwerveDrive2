@@ -51,4 +51,12 @@ typedef enum T_PID_Cal
   E_PID_CalSz
 } T_PID_Cal;
 
+typedef enum T_AutoTargetStates
+{
+  E_NotActive,
+  E_TargetFoundRotateBotAndRollerSpinUp,
+  E_MoveBallsToRollers,
+  E_AutoTargetStatesSz
+} T_AutoTargetStates;
+
 #endif

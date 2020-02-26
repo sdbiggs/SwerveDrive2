@@ -21,14 +21,21 @@
 #include "Lookup.hpp"
 #include "WheelOfFortune.hpp"
 #include "vision.hpp"
+#include "DriveControl.hpp"
+#include "AutoTarget.hpp"
 
 T_WheelOfFortuneColor V_ColorWheelColor;
 
-double V_FWD;
-double V_STR;
-double V_RCW;
-double V_WS[E_RobotCornerSz];
-double V_WA[E_RobotCornerSz];
+// double desiredAngle;
+// double rotateDeBounce;
+// double rotateErrorCalc;
+// double rotateErrorIntegral;
+// bool   rotateMode;
+// double V_FWD;
+// double V_STR;
+// double V_RCW;
+// double V_WS[E_RobotCornerSz];
+// double V_WA[E_RobotCornerSz];
 
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
@@ -38,6 +45,11 @@ double V_WheelSpeedError[E_RobotCornerSz];
 double V_WheelSpeedIntergral[E_RobotCornerSz];
 
 double V_ShooterSpeedDesired[E_RoboShooter];
+
+double V_AutoTargetAngle;
+double V_AutoTargetUpperRollerSpd;
+double V_AutoTargetLowerRollerSpd;
+double V_AutoTargetBeltPower;
 
 bool   V_RobotInit;
 
@@ -75,11 +87,6 @@ bool         visionStart2;
 
 char         autonChoose;
 
-double desiredAngle;
-double rotateDeBounce;
-double rotateErrorCalc;
-double rotateErrorIntegral;
-bool   rotateMode;
 double SpeedRecommend;
 
 double PDP_Current_UpperShooter = 0;
@@ -111,7 +118,7 @@ void Robot::RobotInit() {
     m_topShooterMotor.RestoreFactoryDefaults();
     m_bottomShooterMotor.RestoreFactoryDefaults();
 
-    V_RobotInit = false;
+    V_RobotInit = true;
 
     GyroRobotInit();
 
@@ -308,23 +315,14 @@ void Robot::TeleopInit()
  ******************************************************************************/
 void Robot::TeleopPeriodic()
   {
-  double L_temp;
-  double L_A;
-  double L_B;
-  double L_C;
-  double L_D;
-  double L_Gain;
-  double L_Max;
-  double L_WA_FWD;
-  double L_WA_FWD_Delta;
-  double L_WA_REV;
-  double L_WA_REV_Delta;
-  T_RobotCorner index;
-  double L_FortuneMotor;
+  T_RobotCorner         index;
+  double                L_FortuneMotor;
   T_WheelOfFortuneColor L_Color;
 
   L_Color = ColorSensor(false);
+
   Gyro();
+
   L_FortuneMotor = WheelOfFortune (L_Color,
                                    c_joyStick2.GetRawButton(2),
                                    c_joyStick2.GetRawButton(4),
@@ -346,9 +344,57 @@ void Robot::TeleopPeriodic()
                 m_encoderTopShooter,
                 m_encoderBottomShooter);
 
-  V_FWD = c_joyStick.GetRawAxis(1) * -1;
-  V_STR = c_joyStick.GetRawAxis(0);
-  V_RCW = c_joyStick.GetRawAxis(4);
+
+
+
+  double L_JoyStick1Axis1Y = DesiredSpeed(c_joyStick.GetRawAxis(1));
+  double L_JoyStick1Axis1X = DesiredSpeed(c_joyStick.GetRawAxis(0));
+  double L_JoyStick1Axis2X = DesiredSpeed(c_joyStick.GetRawAxis(4));
+
+    /*
+      Finds distance from robot to specified target.
+      Numerator depends upon camera height relative to target for target distance,
+      and camera height relative to ground for ball distance.
+      Make sure it's in meters.
+    */
+    distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (C_Deg2Rad));
+    distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-C_Deg2Rad));
+
+    //Finds robot's distance from target's center view.
+    distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * C_Deg2Rad);
+    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * C_Deg2Rad);
+
+V_AutoTargetState = AutoTargeting(V_AutoTargetState,
+                                  c_joyStick2.GetRawButton(6),
+                                  L_JoyStick1Axis1Y,
+                                  L_JoyStick1Axis1X,
+                                  L_JoyStick1Axis2X,
+                                  distanceFromTargetCenter, // This should be angle
+                                  distanceFromTargetCenter,
+                                  gyro_yawangledegrees,
+                                  &V_AutoTargetAngle,
+                                  V_ShooterSpeedCurr[E_TopShooter],
+                                  V_ShooterSpeedCurr[E_BottomShooter],
+                                  &V_AutoTargetUpperRollerSpd,
+                                  &V_AutoTargetLowerRollerSpd,
+                                  &V_AutoTargetBeltPower);
+
+  DriveControlMain(L_JoyStick1Axis1Y,
+                   L_JoyStick1Axis1X,
+                   L_JoyStick1Axis2X,
+                   c_joyStick.GetRawAxis(3),
+                   c_joyStick.GetRawButton(3),
+                   c_joyStick.GetRawButton(4),
+                   c_joyStick.GetRawButton(5),
+                   gyro_yawangledegrees,
+                   gyro_yawanglerad,
+                   &V_WheelAngleFwd[0],
+                   &V_WheelAngleRev[0],
+                   &V_WS[0],
+                   &V_WA[0],
+                   &V_RobotInit,
+                   V_AutoTargetState,
+                   V_AutoTargetAngle);
 
   //PDP top shooter port 13
   //PDP bottom shooter port 12
@@ -361,156 +407,6 @@ void Robot::TeleopPeriodic()
   PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
   PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
 
-
-  /* Let's place a deadband around the joystick readings */
-  V_FWD = DesiredSpeed(V_FWD);
-  V_STR = DesiredSpeed(V_STR);
-  V_RCW = DesiredSpeed(V_RCW);
-
-
- //turning rotatemode on/off & setting desired angle
-  if (c_joyStick.GetRawButton(4)) {
-    rotateMode = true;
-    desiredAngle = 90;
-  }
-  else if (c_joyStick.GetRawButton(3)) {
-    rotateMode = true;
-    desiredAngle = 0;
-  }
-  else if (c_joyStick.GetRawButton(5)) {
-    rotateMode = true;
-    desiredAngle = 67.5;
-  }
-
-
-//error calculation section
-  double errorCalc = desiredAngle - gyro_yawangledegrees;
-
-
-  if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce <= 0.25) {
-    rotateMode = true;
-    rotateDeBounce += 0.01;
-  }
-  else if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce >= 0.25) {
-    rotateMode = false;
-    rotateDeBounce = 0;
-  }
-
-  if (rotateMode == true)
-    {
-    V_RCW = Control_PID(desiredAngle,
-                        gyro_yawangledegrees,
-                        &rotateErrorCalc,
-                        &rotateErrorIntegral,
-                        K_RobotRotationPID_Gx[E_P_Gx],
-                        K_RobotRotationPID_Gx[E_I_Gx],
-                        K_RobotRotationPID_Gx[E_D_Gx],
-                        K_RobotRotationPID_Gx[E_P_Ul],
-                        K_RobotRotationPID_Gx[E_P_Ll],
-                        K_RobotRotationPID_Gx[E_I_Ul],
-                        K_RobotRotationPID_Gx[E_I_Ll],
-                        K_RobotRotationPID_Gx[E_D_Ul],
-                        K_RobotRotationPID_Gx[E_D_Ll],
-                        K_RobotRotationPID_Gx[E_Max_Ul],
-                        K_RobotRotationPID_Gx[E_Max_Ll]);
-    }
-
-  L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
-  V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
-  V_FWD = L_temp;
-
-  //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
-  L_A = V_STR - V_RCW * (C_L/C_R);
-  L_B = V_STR + V_RCW * (C_L/C_R);
-  L_C = V_FWD - V_RCW * (C_W/C_R);
-  L_D = V_FWD + V_RCW * (C_W/C_R);
-
-  V_WS[E_FrontRight] = pow((L_B * L_B + L_C * L_C), 0.5);
-  V_WS[E_FrontLeft]  = pow((L_B * L_B + L_D * L_D), 0.5);
-  V_WS[E_RearLeft]   = pow((L_A * L_A + L_D * L_D), 0.5);
-  V_WS[E_RearRight]  = pow((L_A * L_A + L_C * L_C), 0.5);
-
-  V_WA[E_FrontRight] = atan2(L_B, L_C) *180/C_PI;
-  V_WA[E_FrontLeft]  = atan2(L_B, L_D) *180/C_PI;
-  V_WA[E_RearLeft]   = atan2(L_A, L_D) *180/C_PI;
-  V_WA[E_RearRight]  = atan2(L_A, L_C) *180/C_PI;
-
-  L_Max = V_WS[E_FrontRight];
-
-  if (V_WS[E_FrontLeft] > L_Max) {
-    L_Max = V_WS[E_FrontLeft];
-  }
- if (V_WS[E_RearLeft] > L_Max) {
-    L_Max = V_WS[E_RearLeft];
-  }
-  if (V_WS[E_RearRight] > L_Max) {
-    L_Max = V_WS[E_RearRight];
-  }
-  if (L_Max > 1) {
-      V_WS[E_FrontRight] /= L_Max;
-      V_WS[E_FrontLeft]  /= L_Max;
-      V_WS[E_RearLeft]   /= L_Max;
-      V_WS[E_RearRight]  /= L_Max;
-  }
-
-  L_Gain = 0.1;
-  if (c_joyStick.GetRawAxis(3) > L_Gain)
-    {
-    L_Gain = c_joyStick.GetRawAxis(3);
-    }
-
-  V_WS[E_FrontRight] *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_FrontLeft]  *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_RearLeft]   *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_RearRight]  *= (K_WheelMaxSpeed * L_Gain);
-
-  for (index = E_FrontLeft;
-       index < E_RobotCornerSz;
-       index = T_RobotCorner(int(index) + 1))
-  {
-    L_WA_FWD = DtrmnEncoderRelativeToCmnd(V_WA[index],
-                                          V_WheelAngleFwd[index]);
-
-    L_WA_FWD_Delta = fabs(V_WA[index] - L_WA_FWD);
-
-    L_WA_REV = DtrmnEncoderRelativeToCmnd(V_WA[index],
-                                          V_WheelAngleRev[index]);
-
-    L_WA_REV_Delta = fabs(V_WA[index] - L_WA_REV);
-
-    if (L_WA_FWD_Delta <= L_WA_REV_Delta)
-      {
-        V_WheelAngleArb[index] = L_WA_FWD;
-      }
-    else
-      {
-        V_WheelAngleArb[index] = L_WA_REV;
-        V_WS[index] *= (-1); // Need to flip sign of drive wheel to acount for reverse direction
-      }
-  }
-
-  //8.31 : 1
-  //11.9 m/s
-
-  // V_RobotInit = true;
-  /* Ok, let's check to see if we are in init: */
-    if (V_RobotInit == true)
-      {
-      V_RobotInit = false;
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
-        V_WS[index] = 0;
-        V_WA[index] = 0;
-        V_WheelAngleArb[index] = V_WheelAngleFwd[index];
-        if (fabs(V_WheelAngleArb[index]) > K_InitAngle)
-          {
-          V_RobotInit = true;
-          }
-        }
-      }
-    // V_RobotInit = true;
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
@@ -550,9 +446,6 @@ void Robot::TeleopPeriodic()
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
-    frc::SmartDashboard::PutBoolean("rotateMode",rotateMode);
-    frc::SmartDashboard::PutNumber("errorCalc",errorCalc);
-    frc::SmartDashboard::PutNumber("desiredAngle",desiredAngle);
     frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
     frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
     frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
@@ -601,9 +494,19 @@ void Robot::TeleopPeriodic()
 
     L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
 
+    if (V_AutoTargetState != E_NotActive)
+      {
+      L_RequestedSpeed = V_AutoTargetUpperRollerSpd;
+      }
+
     V_ShooterSpeedDesired[E_TopShooter] =RampTo(L_RequestedSpeed,
                                                 V_ShooterSpeedDesired[E_TopShooter],
                                                 30);
+
+    if (V_AutoTargetState != E_NotActive)
+      {
+      L_RequestedSpeed = V_AutoTargetLowerRollerSpd;
+      }
 
     L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
 
@@ -730,7 +633,7 @@ void Robot::TeleopPeriodic()
       m_intake.Set(ControlMode::PercentOutput, 0);
     }
 
-    if(c_joyStick2.GetRawButton(1))
+    if((c_joyStick2.GetRawButton(1)) || (V_AutoTargetBeltPower > 0.1))
     {
       m_belt.Set(ControlMode::PercentOutput, 1);
     }
@@ -738,18 +641,7 @@ void Robot::TeleopPeriodic()
     {
       m_belt.Set(ControlMode::PercentOutput, 0);
     }
-    /*
-      Finds distance from robot to specified target.
-      Numerator depends upon camera height relative to target for target distance,
-      and camera height relative to ground for ball distance.
-      Make sure it's in meters.
-    */
-    distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (C_Deg2Rad));
-    distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-C_Deg2Rad));
 
-    //Finds robot's distance from target's center view.
-    distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * C_Deg2Rad);
-    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * C_Deg2Rad);
 
     frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
 
@@ -762,12 +654,12 @@ void Robot::TeleopPeriodic()
     if(c_joyStick.GetRawButton(1) == false && visionStart1 == true)
     {
         visionOff(vision0, ledLight, inst, visionStart1, visionStart2, activeVisionAngle0, activeVisionDistance0);
-        V_RCW = 0;
+//        V_RCW = 0;
         visionStart1 = false;
     }
     if(visionStart1 == true)
     {
-        V_RCW = AutoTarget(targetYaw0, distanceTarget, 0, activeVisionAngle0, activeVisionDistance0, desiredVisionAngle0, desiredVisionDistance0);
+//        V_RCW = AutoTarget(targetYaw0, distanceTarget, 0, activeVisionAngle0, activeVisionDistance0, desiredVisionAngle0, desiredVisionDistance0);
     }
 
     //Toggle for autoshoot
