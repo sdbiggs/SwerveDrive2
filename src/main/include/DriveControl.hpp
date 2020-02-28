@@ -20,13 +20,19 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
                       double L_JoyStick1Axis1X,
                       double L_JoyStick1Axis2X,
                       double L_JoyStick1Axis3,
+<<<<<<< HEAD
                       double L_JoyStick1Button1,
+=======
+>>>>>>> 2b13db20198e29d8d628a3ab09832cb48193a05f
                       double L_JoyStick1Button3,
                       double L_JoyStick1Button4,
                       double L_JoyStick1Button5,
                       double L_GyroAngleDegrees,
                       double L_GyroAngleRadians,
+<<<<<<< HEAD
                       double L_VisionAngleDeg,
+=======
+>>>>>>> 2b13db20198e29d8d628a3ab09832cb48193a05f
                       double *L_WheelAngleFwd,
                       double *L_WheelAngleRev,
                       double *L_WheelSpeedTarget,
