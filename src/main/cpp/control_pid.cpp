@@ -1,3 +1,17 @@
+/*
+  control_pid.cpp
+
+  Created on: Jan 01, 2020
+  Author: 5561
+ */
+
+#include "control_pid.hpp"
+
+/******************************************************************************
+ * Function:     Control_PID
+ *
+ * Description:  Proportional Integral Derivative control.
+ ******************************************************************************/
 double Control_PID(double  L_DesiredSpeed,
                    double  L_CurrentSpeed,
                    double *L_ErrorPrev,

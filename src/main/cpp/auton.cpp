@@ -5,22 +5,29 @@
 
 using namespace frc;
 
-// double AutoShoot(nt::NetworkTableEntry targetYaw, double targetDistance, int TOPorBOTTOM)
-// {
-//     // double speedDesired = LookUpForTOPorBOTTOM(targetYaw, targetDistance, TOPorBOTTOM);
-//     // return speedDesired;
-// }
+double AutoShoot(nt::NetworkTableEntry targetYaw, double targetDistance, int TOPorBOTTOM)
+{
+    // double speedDesired = LookUpForTOPorBOTTOM(targetYaw, targetDistance, TOPorBOTTOM);
+    double speedDesired;
+    return speedDesired;
+}
 
-double AutoTarget(nt::NetworkTableEntry ntEntry,
-              double ntDistance,
-              int targetChoose,
-              bool ntVisionAngle,
-              bool ntVisionDistance,
-              double ntDesiredAngle,
-              double ntDesiredDistance)
+double AutoTarget(double ntEntry)
 {
     double rotate = 0;
-    visionRun(ntEntry, ntDistance, targetChoose, ntVisionAngle, ntVisionDistance, ntDesiredAngle, ntDesiredDistance);
+    bool ntVisionAngle = false;
+    double ntDesiredAngle = 0;
+    
+    if (abs(ntEntry) > 1)
+    {
+        ntDesiredAngle = (0.9 * ntEntry);
+        ntVisionAngle  = true;
+    }
+    else
+    {
+        ntVisionAngle = false;
+        rotate = 0;
+    }
     
     if(ntVisionAngle == true)
     {
@@ -37,21 +44,15 @@ double AutoTarget(nt::NetworkTableEntry ntEntry,
     return rotate;
 }
 
-// bool AutoLongitudinalMove(double ntDistance, double distanceTOTAL)
-// {
-//     bool longitudinalAchieved;
-//     double displacement = (distanceTOTAL - ntDistance);
+bool AutoMove(double ntDistance, double distanceTOTAL)
+{
+    bool positionAchieved;
+    double displacement = (distanceTOTAL - ntDistance);
 
-//     if(displacement <= 0)
-//     {
-//         longitudinalAchieved = true;
-//     }
+    if(displacement <= 0)
+    {
+        positionAchieved = true;
+    }
 
-//     return longitudinalAchieved;
-// }
-
-// bool AutoLateralMove(double distanceFROMCENTER, double distanceTOTAL)
-// {
-//     bool lateralAchieved;
-//     double displacement = (distanceTOTAL - distanceFROMCENTER);
-// }
+    return positionAchieved;
+}

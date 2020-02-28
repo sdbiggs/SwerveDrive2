@@ -16,22 +16,27 @@
 #include "Encoders.hpp"
 #include "Enums.hpp"
 #include "control_pid.hpp"
-#include "ColorSensor.hpp"
+//#include "ColorSensor.hpp"
 #include "Gyro.hpp"
 #include "Lookup.hpp"
 #include "WheelOfFortune.hpp"
 #include "vision.hpp"
-T_WheelOfFortuneColor V_ColorWheelColor;
+#include "DriveControl.hpp"
+#include "AutoTarget.hpp"
 
-double V_FWD;
-double V_STR;
-double V_RCW;
-double V_WS[E_RobotCornerSz];
-double V_WA[E_RobotCornerSz];
-double V_WA_Prev[E_RobotCornerSz];
+// T_WheelOfFortuneColor V_ColorWheelColor;
 
-double V_ShooterSpeedCurr[E_RoboShooter];
-double V_ShooterSpeedDesired[E_RoboShooter];
+// double desiredAngle;
+// double rotateDeBounce;
+// double rotateErrorCalc;
+// double rotateErrorIntegral;
+// bool   rotateMode;
+// double V_FWD;
+// double V_STR;
+// double V_RCW;
+// double V_WS[E_RobotCornerSz];
+// double V_WA[E_RobotCornerSz];
+
 double V_WheelAngleCmnd[E_RobotCornerSz];
 double V_WheelAngleError[E_RobotCornerSz];
 double V_WheelAngleIntegral[E_RobotCornerSz];
@@ -39,6 +44,12 @@ double V_WheelSpeedCmnd[E_RobotCornerSz];
 double V_WheelSpeedError[E_RobotCornerSz];
 double V_WheelSpeedIntergral[E_RobotCornerSz];
 
+double V_ShooterSpeedDesired[E_RoboShooter];
+
+double V_AutoTargetAngle;
+double V_AutoTargetUpperRollerSpd;
+double V_AutoTargetLowerRollerSpd;
+double V_AutoTargetBeltPower;
 
 bool   V_RobotInit;
 
@@ -62,31 +73,24 @@ nt::NetworkTableEntry latency1;
 nt::NetworkTableEntry lidarDistance;
 nt::NetworkTableEntry ledControl;
 
-const double shooterWheelRotation = (2.5555555555555555555555555555555555555555555555 * (2 * C_PI));
 double       distanceTarget;
 double       distanceBall;
 double       distanceFromTargetCenter;
-double       distanceFromBallCenter; //Go to line 666
+double       distanceFromBallCenter;
 double       desiredVisionAngle0;
 double       desiredVisionDistance0;
+double       originalPosition;
 bool         activeVisionAngle0;
 bool         activeVisionDistance0;
 bool         visionRequest;
 bool         visionStart1;
 bool         visionStart2;
-char         autonChoose;
 
-double desiredAngle;
-double rotateDeBounce;
-double rotateErrorCalc;
-double rotateErrorIntegral;
-bool rotateMode;
-double P_Gx;
-double I_Gx;
-double P_UL;
-double P_LL;
-double I_UL;
-double I_LL;
+bool         autonComplete[4];
+int          beamCount;
+bool         beamFullyCharged;
+
+
 double SpeedRecommend;
 
 double PDP_Current_UpperShooter = 0;
@@ -96,25 +100,6 @@ double PDP_Current_LowerShooter_last = 0;
 
 double BallsShot = 0;
 
-
-/******************************************************************************
- * Function:     CriteriaMet
- *
- * Description:  This function checks to see if certain criteria is met.
- ******************************************************************************/
-bool CriteriaMet(double  L_Desired,
-                 double  L_Current,
-                 double  L_AllowedError)
-  {
-  bool L_CriteriaMet = true;
-
-  if (fabs(L_Current - L_Desired) <= L_AllowedError)
-    {
-    L_CriteriaMet = false;
-    }
-
-  return (L_CriteriaMet);
-  }
 
 /******************************************************************************
  * Function:     RobotInit
@@ -137,7 +122,7 @@ void Robot::RobotInit() {
     m_topShooterMotor.RestoreFactoryDefaults();
     m_bottomShooterMotor.RestoreFactoryDefaults();
 
-    V_RobotInit = false;
+    V_RobotInit = true;
 
     GyroRobotInit();
 
@@ -229,9 +214,28 @@ void Robot::RobotInit() {
  * Description:  Function called periodically (not defined well as to what
  *               "periodically" means).
  ******************************************************************************/
-void Robot::RobotPeriodic() 
+void Robot::RobotPeriodic()
 {
   frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
+
+    /*
+      Finds distance from robot to specified target.
+      Numerator depends upon camera height relative to target for target distance,
+      and camera height relative to ground for ball distance.
+      Make sure it's in meters.
+    */
+     distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0) + 15) * (C_Deg2Rad));
+    //  distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-deg2rad));
+
+    //Finds robot's distance from target's center view.
+     distanceFromTargetCenter = (distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * C_Deg2Rad) - 28.17812754);
+    //  distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad);
+
+    frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
+    frc::SmartDashboard::PutNumber("distanceFromTargetCenter", distanceFromTargetCenter);
+    frc::SmartDashboard::PutNumber("targetYaw", targetYaw0.GetDouble(0));
+    frc::SmartDashboard::PutNumber("targetPitch", targetPitch0.GetDouble(1));
+    frc::SmartDashboard::PutNumber("lidarDistance", lidarDistance.GetDouble(0));
 }
 
 
@@ -243,16 +247,36 @@ void Robot::RobotPeriodic()
  ******************************************************************************/
 void Robot::AutonomousInit()
   {
-//  m_autoSelected = m_chooser.GetSelected();
-//  // m_autoSelected = SmartDashboard::GetString("Auto Selector",
-//  //     kAutoNameDefault);
-//  std::cout << "Auto selected: " << m_autoSelected << std::endl;
-//
-//  if (m_autoSelected == kAutoNameCustom) {
-//    // Custom Auto goes here
-//  } else {
-//    // Default Auto goes here
-//  }
+      int index;
+      V_RobotInit = true;
+      // visionInit(vision0, ledLight, inst);
+      
+      for (index = E_FrontLeft;
+           index < E_RobotCornerSz;
+           index = T_RobotCorner(int(index) + 1))
+      {
+        V_WS[index] = 0;
+        V_WA[index] = 0;
+        V_WheelRelativeAngleRawOffset[index] = 0;
+        V_WheelAngleFwd[index] = 0;
+        V_WheelAnglePrev[index] = 0;
+        V_WheelAngleLoop[index] = 0;
+        V_WheelAngleRaw[index] = 0;
+        V_WheelAngleError[index] = 0;
+        V_WheelAngleIntegral[index] = 0;
+        V_WheelVelocity[index] = 0;
+        V_WheelSpeedError[index] = 0;
+        V_WheelSpeedIntergral[index] = 0;
+        V_WheelAngleArb[index] = 0;
+      }
+      V_STR = 0;
+      V_FWD = 0;
+      V_RCW = 0;
+      gyro_yawangledegrees = 0;
+      gyro_yawanglerad = 0;
+
+      originalPosition = targetYaw0.GetDouble(0);
+      GyroTeleInit();
   }
 
 
@@ -263,12 +287,211 @@ void Robot::AutonomousInit()
  *               should place our primary autonomous control code.
  ******************************************************************************/
 void Robot::AutonomousPeriodic()
-  {
-//  if (m_autoSelected == kAutoNameCustom) {
-//    // Custom Auto goes here
-//  } else {
-//    // Default Auto goes here
-//  }
+  {   
+      int theCoolerInteger;
+
+      Gyro();
+
+      #pragma badauto
+      // switch(theCoolerInteger)
+      // {
+      //     //1: Back up and shoot at the same time (5ft)
+      //     case 1:
+      //       if(autonComplete[3] == false)
+      //       {
+      //           if(AutoMove(distanceTarget, 457.0476) == false)
+      //           {
+      //             V_FWD = .5;
+      //           }
+      //           else
+      //           {
+      //             V_FWD = 0;
+      //             autonComplete[1] = true;
+      //           }
+
+      //           V_ShooterSpeedDesired[E_TopShooter] = AutoShoot(targetYaw0, distanceTarget, 0);
+      //           V_ShooterSpeedDesired[E_BottomShooter] = AutoShoot(targetYaw0, distanceTarget, 1);
+
+      //           if (beamFullyCharged == true && beamCount < 3)
+      //           {
+      //             m_belt.Set(ControlMode::PercentOutput, 1);
+      //           }
+      //           else
+      //           {
+      //             m_belt.Set(ControlMode::PercentOutput, 0);
+      //           }
+                
+      //           if (beamCount == 3)
+      //           {
+      //             autonComplete[2] = true;
+      //           }
+
+      //           if(autonComplete[1] && autonComplete[2])
+      //           {
+      //             autonComplete[3] = true;
+      //           }
+      //       }
+      //       break;
+          
+      //     //Rotates then shoots, then rotates back to 0 position, then moves forward
+      //     case 2:
+      //       if(autonComplete[3] == false)
+      //       {
+      //         if(autonComplete[1] == false)
+      //         {
+      //           // V_RCW = AutoTarget(targetYaw0.GetDouble(0), distanceTarget, desiredVisionAngle0);
+
+      //           V_ShooterSpeedDesired[E_TopShooter] = AutoShoot(targetYaw0, distanceTarget, 0);
+      //           V_ShooterSpeedDesired[E_BottomShooter] = AutoShoot(targetYaw0, distanceTarget, 1);
+                
+      //           if(V_RCW == 0)
+      //           {
+      //             if(beamFullyCharged == true && beamCount < 3)
+      //             {
+      //               m_belt.Set(ControlMode::PercentOutput, 1);
+      //             }
+      //             else
+      //             {
+      //               m_belt.Set(ControlMode::PercentOutput, 0);
+      //             }
+                    
+      //             if(beamCount == 3)
+      //             {
+      //               autonComplete[1] = true;
+      //             }
+      //           }
+      //         }
+
+      //         if (autonComplete[1])
+      //         {
+      //           if(abs(originalPosition) > 0)
+      //           {
+      //             // V_RCW = AutoTarget(-originalPosition, distanceTarget, desiredVisionAngle0);
+      //           }
+      //           else
+      //           {
+      //             autonComplete[2] = true;
+      //           }
+      //         }
+              
+      //         if(autonComplete[2])
+      //         {
+      //           if(AutoMove(distanceTarget, 457.0476) == false)
+      //           {
+      //             V_FWD = .5;
+      //           }
+      //           else
+      //           {
+      //             V_FWD = 0;
+      //             autonComplete[3] = true;
+      //           }
+      //         }
+      //       }
+      //       break;
+      // }
+      #pragma endregion
+
+      Read_Encoders(V_RobotInit,
+                a_encoderFrontLeftSteer.GetVoltage(),
+                a_encoderFrontRightSteer.GetVoltage(),
+                a_encoderRearLeftSteer.GetVoltage(),
+                a_encoderRearRightSteer.GetVoltage(),
+                m_encoderFrontLeftSteer,
+                m_encoderFrontRightSteer,
+                m_encoderRearLeftSteer,
+                m_encoderRearRightSteer,
+                m_encoderFrontLeftDrive,
+                m_encoderFrontRightDrive,
+                m_encoderRearLeftDrive,
+                m_encoderRearRightDrive,
+                m_encoderTopShooter,
+                m_encoderBottomShooter);
+
+      double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
+      double driveforward = 0;
+
+      if(timeleft > 10)
+      {
+        driveforward = -0.3;
+      }
+
+      DriveControlMain(driveforward,
+                  0,
+                  0,
+                  c_joyStick.GetRawAxis(3),
+                  c_joyStick.GetRawButton(1),
+                  c_joyStick.GetRawButton(3),
+                  c_joyStick.GetRawButton(4),
+                  c_joyStick.GetRawButton(5),
+                  gyro_yawangledegrees,
+                  gyro_yawanglerad,
+                  targetYaw0.GetDouble(0),
+                  &V_WheelAngleFwd[0],
+                  &V_WheelAngleRev[0],
+                  &V_WS[0],
+                  &V_WA[0],
+                  &V_RobotInit,
+                  V_AutoTargetState,
+                  V_AutoTargetAngle);
+        
+        T_RobotCorner index; 
+
+        for (index = E_FrontLeft;
+         index < E_RobotCornerSz;
+         index = T_RobotCorner(int(index) + 1))
+      {
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
+                                              V_WheelAngleArb[index],
+                                             &V_WheelAngleError[index],
+                                             &V_WheelAngleIntegral[index],
+                                              K_WheelAnglePID_Gx[E_P_Gx],
+                                              K_WheelAnglePID_Gx[E_I_Gx],
+                                              K_WheelAnglePID_Gx[E_D_Gx],
+                                              K_WheelAnglePID_Gx[E_P_Ul],
+                                              K_WheelAnglePID_Gx[E_P_Ll],
+                                              K_WheelAnglePID_Gx[E_I_Ul],
+                                              K_WheelAnglePID_Gx[E_I_Ll],
+                                              K_WheelAnglePID_Gx[E_D_Ul],
+                                              K_WheelAnglePID_Gx[E_D_Ll],
+                                              K_WheelAnglePID_Gx[E_Max_Ul],
+                                              K_WheelAnglePID_Gx[E_Max_Ll]);
+
+      V_WheelSpeedCmnd[index] = Control_PID( V_WS[index],
+                                             V_WheelVelocity[index],
+                                            &V_WheelSpeedError[index],
+                                            &V_WheelSpeedIntergral[index],
+                                             K_WheelSpeedPID_Gx[E_P_Gx],
+                                             K_WheelSpeedPID_Gx[E_I_Gx],
+                                             K_WheelSpeedPID_Gx[E_D_Gx],
+                                             K_WheelSpeedPID_Gx[E_P_Ul],
+                                             K_WheelSpeedPID_Gx[E_P_Ll],
+                                             K_WheelSpeedPID_Gx[E_I_Ul],
+                                             K_WheelSpeedPID_Gx[E_I_Ll],
+                                             K_WheelSpeedPID_Gx[E_D_Ul],
+                                             K_WheelSpeedPID_Gx[E_D_Ll],
+                                             K_WheelSpeedPID_Gx[E_Max_Ul],
+                                             K_WheelSpeedPID_Gx[E_Max_Ll]);
+      }
+
+    m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
+    m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
+    m_rearLeftDriveMotor.Set(V_WheelSpeedCmnd[E_RearLeft]);
+    m_rearRightDriveMotor.Set(V_WheelSpeedCmnd[E_RearRight]);
+
+    // m_frontLeftDriveMotor.Set(0);
+    // m_frontRightDriveMotor.Set(0);
+    // m_rearLeftDriveMotor.Set(0);
+    // m_rearRightDriveMotor.Set(0);
+
+    m_frontLeftSteerMotor.Set(V_WheelAngleCmnd[E_FrontLeft] * (-1));
+    m_frontRightSteerMotor.Set(V_WheelAngleCmnd[E_FrontRight] * (-1));
+    m_rearLeftSteerMotor.Set(V_WheelAngleCmnd[E_RearLeft] * (-1));
+    m_rearRightSteerMotor.Set(V_WheelAngleCmnd[E_RearRight] * (-1));
+
+    // m_frontLeftSteerMotor.Set(0);
+    // m_frontRightSteerMotor.Set(0);
+    // m_rearLeftSteerMotor.Set(0);
+    // m_rearRightSteerMotor.Set(0);
   }
 
 
@@ -334,29 +557,18 @@ void Robot::TeleopInit()
  ******************************************************************************/
 void Robot::TeleopPeriodic()
   {
-  double L_temp;
-  double L_A;
-  double L_B;
-  double L_C;
-  double L_D;
-  double L_Gain;
-  double L_Max;
-  double L_WA_FWD;
-  double L_WA_FWD_Delta;
-  double L_WA_REV;
-  double L_WA_REV_Delta;
-  T_RobotCorner index;
-  double L_FortuneMotor;
-  T_WheelOfFortuneColor L_Color;
+  T_RobotCorner         index;
+  double                L_FortuneMotor;
+  // T_WheelOfFortuneColor L_Color;
 
-  L_Color = ColorSensor(false);
+  //L_Color = ColorSensor(false);
+
   Gyro();
-  L_FortuneMotor = WheelOfFortune (L_Color,
-                     c_joyStick2.GetRawButton(2),
-                     c_joyStick2.GetRawButton(4),
-                     c_joyStick2.GetRawButton(3));
 
-
+  L_FortuneMotor = WheelOfFortune (//L_Color,
+                                   c_joyStick2.GetRawButton(2),
+                                   c_joyStick2.GetRawButton(4),
+                                   c_joyStick2.GetRawButton(3));
 
   Read_Encoders(V_RobotInit,
                 a_encoderFrontLeftSteer.GetVoltage(),
@@ -370,214 +582,90 @@ void Robot::TeleopPeriodic()
                 m_encoderFrontLeftDrive,
                 m_encoderFrontRightDrive,
                 m_encoderRearLeftDrive,
-                m_encoderRearRightDrive);
+                m_encoderRearRightDrive,
+                m_encoderTopShooter,
+                m_encoderBottomShooter);
 
-  V_FWD = c_joyStick.GetRawAxis(1) * -1;
-  V_STR = c_joyStick.GetRawAxis(0);
-  V_RCW = c_joyStick.GetRawAxis(4);
+
+
+
+  double L_JoyStick1Axis1Y = DesiredSpeed(c_joyStick.GetRawAxis(1));
+  double L_JoyStick1Axis1X = DesiredSpeed(c_joyStick.GetRawAxis(0));
+  double L_JoyStick1Axis2X = DesiredSpeed(c_joyStick.GetRawAxis(4));
+
+   
+
+
+
+  DriveControlMain(L_JoyStick1Axis1Y,
+                   L_JoyStick1Axis1X,
+                   L_JoyStick1Axis2X,
+                   c_joyStick.GetRawAxis(3),
+                   c_joyStick.GetRawButton(1),
+                   c_joyStick.GetRawButton(3),
+                   c_joyStick.GetRawButton(4),
+                   c_joyStick.GetRawButton(5),
+                   gyro_yawangledegrees,
+                   gyro_yawanglerad,
+                   targetYaw0.GetDouble(0),
+                   &V_WheelAngleFwd[0],
+                   &V_WheelAngleRev[0],
+                   &V_WS[0],
+                   &V_WA[0],
+                   &V_RobotInit,
+                   V_AutoTargetState,
+                   V_AutoTargetAngle);
 
   //PDP top shooter port 13
   //PDP bottom shooter port 12
-  PDP_Current_UpperShooter = PDP.GetCurrent(13);
-  PDP_Current_LowerShooter = PDP.GetCurrent(12);
-  if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
-  {
-    BallsShot += 1;b
-  }
-  PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
-  PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
+//  PDP_Current_UpperShooter = PDP.GetCurrent(13);
+//  PDP_Current_LowerShooter = PDP.GetCurrent(12);
+//  if(abs(PDP_Current_LowerShooter - PDP_Current_LowerShooter_last) > 2 || abs(PDP_Current_UpperShooter - PDP_Current_UpperShooter_last) > 2)
+//  {
+//    BallsShot += 1;
+//  }
+//  PDP_Current_UpperShooter_last = PDP_Current_UpperShooter;
+//  PDP_Current_LowerShooter_last = PDP_Current_LowerShooter;
 
-
-  /* Let's place a deadband around the joystick readings */
-  V_FWD = DesiredSpeed(V_FWD);
-  V_STR = DesiredSpeed(V_STR);
-  V_RCW = DesiredSpeed(V_RCW);
-
-
- //turning rotatemode on/off & setting desired angle
-  if (c_joyStick.GetRawButton(4)) {
-    rotateMode = true;
-    desiredAngle = 90;
-  }
-  else if (c_joyStick.GetRawButton(3)) {
-    rotateMode = true;
-    desiredAngle = 0;
-  }
-  else if (c_joyStick.GetRawButton(5)) {
-    rotateMode = true;
-    desiredAngle = 67.5;
-  }
-
-
-//error calculation section
-  double errorCalc = desiredAngle - gyro_yawangledegrees;
-
-
-  if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce <= 0.25) {
-    rotateMode = true;
-    rotateDeBounce += 0.01;
-  } // go to line 69
-  else if (rotateMode == true && fabs(errorCalc) <= 1 && rotateDeBounce >= 0.25) {
-    rotateMode = false;
-    rotateDeBounce = 0;
-  }
-
-  if (rotateMode == true) {
-      V_RCW = Control_PID(desiredAngle,
-                                            gyro_yawangledegrees,
-                                            &rotateErrorCalc,
-                                            &rotateErrorIntegral,
-                                            0.08,   // P Gx 0.0038 0.005
-                                            0.0007, // I Gx 0.0029  0.001
-                                            0, // D Gx
-                                            0.9, // P UL
-                                            -0.9, // P LL
-                                            0.5, // I UL
-                                            -0.5, // I LL
-                                            0.2, // D UL
-                                            -0.2, // D LL
-                                            1.0, // Max upper
-                                            -1.0);
-  }
-
-  L_temp = V_FWD * cos(gyro_yawanglerad) + V_STR * sin(gyro_yawanglerad);
-  V_STR = -V_FWD * sin(gyro_yawanglerad) + V_STR * cos(gyro_yawanglerad);
-  V_FWD = L_temp;
-
-  //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
-  L_A = V_STR - V_RCW * (C_L/C_R);
-  L_B = V_STR + V_RCW * (C_L/C_R);
-  L_C = V_FWD - V_RCW * (C_W/C_R);
-  L_D = V_FWD + V_RCW * (C_W/C_R);
-
-  V_WS[E_FrontRight] = pow((L_B * L_B + L_C * L_C), 0.5);
-  V_WS[E_FrontLeft]  = pow((L_B * L_B + L_D * L_D), 0.5);
-  V_WS[E_RearLeft]   = pow((L_A * L_A + L_D * L_D), 0.5);
-  V_WS[E_RearRight]  = pow((L_A * L_A + L_C * L_C), 0.5);
-
-  V_WA[E_FrontRight] = atan2(L_B, L_C) *180/C_PI;
-  V_WA[E_FrontLeft]  = atan2(L_B, L_D) *180/C_PI;
-  V_WA[E_RearLeft]   = atan2(L_A, L_D) *180/C_PI;
-  V_WA[E_RearRight]  = atan2(L_A, L_C) *180/C_PI;
-
-  L_Max = V_WS[E_FrontRight];
-
-  if (V_WS[E_FrontLeft] > L_Max) {
-    L_Max = V_WS[E_FrontLeft];
-  }
- if (V_WS[E_RearLeft] > L_Max) {
-    L_Max = V_WS[E_RearLeft];
-  }
-  if (V_WS[E_RearRight] > L_Max) {
-    L_Max = V_WS[E_RearRight];
-  }
-  if (L_Max > 1) {
-      V_WS[E_FrontRight] /= L_Max;
-      V_WS[E_FrontLeft] /= L_Max;
-      V_WS[E_RearLeft] /= L_Max;
-      V_WS[E_RearRight] /= L_Max;
-  }
-
-  L_Gain = 0.1;
-  if (c_joyStick.GetRawAxis(3) > L_Gain)
-    {
-    L_Gain = c_joyStick.GetRawAxis(3);
-    }
-
-  V_WS[E_FrontRight] *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_FrontLeft]  *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_RearLeft]   *= (K_WheelMaxSpeed * L_Gain);
-  V_WS[E_RearRight]  *= (K_WheelMaxSpeed * L_Gain);
-
-  for (index = E_FrontLeft;
-       index < E_RobotCornerSz;
-       index = T_RobotCorner(int(index) + 1))
-  {
-    L_WA_FWD = DtrmnEncoderRelativeToCmnd(V_WA[index],
-                                          V_WheelAngleFwd[index]);
-
-    L_WA_FWD_Delta = fabs(V_WA[index] - L_WA_FWD);
-
-    L_WA_REV = DtrmnEncoderRelativeToCmnd(V_WA[index],
-                                          V_WheelAngleRev[index]);
-
-    L_WA_REV_Delta = fabs(V_WA[index] - L_WA_REV);
-
-    if (L_WA_FWD_Delta <= L_WA_REV_Delta)
-      {
-        V_WheelAngleArb[index] = L_WA_FWD;
-      }
-    else
-      {
-        V_WheelAngleArb[index] = L_WA_REV;
-        V_WS[index] *= (-1); // Need to flip sign of drive wheel to acount for reverse direction
-      }
-  }
-
-  //8.31 : 1
-  //11.9 m/s
-
-  // V_RobotInit = true;
-  /* Ok, let's check to see if we are in init: */
-    if (V_RobotInit == true)
-      {
-      V_RobotInit = false;
-      for (index = E_FrontLeft;
-           index < E_RobotCornerSz;
-           index = T_RobotCorner(int(index) + 1))
-        {
-        V_WS[index] = 0;
-        V_WA[index] = 0;
-        V_WheelAngleArb[index] = V_WheelAngleFwd[index];
-        if (fabs(V_WheelAngleArb[index]) > K_InitAngle)
-          {
-          V_RobotInit = true;
-          }
-        }
-      }
-    // V_RobotInit = true;
 
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
       {
-      V_WheelAngleCmnd[index] =  Control_PID(V_WA[index],
-                                             V_WheelAngleArb[index],
+      V_WheelAngleCmnd[index] =  Control_PID( V_WA[index],
+                                              V_WheelAngleArb[index],
                                              &V_WheelAngleError[index],
                                              &V_WheelAngleIntegral[index],
-                                              0.007, // P Gx 0.0045
-                                              0.0005, // I Gx 0001
-                                              0.0000005, // D Gx
-                                              0.4, // P UL
-                                             -0.4, // P LL
-                                              0.12, // I UL
-                                             -0.12, // I LL
-                                              0.5, // D UL
-                                             -0.5, // D LL
-                                              0.9, // Max upper
-                                             -0.9); // Max lower
+                                              K_WheelAnglePID_Gx[E_P_Gx],
+                                              K_WheelAnglePID_Gx[E_I_Gx],
+                                              K_WheelAnglePID_Gx[E_D_Gx],
+                                              K_WheelAnglePID_Gx[E_P_Ul],
+                                              K_WheelAnglePID_Gx[E_P_Ll],
+                                              K_WheelAnglePID_Gx[E_I_Ul],
+                                              K_WheelAnglePID_Gx[E_I_Ll],
+                                              K_WheelAnglePID_Gx[E_D_Ul],
+                                              K_WheelAnglePID_Gx[E_D_Ll],
+                                              K_WheelAnglePID_Gx[E_Max_Ul],
+                                              K_WheelAnglePID_Gx[E_Max_Ll]);
 
-      V_WheelSpeedCmnd[index] = Control_PID(V_WS[index],
-                                            V_WheelVelocity[index],
+      V_WheelSpeedCmnd[index] = Control_PID( V_WS[index],
+                                             V_WheelVelocity[index],
                                             &V_WheelSpeedError[index],
                                             &V_WheelSpeedIntergral[index],
-                                            0.0055,   // P Gx 0.0038 0.005
-                                            0.0009, // I Gx 0.0029  0.001
-                                            0.00000005, // D Gx
-                                            0.9, // P UL
-                                            -0.9, // P LL
-                                            0.5, // I UL
-                                            -0.5, // I LL
-                                            0.2, // D UL
-                                            -0.2, // D LL
-                                            1.0, // Max upper
-                                            -1.0);
+                                             K_WheelSpeedPID_Gx[E_P_Gx],
+                                             K_WheelSpeedPID_Gx[E_I_Gx],
+                                             K_WheelSpeedPID_Gx[E_D_Gx],
+                                             K_WheelSpeedPID_Gx[E_P_Ul],
+                                             K_WheelSpeedPID_Gx[E_P_Ll],
+                                             K_WheelSpeedPID_Gx[E_I_Ul],
+                                             K_WheelSpeedPID_Gx[E_I_Ll],
+                                             K_WheelSpeedPID_Gx[E_D_Ul],
+                                             K_WheelSpeedPID_Gx[E_D_Ll],
+                                             K_WheelSpeedPID_Gx[E_Max_Ul],
+                                             K_WheelSpeedPID_Gx[E_Max_Ll]);
       }
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
-    frc::SmartDashboard::PutBoolean("rotateMode",rotateMode);
-    frc::SmartDashboard::PutNumber("errorCalc",errorCalc);
-    frc::SmartDashboard::PutNumber("desiredAngle",desiredAngle);
     frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
     frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
     frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
@@ -608,102 +696,124 @@ void Robot::TeleopPeriodic()
 
     frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
-
-
     //Shooter mech
-    V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * shooterWheelRotation) * 0.3191858136047229930278045677412;
-    V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * shooterWheelRotation) * 0.2393893602035422447708534258059;
-
     frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
     frc::SmartDashboard::PutNumber("Bottom Speed", V_ShooterSpeedCurr[E_BottomShooter]);
 
-    SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
-    frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
+    // SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
+    // frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
 
     double L_RequestedSpeed;
 
     //Shooter mech controls
-    // V_ShooterSpeedDesired[E_TopShooter]    = c_joyStick2.GetRawAxis(1) * 10000;
-    // V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5) * 10000;
-
-//    V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
-//    V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
-
-    L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
-
-    V_ShooterSpeedDesired[E_TopShooter] =RampTo(L_RequestedSpeed,
-                                                V_ShooterSpeedDesired[E_TopShooter],
-                                                30);
-
-    L_RequestedSpeed = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
-
-    V_ShooterSpeedDesired[E_BottomShooter] =RampTo(L_RequestedSpeed,
-                                                   V_ShooterSpeedDesired[E_BottomShooter],
-                                                   30);
-
-    double upper_P_Gx = frc::SmartDashboard::GetNumber("Upper_P_Gx", 0);
-    double upper_I_Gx = frc::SmartDashboard::GetNumber("Upper_I_Gx", 0);
-    double upper_D_Gx = frc::SmartDashboard::GetNumber("Upper_D_Gx", 0);
-    double upper_I_Zone = frc::SmartDashboard::GetNumber("Upper_I_Zone", 0);
-    double upper_FF = frc::SmartDashboard::GetNumber("Upper_FF", 0);
-    double upper_Max = frc::SmartDashboard::GetNumber("Upper_Max_Limit", 0);
-    double upper_Min = frc::SmartDashboard::GetNumber("Upper_Min_Limit", 0);
-
-    double lower_P_Gx = frc::SmartDashboard::GetNumber("Lower_P_Gx", 0);
-    double lower_I_Gx = frc::SmartDashboard::GetNumber("Lower_I_Gx", 0);
-    double lower_D_Gx = frc::SmartDashboard::GetNumber("Lower_D_Gx", 0);
-    double lower_I_Zone =frc::SmartDashboard::GetNumber("Lower_I_Zone", 0);
-    double lower_FF = frc::SmartDashboard::GetNumber("Lower_FF", 0);
-    double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
-    double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
-
-    double p = frc::SmartDashboard::GetNumber("P Gain", 0);
-    double i = frc::SmartDashboard::GetNumber("I Gain", 0);
-    double d = frc::SmartDashboard::GetNumber("D Gain", 0);
-    double iz = frc::SmartDashboard::GetNumber("I Zone", 0);
-    double ff = frc::SmartDashboard::GetNumber("Feed Forward", 0);
-    double max = frc::SmartDashboard::GetNumber("Max Output", 0);
-    double min = frc::SmartDashboard::GetNumber("Min Output", 0); //go back to heck dose watamelonns //https://www.youtube.com/watch?v=oHg5SJYRHA0
-
-    if(upper_P_Gx != Upper_P_Gx) { m_topShooterpid.SetP(upper_P_Gx); Upper_P_Gx = upper_P_Gx; }
-    if(upper_I_Gx != Upper_I_Gx) { m_topShooterpid.SetI(upper_I_Gx); Upper_I_Gx = upper_I_Gx; }
-    if(upper_D_Gx != Upper_D_Gx) { m_topShooterpid.SetD(upper_D_Gx); Upper_D_Gx = upper_D_Gx; }
-    if(upper_I_Zone != Upper_I_Zone) { m_topShooterpid.SetIZone(upper_I_Zone); Upper_I_Zone = upper_I_Zone; }
-    if(upper_FF != Upper_FF) { m_topShooterpid.SetFF(upper_FF); Upper_FF = upper_FF; }
-    if ((upper_Max != Upper_Max) || (upper_Min != Upper_Min))
+    int shooterSpeedSlowDown;
+    T_RoboShooter dex;
+    
+    //NOTE: Shooting code
+    if(c_joyStick2.GetRawButton(8))
+    {   
+      if(shooterSpeedSlowDown < 200)
+      {
+        for (dex = E_TopShooter;
+             dex < E_RoboShooter;
+             dex = T_RoboShooter(int(dex) + 1))
+        {
+            V_ShooterSpeedDesired[dex] *= 0.99;
+            shooterSpeedSlowDown++;
+        }
+      }       
+      else if(shooterSpeedSlowDown >= 200)
+      {
+        V_ShooterSpeedDesired[E_TopShooter] = 0;
+        V_ShooterSpeedDesired[E_BottomShooter] = 0;
+      }
+    }
+    else if(abs(c_joyStick2.GetRawAxis(1)) > .2 || abs(c_joyStick2.GetRawAxis(5)) > .2)
     {
-      m_topShooterpid.SetOutputRange(upper_Min, upper_Max);
-      Upper_Min = upper_Min; Upper_Max = upper_Max;
+      V_ShooterSpeedDesired[E_TopShooter] = c_joyStick2.GetRawAxis(1) * 2000;
+      V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5) * 2200;
     }
-
-    if(lower_P_Gx != Lower_P_Gx) { m_bottomShooterpid.SetP(lower_P_Gx); Lower_P_Gx = lower_P_Gx; }
-    if(lower_I_Gx != Lower_I_Gx) { m_bottomShooterpid.SetI(lower_I_Gx); Lower_I_Gx = lower_I_Gx; }
-    if(lower_D_Gx != Lower_D_Gx) { m_bottomShooterpid.SetD(lower_D_Gx); Lower_D_Gx = lower_D_Gx; }
-    if(lower_I_Zone != Lower_I_Zone) { m_bottomShooterpid.SetIZone(lower_I_Zone); Lower_I_Zone = lower_I_Zone; }
-    if(lower_FF != Lower_FF) { m_bottomShooterpid.SetFF(lower_FF); Lower_FF = lower_FF; }
-    if ((lower_Max != Lower_Max) || (lower_Min != Lower_Min))
+    else
     {
-      m_bottomShooterpid.SetOutputRange(lower_Min, lower_Max);
-      Lower_Min = lower_Min; Lower_Max = lower_Max;
+      V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
+      V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
     }
+    
 
-    if((p != kP)) { m_liftpid.SetP(p); kP = p; }
-    if((i != kI)) { m_liftpid.SetI(i); kI = i; }
-    if((d != kD)) { m_liftpid.SetD(d); kD = d; }
-    if((iz != kIz)) { m_liftpid.SetIZone(iz); kIz = iz; }
-    if((ff != kFF)) { m_liftpid.SetFF(ff); kFF = ff; }
-    if((max != kMaxOutput) || (min != kMinOutput)) 
-    { 
-      m_liftpid.SetOutputRange(min, max); 
-      kMinOutput = min; kMaxOutput = max; 
-    }
-    m_liftpid.SetIMaxAccum(0.1);
-    double desiredlevel = frc::SmartDashboard::GetNumber("Desired Level", 0);
+    //Shooter mech
+    // double upper_P_Gx = frc::SmartDashboard::GetNumber("Upper_P_Gx", 0);
+    // double upper_I_Gx = frc::SmartDashboard::GetNumber("Upper_I_Gx", 0);
+    // double upper_D_Gx = frc::SmartDashboard::GetNumber("Upper_D_Gx", 0);
+    // double upper_I_Zone = frc::SmartDashboard::GetNumber("Upper_I_Zone", 0);
+    // double upper_FF = frc::SmartDashboard::GetNumber("Upper_FF", 0);
+    // double upper_Max = frc::SmartDashboard::GetNumber("Upper_Max_Limit", 0);
+    // double upper_Min = frc::SmartDashboard::GetNumber("Upper_Min_Limit", 0);
+    double upper_P_Gx = .001;
+    double upper_I_Gx = .000001;
+    double upper_D_Gx = .0001;
+    double upper_I_Zone = 0;
+    double upper_FF = 0;
+    double upper_Max = 1;
+    double upper_Min = -1;
+
+    // double lower_P_Gx = frc::SmartDashboard::GetNumber("Lower_P_Gx", 0);
+    // double lower_I_Gx = frc::SmartDashboard::GetNumber("Lower_I_Gx", 0);
+    // double lower_D_Gx = frc::SmartDashboard::GetNumber("Lower_D_Gx", 0);
+    // double lower_I_Zone =frc::SmartDashboard::GetNumber("Lower_I_Zone", 0);
+    // double lower_FF = frc::SmartDashboard::GetNumber("Lower_FF", 0);
+    // double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
+    // double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
+    double lower_P_Gx = .001;
+    double lower_I_Gx = .000001;
+    double lower_D_Gx = .0001;
+    double lower_I_Zone = 0;
+    double lower_FF = 0;
+    double lower_Max = 1;
+    double lower_Min = -1;
+
+    m_topShooterpid.SetP(upper_P_Gx);
+    m_topShooterpid.SetI(upper_I_Gx);
+    m_topShooterpid.SetD(upper_D_Gx);
+    m_topShooterpid.SetIZone(upper_I_Zone);
+    m_topShooterpid.SetFF(upper_FF);
+    m_topShooterpid.SetOutputRange(upper_Min, upper_Max);
+
+    m_bottomShooterpid.SetP(lower_P_Gx);
+    m_bottomShooterpid.SetI(lower_I_Gx);
+    m_bottomShooterpid.SetD(lower_D_Gx);
+    m_bottomShooterpid.SetIZone(lower_I_Zone);
+    m_bottomShooterpid.SetFF(lower_FF);
+    m_bottomShooterpid.SetOutputRange(lower_Min, lower_Max);
 
     frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
-    //m_liftpid.SetReference(desiredlevel , rev::ControlType::kPosition);
-    //m_liftMotor.Set(c_joyStick2.GetRawAxis(1) * 0.25);
+    if(c_joyStick2.GetRawAxis(3) > 0.1)
+    {
+      if(m_encoderLift.GetPosition() > -440)
+      {
+        m_liftMotor.Set(c_joyStick2.GetRawAxis(3) * -0.50);
+      }
+      else
+      {
+        m_liftMotor.Set(0);
+      }
+    }
+    else if (c_joyStick2.GetRawAxis(2) > 0.1)
+    {
+      if(m_encoderLift.GetPosition() < -8)
+      {
+        m_liftMotor.Set(c_joyStick2.GetRawAxis(2) * 0.50);
+      }
+      else
+      {
+        m_liftMotor.Set(0);
+      }
+    }
+    else
+    {
+      m_liftMotor.Set(0);
+    }
+
     frc::SmartDashboard::PutNumber("Upper Velocity", m_encoderTopShooter.GetVelocity());
     frc::SmartDashboard::PutNumber("Lower Velocity", m_encoderBottomShooter.GetVelocity());
 
@@ -749,16 +859,16 @@ void Robot::TeleopPeriodic()
     }
 
     //Intake Control
-    if(c_joyStick2.GetRawButton(2))
-    {
-      intake.Set(frc::DoubleSolenoid::Value::kForward);
-      m_intake.Set(ControlMode::PercentOutput, 0.5);
-    }
-    else
-    {
-      intake.Set(frc::DoubleSolenoid::Value::kOff);
-      m_intake.Set(ControlMode::PercentOutput, 0);
-    }
+//    if(c_joyStick2.GetRawButton(2))
+//    {
+//      intake.Set(frc::DoubleSolenoid::Value::kForward);
+//      m_intake.Set(ControlMode::PercentOutput, 0.5);
+//    }
+//    else
+//    {
+//      intake.Set(frc::DoubleSolenoid::Value::kOff);
+//      m_intake.Set(ControlMode::PercentOutput, 0);
+//    }
 
     if(c_joyStick2.GetRawButton(1))
     {
@@ -768,67 +878,7 @@ void Robot::TeleopPeriodic()
     {
       m_belt.Set(ControlMode::PercentOutput, 0);
     }
-    /*
-      Finds distance from robot to specified target.
-      Numerator depends upon camera height relative to target for target distance,
-      and camera height relative to ground for ball distance.
-      Make sure it's in meters.
-    */
-    distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0)) * (deg2rad));
-    distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-deg2rad));
 
-    //Finds robot's distance from target's center view.
-    distanceFromTargetCenter = distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * deg2rad);
-    distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad);
-
-    frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget); 
-
-    // Toggle for target adjust
-    if(c_joyStick.GetRawButton(1) == true)
-    {
-        visionInit(vision0, ledLight, inst);
-        visionStart1 = true;
-    }
-    if(c_joyStick.GetRawButton(1) == false && visionStart1 == true)
-    {
-        visionOff(vision0, ledLight, inst, visionStart1, visionStart2, activeVisionAngle0, activeVisionDistance0);
-        V_RCW = 0;
-        visionStart1 = false;
-    }
-    if(visionStart1 == true)
-    {
-        V_RCW = AutoTarget(targetYaw0, distanceTarget, 0, activeVisionAngle0, activeVisionDistance0, desiredVisionAngle0, desiredVisionDistance0);
-    }
-
-    //Toggle for autoshoot
-
-    
-
-    //  if(c_joyStick.GetRawButton(2) == true)
-    //  {
-    //      visionInit(vision0, ledLight);
-    //      visionStart[2] = true;
-    //  }
-
-    //  if(c_joyStick.GetRawButton(3) == true)
-    //  {
-    //     visionRequest = true;
-    //  }
-
-    //  if(c_joyStick.GetRawButton(4) == true)
-    //  {
-    //     visionStart[1] = false; visionStart[2] = false;
-    //  }
-
-    //  if(visionStart[1] == true)
-    //  {
-    //     visionRun(targetYaw0, distanceFromTargetCenter, high, vision0, ledLight);
-    //  }
-
-    // if(visionStart[2] == true)
-    // {
-    //     visionRun(targetYaw1, -distanceFromBallCenter, ball, vision1, ledLight);
-    // }
 
     frc::Wait(C_ExeTime);
 }

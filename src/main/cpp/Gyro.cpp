@@ -41,10 +41,10 @@ double gyro_currentyaw = (double)NavX->GetYaw();
       gryo_loopcount += 1;
     }
   }
-  gyro_rolloverrad = ((gryo_loopcount * 360) + gyro_currentyaw) / RadtoDeg;
+  gyro_rolloverrad = ((gryo_loopcount * 360) + gyro_currentyaw) / C_RadtoDeg;
 
 gyro_yawangledegrees = (double)NavX->GetYaw();
-gyro_yawanglerad = (double)NavX->GetYaw() / RadtoDeg;
+gyro_yawanglerad = (double)NavX->GetYaw() / C_RadtoDeg;
 
 
   gyro_angleprev = gyro_currentyaw;

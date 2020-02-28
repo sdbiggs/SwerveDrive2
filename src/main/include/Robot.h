@@ -12,8 +12,6 @@
 #include <frc/TimedRobot.h>
 #include <frc/PowerDistributionPanel.h>
 
-#include <networktables/NetworkTableInstance.h>
-#include <networktables/NetworkTableEntry.h>
 
 #include "ctre/Phoenix.h"
 #include "rev/CANSparkMax.h"
