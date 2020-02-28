@@ -19,7 +19,6 @@ const double C_R = 0.8441;
 
 const double K_ShooterWheelRotation[E_RoboShooter] = {5.12517590321455,     // E_TopShooter    2.5555555555555555555555555555555555555555555555 * 2 * C_PI * 0.3191858136047229930278045677412
                                                       3.84388192741092};    // E_BottomShooter 2.5555555555555555555555555555555555555555555555 * 2 * C_PI *0.2393893602035422447708534258059
-<<<<<<< HEAD
 
 const double K_WheelOfFortunePwr = 0.4; // This is the constant power command sent to the wheel of fortune spinner
 
@@ -28,54 +27,6 @@ const double K_WheelOffsetAngle[E_RobotCornerSz] = {75.234367,   // E_FrontLeft
                                                     90.615225,   // E_FrontRight 152  104.6
                                                     12.041014,   // E_RearLeft
                                                     180.703106}; // E_RearRight
-
-const double K_WheelMaxSpeed = 200; // This is the max allowed speed for the wheels
-=======
->>>>>>> 2b13db20198e29d8d628a3ab09832cb48193a05f
-
-const double K_WheelAnglePID_Gx[E_PID_CalSz] = { 0.007,     // P Gx
-                                                 0.0005,    // I Gx
-                                                 0.0000005, // D Gx
-                                                 0.4,       // P UL
-                                                -0.4,       // P LL
-                                                 0.12,      // I UL
-                                                -0.12,      // I LL
-                                                 0.5,       // D UL
-                                                -0.5,       // D LL
-                                                 0.9,       // Max upper
-                                                -0.9};      // Max lower
-
-<<<<<<< HEAD
-const double K_WheelSpeedPID_Gx[E_PID_CalSz] = { 0.0055,     // P Gx
-                                                 0.0009,     // I Gx
-                                                 0.00000005, // D Gx
-                                                 0.9,        // P UL
-                                                -0.9,        // P LL
-                                                 0.5,        // I UL
-                                                -0.5,        // I LL
-                                                 0.2,        // D UL
-                                                -0.2,        // D LL
-                                                 1.0,        // Max upper
-                                                -1.0};       // Max lower
-
-const double K_RobotRotationPID_Gx[E_PID_CalSz] = { 0.08,   // P Gx
-                                                    0.0007, // I Gx
-                                                    0.0,    // D Gx
-                                                    0.9,    // P UL
-                                                   -0.9,    // P LL
-                                                    0.5,    // I UL
-                                                   -0.5,    // I LL
-                                                    0.2,    // D UL
-                                                   -0.2,    // D LL
-                                                    1.0,    // Max upper
-                                                   -1.0};   // Max lower
-=======
-const double K_InitAngle = 1.4; // This is the absolute angle that all of the wheels need to be sitting at before allowing the robot to exit init
-const double K_WheelOffsetAngle[E_RobotCornerSz] = {75.234367,   // E_FrontLeft
-                                                    90.615225,   // E_FrontRight 152  104.6
-                                                    12.041014,   // E_RearLeft
-                                                    180.703106}; // E_RearRight
->>>>>>> 2b13db20198e29d8d628a3ab09832cb48193a05f
 
 const double K_WheelMaxSpeed = 200; // This is the max allowed speed for the wheels
 
@@ -157,11 +108,8 @@ const double K_DesiredDriveSpeed[20] = {-1.00,  //-0.95
                                          0.88,  // 0.85
                                          1.00}; // 0.95
 
-<<<<<<< HEAD
 const double K_TargetVisionAngle = 50;
 
-=======
->>>>>>> 2b13db20198e29d8d628a3ab09832cb48193a05f
 const double K_TargetVisionAngleMin = 10;
 
 const double K_TargetVisionAngleMax = 50;

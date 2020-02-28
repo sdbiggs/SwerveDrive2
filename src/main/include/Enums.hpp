@@ -59,28 +59,4 @@ typedef enum T_AutoTargetStates
   E_AutoTargetStatesSz
 } T_AutoTargetStates;
 
-typedef enum T_PID_Cal
-{
-  E_P_Gx,
-  E_I_Gx,
-  E_D_Gx,
-  E_P_Ul,
-  E_P_Ll,
-  E_I_Ul,
-  E_I_Ll,
-  E_D_Ul,
-  E_D_Ll,
-  E_Max_Ul,
-  E_Max_Ll,
-  E_PID_CalSz
-} T_PID_Cal;
-
-typedef enum T_AutoTargetStates
-{
-  E_NotActive,
-  E_TargetFoundRotateBotAndRollerSpinUp,
-  E_MoveBallsToRollers,
-  E_AutoTargetStatesSz
-} T_AutoTargetStates;
-
 #endif
