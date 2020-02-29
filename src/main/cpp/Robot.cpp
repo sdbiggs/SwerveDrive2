@@ -90,6 +90,9 @@ bool         autonComplete[4];
 int          beamCount;
 bool         beamFullyCharged;
 
+bool         V_AutoShootEnable;
+double       V_ShooterSpeedDesiredFinalUpper;
+double       V_ShooterSpeedDesiredFinalLower;
 
 double SpeedRecommend;
 
@@ -121,6 +124,9 @@ void Robot::RobotInit() {
     m_rearRightDriveMotor.RestoreFactoryDefaults();
     m_topShooterMotor.RestoreFactoryDefaults();
     m_bottomShooterMotor.RestoreFactoryDefaults();
+    m_liftMotor.RestoreFactoryDefaults();
+
+    m_liftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
 
     V_RobotInit = true;
 
@@ -132,7 +138,7 @@ void Robot::RobotInit() {
     inst.StartDSClient();
 
     vision0  = inst.GetTable("chameleon-vision/goal");
-    vision1  = inst.GetTable("chameleon-vision/ball");
+    vision1  = inst.GetTable("chameleon-vision/ColorWheel");
     lidar    = inst.GetTable("lidar");
     ledLight = inst.GetTable("ledLight");
 
@@ -152,21 +158,21 @@ void Robot::RobotInit() {
     ledControl            = ledLight->GetEntry("ledControl");
     lidarDistance         = lidar->GetEntry("lidarDistance");
 
-    frc::SmartDashboard::PutNumber("Upper_P_Gx", 0);
-    frc::SmartDashboard::PutNumber("Upper_I_Gx", 0);
-    frc::SmartDashboard::PutNumber("Upper_D_Gx", 0);
-    frc::SmartDashboard::PutNumber("Upper_I_Zone", 0);
-    frc::SmartDashboard::PutNumber("Upper_FF", 0);
-    frc::SmartDashboard::PutNumber("Upper_Max_Limit", 0);
-    frc::SmartDashboard::PutNumber("Upper_Min_Limit", 0);
+    // frc::SmartDashboard::PutNumber("Upper_P_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Upper_I_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Upper_D_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Upper_I_Zone", 0);
+    // frc::SmartDashboard::PutNumber("Upper_FF", 0);
+    // frc::SmartDashboard::PutNumber("Upper_Max_Limit", 0);
+    // frc::SmartDashboard::PutNumber("Upper_Min_Limit", 0);
 
-    frc::SmartDashboard::PutNumber("Lower_P_Gx", 0);
-    frc::SmartDashboard::PutNumber("Lower_I_Gx", 0);
-    frc::SmartDashboard::PutNumber("Lower_D_Gx", 0);
-    frc::SmartDashboard::PutNumber("Lower_I_Zone", 0);
-    frc::SmartDashboard::PutNumber("Lower_FF", 0);
-    frc::SmartDashboard::PutNumber("Lower_Max_Limit", 0);
-    frc::SmartDashboard::PutNumber("Lower_Min_Limit", 0);
+    // frc::SmartDashboard::PutNumber("Lower_P_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Lower_I_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Lower_D_Gx", 0);
+    // frc::SmartDashboard::PutNumber("Lower_I_Zone", 0);
+    // frc::SmartDashboard::PutNumber("Lower_FF", 0);
+    // frc::SmartDashboard::PutNumber("Lower_Max_Limit", 0);
+    // frc::SmartDashboard::PutNumber("Lower_Min_Limit", 0);
 
     frc::SmartDashboard::PutNumber("Speed Desired Top", 0);
     frc::SmartDashboard::PutNumber("Speed Desired Bottom", 0);
@@ -176,35 +182,51 @@ void Robot::RobotInit() {
     V_ShooterSpeedCurr[E_TopShooter] = 0;
     V_ShooterSpeedCurr[E_BottomShooter] = 0;
 
-    m_topShooterpid.SetP(Upper_P_Gx);
-    m_topShooterpid.SetI(Upper_I_Gx);
-    m_topShooterpid.SetD(Upper_D_Gx);
-    m_topShooterpid.SetIZone(Upper_I_Zone);
-    m_topShooterpid.SetFF(Upper_FF);
-    m_topShooterpid.SetOutputRange(Upper_Min,Upper_Max);
+    double upper_P_Gx = .001;
+    double upper_I_Gx = .000001;
+    double upper_D_Gx = .0001;
+    double upper_I_Zone = 0;
+    double upper_FF = 0;
+    double upper_Max = 1;
+    double upper_Min = -1;
 
-    m_bottomShooterpid.SetP(Lower_P_Gx);
-    m_bottomShooterpid.SetI(Lower_I_Gx);
-    m_bottomShooterpid.SetD(Lower_D_Gx);
-    m_bottomShooterpid.SetIZone(Lower_I_Zone);
-    m_bottomShooterpid.SetFF(Lower_FF);
-    m_bottomShooterpid.SetOutputRange(Lower_Min,Lower_Max);
+    double lower_P_Gx = .001;
+    double lower_I_Gx = .000001;
+    double lower_D_Gx = .0001;
+    double lower_I_Zone = 0;
+    double lower_FF = 0;
+    double lower_Max = 1;
+    double lower_Min = -1;
 
-    m_liftpid.SetP(kP);
-    m_liftpid.SetI(kI);
-    m_liftpid.SetD(kD);
-    m_liftpid.SetIZone(kIz);
-    m_liftpid.SetFF(kFF);
-    m_liftpid.SetOutputRange(kMinOutput, kMaxOutput);
+    m_topShooterpid.SetP(upper_P_Gx);
+    m_topShooterpid.SetI(upper_I_Gx);
+    m_topShooterpid.SetD(upper_D_Gx);
+    m_topShooterpid.SetIZone(upper_I_Zone);
+    m_topShooterpid.SetFF(upper_FF);
+    m_topShooterpid.SetOutputRange(upper_Min, upper_Max);
 
-    frc::SmartDashboard::PutNumber("P Gain", kP);
-    frc::SmartDashboard::PutNumber("I Gain", kI);
-    frc::SmartDashboard::PutNumber("D Gain", kD);
-    frc::SmartDashboard::PutNumber("I Zone", kIz);
-    frc::SmartDashboard::PutNumber("Feed Forward", kFF);
-    frc::SmartDashboard::PutNumber("Max Output", kMaxOutput);
-    frc::SmartDashboard::PutNumber("Min Output", kMinOutput);
-    frc::SmartDashboard::PutNumber("Desired Level", 0);
+    m_bottomShooterpid.SetP(lower_P_Gx);
+    m_bottomShooterpid.SetI(lower_I_Gx);
+    m_bottomShooterpid.SetD(lower_D_Gx);
+    m_bottomShooterpid.SetIZone(lower_I_Zone);
+    m_bottomShooterpid.SetFF(lower_FF);
+    m_bottomShooterpid.SetOutputRange(lower_Min, lower_Max);
+
+    // m_liftpid.SetP(kP);
+    // m_liftpid.SetI(kI);
+    // m_liftpid.SetD(kD);
+    // m_liftpid.SetIZone(kIz);
+    // m_liftpid.SetFF(kFF);
+    // m_liftpid.SetOutputRange(kMinOutput, kMaxOutput);
+
+    // frc::SmartDashboard::PutNumber("P Gain", kP);
+    // frc::SmartDashboard::PutNumber("I Gain", kI);
+    // frc::SmartDashboard::PutNumber("D Gain", kD);
+    // frc::SmartDashboard::PutNumber("I Zone", kIz);
+    // frc::SmartDashboard::PutNumber("Feed Forward", kFF);
+    // frc::SmartDashboard::PutNumber("Max Output", kMaxOutput);
+    // frc::SmartDashboard::PutNumber("Min Output", kMinOutput);
+    // frc::SmartDashboard::PutNumber("Desired Level", 0);
 }
 
 
@@ -276,6 +298,8 @@ void Robot::AutonomousInit()
       gyro_yawanglerad = 0;
 
       originalPosition = targetYaw0.GetDouble(0);
+      vision1->PutBoolean("driverMode", true);
+      inst.Flush();
       GyroTeleInit();
   }
 
@@ -410,9 +434,31 @@ void Robot::AutonomousPeriodic()
       double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
       double driveforward = 0;
 
-      if(timeleft > 10)
+      if(timeleft > 8)
       {
-        driveforward = -0.3;
+        V_ShooterSpeedDesiredFinalUpper = (-2625 * 0.8);
+        V_ShooterSpeedDesiredFinalLower = (-2800 * 0.8);
+      }
+      else
+      {
+        V_ShooterSpeedDesiredFinalUpper = 0;
+        V_ShooterSpeedDesiredFinalLower = 0;
+      }
+      V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+      V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
+
+      if(timeleft < 12 && timeleft > 8)
+      {
+        m_belt.Set(ControlMode::PercentOutput, 0.69);
+      }
+      else
+      {
+        m_belt.Set(ControlMode::PercentOutput, 0);
+      }
+
+      if(timeleft < 8 && timeleft > 4)
+      {
+        driveforward = (-0.69 - 0.16);
       }
 
       DriveControlMain(driveforward,
@@ -472,6 +518,9 @@ void Robot::AutonomousPeriodic()
                                              K_WheelSpeedPID_Gx[E_Max_Ul],
                                              K_WheelSpeedPID_Gx[E_Max_Ll]);
       }
+
+    m_topShooterpid.SetReference(V_ShooterSpeedDesired[E_TopShooter], rev::ControlType::kVelocity);
+    m_bottomShooterpid.SetReference(V_ShooterSpeedDesired[E_BottomShooter], rev::ControlType::kVelocity);
 
     m_frontLeftDriveMotor.Set(V_WheelSpeedCmnd[E_FrontLeft]);
     m_frontRightDriveMotor.Set(V_WheelSpeedCmnd[E_FrontRight]);
@@ -543,6 +592,7 @@ void Robot::TeleopInit()
       V_RCW = 0;
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
+      V_AutoShootEnable = false;
 
   BallsShot = 0;
 
@@ -667,34 +717,34 @@ void Robot::TeleopPeriodic()
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
 
     frc::SmartDashboard::PutNumber("Gyro Angle Deg", gyro_yawangledegrees);
-    frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
-    frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
+    // frc::SmartDashboard::PutNumber("Gyro Angle Rad", gyro_yawanglerad);
+    // frc::SmartDashboard::PutNumber("ROLL OVER RAD", gyro_rolloverrad);
 
-    frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
-    frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
-    frc::SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
-    frc::SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
+    // frc::SmartDashboard::PutNumber("Front Left Wheel Velocity",(V_WheelVelocity[E_FrontLeft]));
+    // frc::SmartDashboard::PutNumber("Front Right Wheel Velocity",(V_WheelVelocity[E_FrontRight]));
+    // frc::SmartDashboard::PutNumber("Rear Left Wheel Velocity",(V_WheelVelocity[E_RearLeft]));
+    // frc::SmartDashboard::PutNumber("Rear Right Wheel Velocity",(V_WheelVelocity[E_RearRight]));
 
-    frc::SmartDashboard::PutNumber("STR", V_STR);
-    frc::SmartDashboard::PutNumber("FWD", V_FWD);
-    frc::SmartDashboard::PutNumber("RCW", V_RCW);
+    // frc::SmartDashboard::PutNumber("STR", V_STR);
+    // frc::SmartDashboard::PutNumber("FWD", V_FWD);
+    // frc::SmartDashboard::PutNumber("RCW", V_RCW);
 
-    frc::SmartDashboard::PutNumber("Wheel angle FR", V_WheelAngleArb[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle FL", V_WheelAngleArb[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("Wheel angle RR", V_WheelAngleArb[E_RearRight]);
-    frc::SmartDashboard::PutNumber("Wheel angle RL", V_WheelAngleArb[E_RearLeft]);
+    // frc::SmartDashboard::PutNumber("Wheel angle FR", V_WheelAngleArb[E_FrontRight]);
+    // frc::SmartDashboard::PutNumber("Wheel angle FL", V_WheelAngleArb[E_FrontLeft]);
+    // frc::SmartDashboard::PutNumber("Wheel angle RR", V_WheelAngleArb[E_RearRight]);
+    // frc::SmartDashboard::PutNumber("Wheel angle RL", V_WheelAngleArb[E_RearLeft]);
 
-    frc::SmartDashboard::PutNumber("WS_FR", V_WS[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WS_FL", V_WS[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
+    // frc::SmartDashboard::PutNumber("WS_FR", V_WS[E_FrontRight]);
+    // frc::SmartDashboard::PutNumber("WS_FL", V_WS[E_FrontLeft]);
+    // frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
+    // frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
-    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
-    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
-    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
+    // frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
+    // frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
+    // frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
+    // frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
-    frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
+    // frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
     //Shooter mech
     frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
@@ -703,43 +753,83 @@ void Robot::TeleopPeriodic()
     // SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
     // frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
 
-    double L_RequestedSpeed;
+    //NOTE  Zero Gyro
+    if(c_joyStick.GetRawButton(7))
+    {
+      GyroTeleInit();
+    }
+
 
     //Shooter mech controls
-    int shooterSpeedSlowDown;
-    T_RoboShooter dex;
+    // int shooterSpeedSlowDown;
+    // T_RoboShooter dex;
     
-    //NOTE: Shooting code
-    if(c_joyStick2.GetRawButton(8))
-    {   
-      if(shooterSpeedSlowDown < 200)
+    //NOTE: Shooting code slowdown
+    // if(c_joyStick2.GetRawButton(8))
+    // {   
+    //   if(shooterSpeedSlowDown < 200)
+    //   {
+    //     for (dex = E_TopShooter;
+    //          dex < E_RoboShooter;
+    //          dex = T_RoboShooter(int(dex) + 1))
+    //     {
+    //         V_ShooterSpeedDesired[dex] *= 0.99;
+    //         shooterSpeedSlowDown++;
+    //     }
+    //   }       
+    //   else if(shooterSpeedSlowDown >= 200)
+    //   {
+    //     V_ShooterSpeedDesired[E_TopShooter] = 0;
+    //     V_ShooterSpeedDesired[E_BottomShooter] = 0;
+    //   }
+    // }
+    // if(c_joyStick2.GetRawButton(8))
+    // {
+
+    // }
+   if ((c_joyStick2.GetPOV() == 90))
+   {
+     V_AutoShootEnable = false;
+     V_ShooterSpeedDesiredFinalUpper = 0;
+     V_ShooterSpeedDesiredFinalLower = 0;
+   }
+    
+    if ((c_joyStick2.GetPOV() == 180) || (c_joyStick2.GetPOV() == 270) || (V_AutoShootEnable == true))
+    {
+      // V_ShooterSpeedDesired[E_TopShooter] = -3000;
+      // V_ShooterSpeedDesired[E_BottomShooter] = -3200;
+      if ((c_joyStick2.GetPOV() == 180))
       {
-        for (dex = E_TopShooter;
-             dex < E_RoboShooter;
-             dex = T_RoboShooter(int(dex) + 1))
-        {
-            V_ShooterSpeedDesired[dex] *= 0.99;
-            shooterSpeedSlowDown++;
-        }
-      }       
-      else if(shooterSpeedSlowDown >= 200)
-      {
-        V_ShooterSpeedDesired[E_TopShooter] = 0;
-        V_ShooterSpeedDesired[E_BottomShooter] = 0;
+       V_ShooterSpeedDesiredFinalUpper = (-1312.5);
+       V_ShooterSpeedDesiredFinalLower = (-1400);
       }
+      else if ((c_joyStick2.GetPOV() == 270))
+      {
+      V_ShooterSpeedDesiredFinalUpper = -2350;
+       V_ShooterSpeedDesiredFinalLower = -3325;
+      }
+      V_AutoShootEnable = true;
+      V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+      V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
     }
-    else if(abs(c_joyStick2.GetRawAxis(1)) > .2 || abs(c_joyStick2.GetRawAxis(5)) > .2)
+    else if(fabs(c_joyStick2.GetRawAxis(5)) > .05 || fabs(c_joyStick2.GetRawAxis(1)) > .05)
     {
-      V_ShooterSpeedDesired[E_TopShooter] = c_joyStick2.GetRawAxis(1) * 2000;
-      V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5) * 2200;
+      V_ShooterSpeedDesired[E_TopShooter] = c_joyStick2.GetRawAxis(1);
+      V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5);
+    } else {
+      V_ShooterSpeedDesired[E_TopShooter] = 0;
+      V_ShooterSpeedDesired[E_BottomShooter] = 0;
     }
-    else
-    {
-      V_ShooterSpeedDesired[E_TopShooter]    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
-      V_ShooterSpeedDesired[E_BottomShooter] = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
-    }
+
     
 
+    // else
+    // {
+    V_ShooterSpeedDesiredFinalUpper    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
+    V_ShooterSpeedDesiredFinalLower = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
+    // }
+    V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+    V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
     //Shooter mech
     // double upper_P_Gx = frc::SmartDashboard::GetNumber("Upper_P_Gx", 0);
     // double upper_I_Gx = frc::SmartDashboard::GetNumber("Upper_I_Gx", 0);
@@ -748,50 +838,50 @@ void Robot::TeleopPeriodic()
     // double upper_FF = frc::SmartDashboard::GetNumber("Upper_FF", 0);
     // double upper_Max = frc::SmartDashboard::GetNumber("Upper_Max_Limit", 0);
     // double upper_Min = frc::SmartDashboard::GetNumber("Upper_Min_Limit", 0);
-    double upper_P_Gx = .001;
-    double upper_I_Gx = .000001;
-    double upper_D_Gx = .0001;
-    double upper_I_Zone = 0;
-    double upper_FF = 0;
-    double upper_Max = 1;
-    double upper_Min = -1;
+    // double upper_P_Gx = .001;
+    // double upper_I_Gx = .000001;
+    // double upper_D_Gx = .0001;
+    // double upper_I_Zone = 0;
+    // double upper_FF = 0;
+    // double upper_Max = 1;
+    // double upper_Min = -1;
 
-    // double lower_P_Gx = frc::SmartDashboard::GetNumber("Lower_P_Gx", 0);
-    // double lower_I_Gx = frc::SmartDashboard::GetNumber("Lower_I_Gx", 0);
-    // double lower_D_Gx = frc::SmartDashboard::GetNumber("Lower_D_Gx", 0);
-    // double lower_I_Zone =frc::SmartDashboard::GetNumber("Lower_I_Zone", 0);
-    // double lower_FF = frc::SmartDashboard::GetNumber("Lower_FF", 0);
-    // double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
-    // double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
-    double lower_P_Gx = .001;
-    double lower_I_Gx = .000001;
-    double lower_D_Gx = .0001;
-    double lower_I_Zone = 0;
-    double lower_FF = 0;
-    double lower_Max = 1;
-    double lower_Min = -1;
+    // // double lower_P_Gx = frc::SmartDashboard::GetNumber("Lower_P_Gx", 0);
+    // // double lower_I_Gx = frc::SmartDashboa rd::GetNumber("Lower_I_Gx", 0);
+    // // double lower_D_Gx = frc::SmartDashboard::GetNumber("Lower_D_Gx", 0);
+    // // double lower_I_Zone =frc::SmartDashboard::GetNumber("Lower_I_Zone", 0);
+    // // double lower_FF = frc::SmartDashboard::GetNumber("Lower_FF", 0);
+    // // double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
+    // // double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
+    // double lower_P_Gx = .001;
+    // double lower_I_Gx = .000001;
+    // double lower_D_Gx = .0001;
+    // double lower_I_Zone = 0;
+    // double lower_FF = 0;
+    // double lower_Max = 1;
+    // double lower_Min = -1;
 
-    m_topShooterpid.SetP(upper_P_Gx);
-    m_topShooterpid.SetI(upper_I_Gx);
-    m_topShooterpid.SetD(upper_D_Gx);
-    m_topShooterpid.SetIZone(upper_I_Zone);
-    m_topShooterpid.SetFF(upper_FF);
-    m_topShooterpid.SetOutputRange(upper_Min, upper_Max);
+    // m_topShooterpid.SetP(upper_P_Gx);
+    // m_topShooterpid.SetI(upper_I_Gx);
+    // m_topShooterpid.SetD(upper_D_Gx);
+    // m_topShooterpid.SetIZone(upper_I_Zone);
+    // m_topShooterpid.SetFF(upper_FF);
+    // m_topShooterpid.SetOutputRange(upper_Min, upper_Max);
 
-    m_bottomShooterpid.SetP(lower_P_Gx);
-    m_bottomShooterpid.SetI(lower_I_Gx);
-    m_bottomShooterpid.SetD(lower_D_Gx);
-    m_bottomShooterpid.SetIZone(lower_I_Zone);
-    m_bottomShooterpid.SetFF(lower_FF);
-    m_bottomShooterpid.SetOutputRange(lower_Min, lower_Max);
+    // m_bottomShooterpid.SetP(lower_P_Gx);
+    // m_bottomShooterpid.SetI(lower_I_Gx);
+    // m_bottomShooterpid.SetD(lower_D_Gx);
+    // m_bottomShooterpid.SetIZone(lower_I_Zone);
+    // m_bottomShooterpid.SetFF(lower_FF);
+    // m_bottomShooterpid.SetOutputRange(lower_Min, lower_Max);
 
     frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
     if(c_joyStick2.GetRawAxis(3) > 0.1)
     {
-      if(m_encoderLift.GetPosition() > -440)
+      if(m_encoderLift.GetPosition() > -480)
       {
-        m_liftMotor.Set(c_joyStick2.GetRawAxis(3) * -0.50);
+        m_liftMotor.Set(c_joyStick2.GetRawAxis(3) * -1.0);
       }
       else
       {
@@ -800,14 +890,18 @@ void Robot::TeleopPeriodic()
     }
     else if (c_joyStick2.GetRawAxis(2) > 0.1)
     {
-      if(m_encoderLift.GetPosition() < -8)
+      if(m_encoderLift.GetPosition() < -30)
       {
-        m_liftMotor.Set(c_joyStick2.GetRawAxis(2) * 0.50);
+        m_liftMotor.Set(c_joyStick2.GetRawAxis(2) * 1.0);
       }
       else
       {
         m_liftMotor.Set(0);
       }
+    }
+    else if(c_joyStick2.GetRawButton(6))
+    {
+      m_liftMotor.Set(0.025);
     }
     else
     {
@@ -817,8 +911,20 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("Upper Velocity", m_encoderTopShooter.GetVelocity());
     frc::SmartDashboard::PutNumber("Lower Velocity", m_encoderBottomShooter.GetVelocity());
 
+if (V_AutoShootEnable == true)
+{
     m_topShooterpid.SetReference(V_ShooterSpeedDesired[E_TopShooter], rev::ControlType::kVelocity);
     m_bottomShooterpid.SetReference(V_ShooterSpeedDesired[E_BottomShooter], rev::ControlType::kVelocity);
+}
+else 
+{
+   //m_topShooterMotor.Set(V_ShooterSpeedDesired[E_TopShooter]);
+    //m_bottomShooterMotor.Set(V_ShooterSpeedDesired[E_BottomShooter]);
+}
+    // m_topShooterpid.SetReference(V_ShooterSpeedDesired[E_TopShooter], rev::ControlType::kVelocity);
+    // m_bottomShooterpid.SetReference(V_ShooterSpeedDesired[E_BottomShooter], rev::ControlType::kVelocity);
+
+
 
     m_fortuneWheel.Set(ControlMode::PercentOutput, L_FortuneMotor);
 
@@ -873,6 +979,10 @@ void Robot::TeleopPeriodic()
     if(c_joyStick2.GetRawButton(1))
     {
       m_belt.Set(ControlMode::PercentOutput, 1);
+    }
+    else if(c_joyStick2.GetRawButton(2))
+    {
+      m_belt.Set(ControlMode::PercentOutput, -.75);
     }
     else
     {
