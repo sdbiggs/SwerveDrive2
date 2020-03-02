@@ -68,9 +68,9 @@ void PIDConfig::Debug(std::string DebugTabName)
 		init = true;
 	} 
 	
-	p = nt_p.GetDouble(0);
-	i = nt_i.GetDouble(0);
-	d = nt_d.GetDouble(0);
+	p = nt_p.GetDouble(p);
+	i = nt_i.GetDouble(i);
+	d = nt_d.GetDouble(d);
 
 	pmax = nt_pmax.GetDouble(pmax);
 	pmin = nt_pmin.GetDouble(pmin);
