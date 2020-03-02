@@ -7,8 +7,10 @@
  *
  * */
 
-// Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
+//NOTE: Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
 #define COMP
+//NOTE: Set this to allow Shuffleboard configuration of PIDConfig objects (Will override defaults)
+#define PID_DEBUG
 
 #include "Robot.h"
 #include <iostream>
@@ -26,6 +28,8 @@
 #include "vision.hpp"
 #include "DriveControl.hpp"
 #include "AutoTarget.hpp"
+
+#include "Types/PIDConfig.hpp"
 
 // T_WheelOfFortuneColor V_ColorWheelColor;
 
@@ -56,7 +60,6 @@ double V_AutoTargetBeltPower;
 
 bool   V_RobotInit;
 
-frc::LiveWindow *lw = frc::LiveWindow::GetInstance();
 std::shared_ptr<NetworkTable> vision0;
 std::shared_ptr<NetworkTable> vision1;
 std::shared_ptr<NetworkTable> lidar;
@@ -106,6 +109,7 @@ double PDP_Current_LowerShooter_last = 0;
 
 double BallsShot = 0;
 
+PIDConfig UpperShooterPIDConfig {0.0008, 0.000001, 0.0006};
 
 /******************************************************************************
  * Function:     RobotInit
@@ -261,6 +265,14 @@ void Robot::RobotPeriodic()
     frc::SmartDashboard::PutNumber("targetYaw", targetYaw0.GetDouble(0));
     frc::SmartDashboard::PutNumber("targetPitch", targetPitch0.GetDouble(1));
     frc::SmartDashboard::PutNumber("lidarDistance", lidarDistance.GetDouble(0));
+
+
+    #ifdef PID_DEBUG
+      UpperShooterPIDConfig.Debug("Upper Shooter PID Control");
+    #endif
+
+    //Run Gyro readings when the robot starts
+    Gyro();
 }
 
 
@@ -303,7 +315,7 @@ void Robot::AutonomousInit()
       originalPosition = targetYaw0.GetDouble(0);
       vision1->PutBoolean("driverMode", true);
       inst.Flush();
-      GyroTeleInit();
+      GyroZero();
   }
 
 
@@ -599,7 +611,7 @@ void Robot::TeleopInit()
 
   BallsShot = 0;
 
-  GyroTeleInit();
+  GyroZero();
 }
 
 
@@ -752,7 +764,7 @@ void Robot::TeleopPeriodic()
     //NOTE  Zero Gyro
     if(c_joyStick.GetRawButton(7))
     {
-      GyroTeleInit();
+      GyroZero();
     }
 
 
