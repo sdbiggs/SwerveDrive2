@@ -1,7 +1,8 @@
 #include <frc/smartdashboard/SmartDashboard.h>
-#include "AHRS.h"
 #include <frc/DriverStation.h>
-#include <Const.hpp>
+
+#include "AHRS.h"
+#include "Const.hpp"
 
 AHRS *NavX;
 
@@ -23,13 +24,14 @@ void GyroRobotInit()
     }
 }
 
-void GyroTeleInit()
+void GyroZero()
 {
     NavX->ZeroYaw();
 }
+
 void Gyro() {
 
-double gyro_currentyaw = (double)NavX->GetYaw();
+  double gyro_currentyaw = (double)NavX->GetYaw();
   //Check to see if gyro angle flips over 180 or -180
   if(175 <= abs(gyro_angleprev))
   {
@@ -43,8 +45,8 @@ double gyro_currentyaw = (double)NavX->GetYaw();
   }
   gyro_rolloverrad = ((gryo_loopcount * 360) + gyro_currentyaw) / C_RadtoDeg;
 
-gyro_yawangledegrees = (double)NavX->GetYaw();
-gyro_yawanglerad = (double)NavX->GetYaw() / C_RadtoDeg;
+  gyro_yawangledegrees = (double)NavX->GetYaw();
+  gyro_yawanglerad = (double)NavX->GetYaw() / C_RadtoDeg;
 
 
   gyro_angleprev = gyro_currentyaw;

@@ -305,7 +305,6 @@ double DesiredSpeed(double L_JoystickAxis)
  ******************************************************************************/
 void DesiredRollerSpeed(double  L_Distance,
                         double  L_Angle,
-                        double *L_RobotAngle,
                         double *L_UpperCmnd,
                         double *L_LowerCmnd)
   {
@@ -316,23 +315,6 @@ void DesiredRollerSpeed(double  L_Distance,
   double  L_Temp[K_BallLauncherDistanceSz][K_BallLauncherAngleSz];
   int     i;
   int     j;
-
-  for (i = 0; i < K_BallLauncherDistanceSz; i++)
-    {
-    for (j = 0; j < K_BallLauncherAngleSz; j++)
-      {
-      L_Temp[i][j] = K_BallLauncherRobotAngle[i][j];
-      }
-    L_RollerSpeedCalibration[i] = L_Temp[i];
-    }
-
-  L_DesiredRobotAngle = LookUp2D_Table(&K_BallLauncherDistanceAxis[0],
-                                        K_BallLauncherDistanceSz,
-                                        L_Distance,
-                                       &K_BallLauncherAngleAxis[0],
-                                        K_BallLauncherAngleSz,
-                                        L_Angle,
-                                        L_RollerSpeedCalibration);
 
   for (i = 0; i < K_BallLauncherDistanceSz; i++)
     {
@@ -368,7 +350,6 @@ void DesiredRollerSpeed(double  L_Distance,
                                               L_Angle,
                                               L_RollerSpeedCalibration);
 
-  *L_RobotAngle = L_DesiredRobotAngle;
   *L_UpperCmnd  = L_DesiredRollerSpeedUpper;
   *L_LowerCmnd  = L_DesiredRollerSpeedLower;
   }

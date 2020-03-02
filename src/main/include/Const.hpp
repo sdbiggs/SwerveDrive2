@@ -20,7 +20,7 @@ const double C_R = 0.8441;
 const double K_ShooterWheelRotation[E_RoboShooter] = {5.12517590321455,     // E_TopShooter    2.5555555555555555555555555555555555555555555555 * 2 * C_PI * 0.3191858136047229930278045677412
                                                       3.84388192741092};    // E_BottomShooter 2.5555555555555555555555555555555555555555555555 * 2 * C_PI *0.2393893602035422447708534258059
 
-const double K_WheelOfFortunePwr = 0.1; // This is the constant power command sent to the wheel of fortune spinner
+const double K_WheelOfFortunePwr = 0.4; // This is the constant power command sent to the wheel of fortune spinner
 
 const double K_InitAngle = 1.4; // This is the absolute angle that all of the wheels need to be sitting at before allowing the robot to exit init
 const double K_WheelOffsetAngle[E_RobotCornerSz] = {75.234367,   // E_FrontLeft
@@ -107,6 +107,8 @@ const double K_DesiredDriveSpeed[20] = {-1.00,  //-0.95
                                          0.77,  // 0.75
                                          0.88,  // 0.85
                                          1.00}; // 0.95
+
+const double K_TargetVisionAngle = 50;
 
 const double K_TargetVisionAngleMin = 10;
 

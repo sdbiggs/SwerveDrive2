@@ -26,14 +26,14 @@ typedef enum T_RoboShooter
   E_RoboShooter
 } T_RoboShooter;
 
-typedef enum T_WheelOfFortuneColor
-{
-  E_Red,
-  E_Yellow,
-  E_Blue,
-  E_Green,
-  E_Unknown
-} T_WheelOfFortuneColor;
+// typedef enum T_WheelOfFortuneColor
+// {
+//   E_Red,
+//   E_Yellow,
+//   E_Blue,
+//   E_Green,
+//   E_Unknown
+// } T_WheelOfFortuneColor;
 
 typedef enum T_PID_Cal
 {

@@ -17,6 +17,13 @@
 
 T_AutoTargetStates V_AutoTargetState;
 
+
+
+/******************************************************************************
+ * Function:     AutoTargeting
+ *
+ * Description:  Auto targeting function.
+ ******************************************************************************/
 T_AutoTargetStates AutoTargeting(T_AutoTargetStates  L_CurrentState,
                                  bool                L_Activate,
                                  double              L_DriverAxis1,
@@ -74,9 +81,11 @@ T_AutoTargetStates AutoTargeting(T_AutoTargetStates  L_CurrentState,
      * We are also not currently active. */
     DesiredRollerSpeed(L_RawTargetVisionDistance,
                        L_RawTargetVisionAngle,
-                       L_RobotTargetAngle,
                        L_UpperRollerSpeedReq,
                        L_LowerRollerSpeedReq);
+
+    *L_RobotTargetAngle  = K_TargetVisionAngle;
+    *L_BeltPowerReq = 0.0;
 
     /* Ok, let's go to the next step: */
     L_CurrentState = E_TargetFoundRotateBotAndRollerSpinUp;

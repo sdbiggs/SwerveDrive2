@@ -8,7 +8,8 @@
 // rev::ColorSensorV3 m_colorSensor{i2cPort};
 // rev::ColorMatch m_colorMatcher;
 
-T_WheelOfFortuneColor ColorSensor(bool init);
+// T_WheelOfFortuneColor ColorSensor(bool init);
+
 // void ColorSensor (bool init);
 // extern std::string colorString;
 
