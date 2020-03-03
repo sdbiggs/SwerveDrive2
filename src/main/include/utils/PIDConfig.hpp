@@ -13,7 +13,7 @@ class PIDConfig {
 		double dmax = 1,dmin = 1;
 		double izone = 0;
     	double feedforward = 0;
-    	double max = 1,min = 1;
+    	double max = 1,min = -1;
 	
 		PIDConfig();
 		PIDConfig(double P, double I, double D);

@@ -54,8 +54,8 @@ const double K_WheelSpeedPID_Gx[E_PID_CalSz] = { 0.0055,     // P Gx
                                                  1.0,        // Max upper
                                                 -1.0};       // Max lower
 
-const double K_RobotRotationPID_Gx[E_PID_CalSz] = { 0.08,   // P Gx
-                                                    0.0007, // I Gx
+const double K_RobotRotationPID_Gx[E_PID_CalSz] = { 0.07,   // P Gx
+                                                    0.0,   // I Gx
                                                     0.0,    // D Gx
                                                     0.9,    // P UL
                                                    -0.9,    // P LL
@@ -126,7 +126,7 @@ const double K_TargetVisionLowerRollerErrorMax = 200;
 
 const double K_RotateDebounceThreshold = 0.1;
 
-const double K_AutoRotateGx = 0.4;
+const double K_AutoRotateGx = 0.1;
 
 #define K_BallLauncherDistanceSz 5
 #define K_BallLauncherAngleSz 3

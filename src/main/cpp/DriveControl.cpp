@@ -13,7 +13,7 @@
 #include "Enums.hpp"
 #include <math.h>
 #include "Gyro.hpp"
-
+#include <frc/smartdashboard/SmartDashboard.h>
 
 
 double desiredAngle;
@@ -101,11 +101,18 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     //   {
     //   desiredAngle = L_DesiredAngle;
     //   }
-    if(L_JoyStick1Button1 || autoBeamLock == true)
+    if ((fabs(L_JoyStick1Axis1Y) > 0) ||
+        (fabs(L_JoyStick1Axis1X) > 0)  ||
+        (fabs(L_JoyStick1Axis2X) > 0))
+    {
+      autoBeamLock = false;
+      rotateMode = false;
+    }
+    else if(L_JoyStick1Button1 || autoBeamLock == true)
     {
       /* Auto targeting */
       autoBeamLock = true;
-      desiredAngle = -2; // This is due to the offset of the camera
+      desiredAngle = 0; // This is due to the offset of the camera
     }
     else if (L_JoyStick1Button4)
       {
@@ -140,17 +147,17 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       L_RotateErrorCalc = 0;
       }
     
+    frc::SmartDashboard::PutNumber("L_RotateErrorCalc", L_RotateErrorCalc);
 
-
-    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25) || 
-        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25))
+    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce <= 0.02) || 
+        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce <= 0.02))
       {
       // rotateMode = true;
       // autoBeamLock = true;
       rotateDeBounce += 0.01;
       }
-    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25) ||
-             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25))
+    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce >= 0.02) ||
+             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce >= 0.02))
       {
       rotateMode = false;
       autoBeamLock = false;
@@ -175,8 +182,10 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
                           K_RobotRotationPID_Gx[E_D_Ll],
                           K_RobotRotationPID_Gx[E_Max_Ul],
                           K_RobotRotationPID_Gx[E_Max_Ll]);
+      
       }
 
+  
     L_temp = V_FWD * cos(L_GyroAngleRadians) + V_STR * sin(L_GyroAngleRadians);
     V_STR = -V_FWD * sin(L_GyroAngleRadians) + V_STR * cos(L_GyroAngleRadians);
     V_FWD = L_temp;

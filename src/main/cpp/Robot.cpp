@@ -8,7 +8,7 @@
  * */
 
 //NOTE: Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
-#define COMP
+#define TEST
 //NOTE: Set this to allow Shuffleboard configuration of PIDConfig objects (Will override defaults)
 #define PID_DEBUG
 
@@ -273,6 +273,7 @@ void Robot::RobotPeriodic()
 
     //Run Gyro readings when the robot starts
     Gyro();
+    frc::SmartDashboard::PutNumber("gyro angle", gyro_yawangledegrees);
 }
 
 
@@ -804,8 +805,8 @@ void Robot::TeleopPeriodic()
       // V_ShooterSpeedDesired[E_BottomShooter] = -3200;
       if ((c_joyStick2.GetPOV() == 180))
       {
-       V_ShooterSpeedDesiredFinalUpper = (-1312.5);
-       V_ShooterSpeedDesiredFinalLower = (-1400);
+       V_ShooterSpeedDesiredFinalUpper = (-1312.5); //-1312.5
+       V_ShooterSpeedDesiredFinalLower = (-1400 * .8); //-1400
       }
       else if ((c_joyStick2.GetPOV() == 270))
       {
@@ -989,13 +990,13 @@ else
 
     if(c_joyStick2.GetRawButton(1))
     {
-      m_conveyDaBalls.Set(ControlMode::PercentOutput, 0.69);
-      m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.69);
+      m_conveyDaBalls.Set(ControlMode::PercentOutput, -1);
+      m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.4);
     }
     else if(c_joyStick2.GetRawButton(2))
     {
       m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
-      m_conveyDaBalls.Set(ControlMode::PercentOutput, -0.420);
+      m_conveyDaBalls.Set(ControlMode::PercentOutput, 0.420);
     }
     else
     {
