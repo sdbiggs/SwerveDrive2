@@ -101,13 +101,13 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     //   {
     //   desiredAngle = L_DesiredAngle;
     //   }
-    
     if(L_JoyStick1Button1 || autoBeamLock == true)
     {
+      /* Auto targeting */
       autoBeamLock = true;
-      desiredAngle = 0;
+      desiredAngle = -2; // This is due to the offset of the camera
     }
-    if (L_JoyStick1Button4)
+    else if (L_JoyStick1Button4)
       {
       rotateMode = true;
       desiredAngle = 90;
@@ -127,34 +127,38 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     }
 
   
-    if (rotateMode)
+    if (rotateMode == true)
       {
-        L_RotateErrorCalc = desiredAngle - L_GyroAngleDegrees;
+      L_RotateErrorCalc = desiredAngle - L_GyroAngleDegrees;
       }
-    else if(autoBeamLock)
+    else if(autoBeamLock == true)
       {
-        L_RotateErrorCalc = desiredAngle - L_VisionAngleDeg;
+      L_RotateErrorCalc = desiredAngle - L_VisionAngleDeg;
       }
     else
-    {
+      {
       L_RotateErrorCalc = 0;
-    }
+      }
     
 
-    //error calculation section
-    if ((rotateMode == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25) || (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25))
+
+    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25) || 
+        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25))
       {
-      rotateMode = true;
+      // rotateMode = true;
+      // autoBeamLock = true;
       rotateDeBounce += 0.01;
       }
-    else if ((rotateMode == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25) || (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25))
+    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25) ||
+             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce >= 0.25))
       {
       rotateMode = false;
       autoBeamLock = false;
       rotateDeBounce = 0;
       }
 
-    if (rotateMode == true || autoBeamLock == true)
+    if ((rotateMode == true) || 
+        (autoBeamLock == true))
       {
       V_RCW = Control_PID(desiredAngle,
                           L_GyroAngleDegrees,
@@ -216,11 +220,16 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       L_WS[E_RearRight]  /= L_Max;
       }
 
-    L_Gain = 0.1;
+    L_Gain = K_RotateDebounceThreshold;
 
     if (L_JoyStick1Axis3 > L_Gain)
       {
       L_Gain = L_JoyStick1Axis3;
+      }
+      else if ((rotateMode == true) ||
+               (autoBeamLock == true))
+      {
+      L_Gain = K_AutoRotateGx;
       }
 
     L_WS[E_FrontRight] *= (K_WheelMaxSpeed * L_Gain);

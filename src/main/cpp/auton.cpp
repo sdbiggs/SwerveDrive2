@@ -8,7 +8,7 @@ using namespace frc;
 double AutoShoot(nt::NetworkTableEntry targetYaw, double targetDistance, int TOPorBOTTOM)
 {
     // double speedDesired = LookUpForTOPorBOTTOM(targetYaw, targetDistance, TOPorBOTTOM);
-    double speedDesired;
+    double speedDesired = 0;
     return speedDesired;
 }
 

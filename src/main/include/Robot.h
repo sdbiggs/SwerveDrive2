@@ -47,9 +47,10 @@ class Robot : public frc::TimedRobot {
   rev::CANSparkMax m_bottomShooterMotor  {bottomShooterID,  rev::CANSparkMax::MotorType::kBrushless};
   rev::CANSparkMax m_liftMotor           {liftID,                  rev::CANSparkMax::MotorType::kBrushless};
 
-  VictorSPX m_belt {12};
+  VictorSPX m_conveyDaBalls {12};
   VictorSPX m_fortuneWheel {13};
   VictorSPX m_intake {15};
+  VictorSPX m_elevateDaBalls {16};
 
   frc::Compressor compressor {14};
 

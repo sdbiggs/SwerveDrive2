@@ -462,11 +462,11 @@ void Robot::AutonomousPeriodic()
 
       if(timeleft < 12 && timeleft > 8)
       {
-        m_belt.Set(ControlMode::PercentOutput, 0.69);
+        m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.69);
       }
       else
       {
-        m_belt.Set(ControlMode::PercentOutput, 0);
+        m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
       }
 
       if(timeleft < 8 && timeleft > 4)
@@ -989,15 +989,18 @@ else
 
     if(c_joyStick2.GetRawButton(1))
     {
-      m_belt.Set(ControlMode::PercentOutput, 0.69);
+      m_conveyDaBalls.Set(ControlMode::PercentOutput, 0.69);
+      m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.69);
     }
     else if(c_joyStick2.GetRawButton(2))
     {
-      m_belt.Set(ControlMode::PercentOutput, -0.420);
+      m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
+      m_conveyDaBalls.Set(ControlMode::PercentOutput, -0.420);
     }
     else
     {
-      m_belt.Set(ControlMode::PercentOutput, 0);
+      m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
+      m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
     }
 
 

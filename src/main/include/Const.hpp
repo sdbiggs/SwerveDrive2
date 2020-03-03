@@ -124,6 +124,10 @@ const double K_TargetVisionUpperRollerErrorMax = 200;
 
 const double K_TargetVisionLowerRollerErrorMax = 200;
 
+const double K_RotateDebounceThreshold = 0.1;
+
+const double K_AutoRotateGx = 0.4;
+
 #define K_BallLauncherDistanceSz 5
 #define K_BallLauncherAngleSz 3
 
