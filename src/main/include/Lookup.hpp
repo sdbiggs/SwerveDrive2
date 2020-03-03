@@ -16,4 +16,6 @@ extern void DesiredRollerSpeed(double  L_Distance,
                                double  L_Angle,
                                double *L_UpperCmnd,
                                double *L_LowerCmnd);
+
+extern double DesiredRotateSpeed(double L_Error);
 #endif /* SRC_ROBORIO2018_LOOKUP_HPP_ */

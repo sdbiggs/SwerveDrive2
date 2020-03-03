@@ -108,7 +108,40 @@ const double K_DesiredDriveSpeed[20] = {-1.00,  //-0.95
                                          0.88,  // 0.85
                                          1.00}; // 0.95
 
-const double K_TargetVisionAngle = 50;
+/*  Rotation calibrations */
+const double K_DesiredRotateSpeedAxis[10] = {-20.0,
+                                              -4.0,
+                                              -2.0,
+                                              -1.0,
+                                              -0.2,
+                                               0.2,
+                                               1.0,
+                                               2.0,
+                                               4.0,
+                                              20.0};
+
+const double K_DesiredRotateSpeed[10] = {-1.0,  // -20.0
+                                         -1.0,  //  -4.0
+                                         -0.4,  //  -2.0
+                                         -0.2,  //  -1.0
+                                          0.0,  //  -0.2
+                                          0.0,  //   0.2
+                                          0.2,  //   1.0
+                                          0.4,  //   2.0
+                                          1.0,  //   4.0
+                                          1.0}; //  20.0
+
+// This is the amount of time that we will wait to make sure we are at the correct location
+const double K_RotateDebounceTime = 0.05;  
+
+// This is the amount of error allowed when in auto rotate / auto target
+const double K_RotateDeadbandAngle = 0.5;  
+
+// This is the desired target angle for the auto vision targeting.  This is due to the offset of the camera.
+const double K_TargetVisionAngle = -0.5;
+
+
+
 
 const double K_TargetVisionAngleMin = 10;
 

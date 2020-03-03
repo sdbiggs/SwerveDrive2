@@ -102,17 +102,18 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     //   desiredAngle = L_DesiredAngle;
     //   }
     if ((fabs(L_JoyStick1Axis1Y) > 0) ||
-        (fabs(L_JoyStick1Axis1X) > 0)  ||
+        (fabs(L_JoyStick1Axis1X) > 0) ||
         (fabs(L_JoyStick1Axis2X) > 0))
     {
+      // Abort out of auto rotate and/or auto target if the driver moves the joysticks
       autoBeamLock = false;
-      rotateMode = false;
+      rotateMode   = false;
     }
     else if(L_JoyStick1Button1 || autoBeamLock == true)
     {
       /* Auto targeting */
       autoBeamLock = true;
-      desiredAngle = 0; // This is due to the offset of the camera
+      desiredAngle = K_TargetVisionAngle; // This is due to the offset of the camera
     }
     else if (L_JoyStick1Button4)
       {
@@ -129,17 +130,20 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       rotateMode = true;
       desiredAngle = 67.5;
       }
-    if (L_JoyStick1Button5 && gyro_yawangledegrees == 67.5) {
+      
+    if (L_JoyStick1Button5 && gyro_yawangledegrees == 67.5)
+      {
       GyroZero();
-    }
-
+      }
   
     if (rotateMode == true)
       {
+      // Use gyro as target when in auto rotate
       L_RotateErrorCalc = desiredAngle - L_GyroAngleDegrees;
       }
     else if(autoBeamLock == true)
       {
+      // Use chameleon vison as target when in auto beam lock
       L_RotateErrorCalc = desiredAngle - L_VisionAngleDeg;
       }
     else
@@ -149,15 +153,15 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     
     frc::SmartDashboard::PutNumber("L_RotateErrorCalc", L_RotateErrorCalc);
 
-    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce <= 0.02) || 
-        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce <= 0.02))
+    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) || 
+        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime))
       {
       // rotateMode = true;
       // autoBeamLock = true;
-      rotateDeBounce += 0.01;
+      rotateDeBounce += C_ExeTime;
       }
-    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce >= 0.02) ||
-             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 5 && rotateDeBounce >= 0.02))
+    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime) ||
+             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime))
       {
       rotateMode = false;
       autoBeamLock = false;
@@ -167,22 +171,23 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     if ((rotateMode == true) || 
         (autoBeamLock == true))
       {
-      V_RCW = Control_PID(desiredAngle,
-                          L_GyroAngleDegrees,
-                          &rotateErrorCalc,
-                          &rotateErrorIntegral,
-                          K_RobotRotationPID_Gx[E_P_Gx],
-                          K_RobotRotationPID_Gx[E_I_Gx],
-                          K_RobotRotationPID_Gx[E_D_Gx],
-                          K_RobotRotationPID_Gx[E_P_Ul],
-                          K_RobotRotationPID_Gx[E_P_Ll],
-                          K_RobotRotationPID_Gx[E_I_Ul],
-                          K_RobotRotationPID_Gx[E_I_Ll],
-                          K_RobotRotationPID_Gx[E_D_Ul],
-                          K_RobotRotationPID_Gx[E_D_Ll],
-                          K_RobotRotationPID_Gx[E_Max_Ul],
-                          K_RobotRotationPID_Gx[E_Max_Ll]);
-      
+      // V_RCW = Control_PID(desiredAngle,
+      //                     L_GyroAngleDegrees,
+      //                     &rotateErrorCalc,
+      //                     &rotateErrorIntegral,
+      //                     K_RobotRotationPID_Gx[E_P_Gx],
+      //                     K_RobotRotationPID_Gx[E_I_Gx],
+      //                     K_RobotRotationPID_Gx[E_D_Gx],
+      //                     K_RobotRotationPID_Gx[E_P_Ul],
+      //                     K_RobotRotationPID_Gx[E_P_Ll],
+      //                     K_RobotRotationPID_Gx[E_I_Ul],
+      //                     K_RobotRotationPID_Gx[E_I_Ll],
+      //                     K_RobotRotationPID_Gx[E_D_Ul],
+      //                     K_RobotRotationPID_Gx[E_D_Ll],
+      //                     K_RobotRotationPID_Gx[E_Max_Ul],
+      //                     K_RobotRotationPID_Gx[E_Max_Ll]);
+
+      V_RCW = DesiredRotateSpeed(L_RotateErrorCalc);
       }
 
   
