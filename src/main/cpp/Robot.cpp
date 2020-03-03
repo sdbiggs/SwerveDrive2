@@ -17,6 +17,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
 #include <frc/livewindow/LiveWindow.h>
+#include <frc/DigitalInput.h>
 
 #include "Encoders.hpp"
 #include "Enums.hpp"
@@ -110,6 +111,8 @@ double PDP_Current_LowerShooter_last = 0;
 double BallsShot = 0;
 
 PIDConfig UpperShooterPIDConfig {0.0008, 0.000001, 0.0006};
+
+frc::DigitalInput ir_sensor{1};
 
 /******************************************************************************
  * Function:     RobotInit
@@ -988,14 +991,22 @@ else
 //      m_intake.Set(ControlMode::PercentOutput, 0);
 //    }
 
+    bool active = ir_sensor.Get();
+
     if(c_joyStick2.GetRawButton(1))
     {
-      m_conveyDaBalls.Set(ControlMode::PercentOutput, -1);
+      if(active)
+      {
+        m_conveyDaBalls.Set(ControlMode::PercentOutput, -1);
+      }
       m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.4);
     }
     else if(c_joyStick2.GetRawButton(2))
     {
-      m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
+      if(active)
+      {
+        m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
+      }
       m_conveyDaBalls.Set(ControlMode::PercentOutput, 0.420);
     }
     else
@@ -1003,7 +1014,6 @@ else
       m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
       m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
     }
-
 
     frc::Wait(C_ExeTime);
 }
