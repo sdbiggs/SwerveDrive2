@@ -329,8 +329,6 @@ void Robot::AutonomousPeriodic()
   {   
       int theCoolerInteger;
 
-      Gyro();
-
       #pragma badauto
       // switch(theCoolerInteger)
       // {
@@ -627,9 +625,6 @@ void Robot::TeleopPeriodic()
   // T_WheelOfFortuneColor L_Color;
 
   //L_Color = ColorSensor(false);
-
-  Gyro();
-
   L_FortuneMotor = WheelOfFortune (//L_Color,
                                    c_joyStick2.GetRawButton(2),
                                    c_joyStick2.GetRawButton(4),
