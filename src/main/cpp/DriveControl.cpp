@@ -12,6 +12,7 @@
 #include "Lookup.hpp"
 #include "Enums.hpp"
 #include <math.h>
+#include "Gyro.hpp"
 
 
 
@@ -26,6 +27,7 @@ double V_STR;
 double V_RCW;
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
+
 
 
 /******************************************************************************
@@ -99,6 +101,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     //   {
     //   desiredAngle = L_DesiredAngle;
     //   }
+    
     if(L_JoyStick1Button1 || autoBeamLock == true)
     {
       autoBeamLock = true;
@@ -119,8 +122,11 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       rotateMode = true;
       desiredAngle = 67.5;
       }
+    if (L_JoyStick1Button5 && gyro_yawangledegrees == 67.5) {
+      GyroZero();
+    }
 
-  //error calculation section
+  
     if (rotateMode)
       {
         L_RotateErrorCalc = desiredAngle - L_GyroAngleDegrees;
@@ -135,7 +141,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     }
     
 
-
+    //error calculation section
     if ((rotateMode == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25) || (autoBeamLock == true && fabs(L_RotateErrorCalc) <= 1 && rotateDeBounce <= 0.25))
       {
       rotateMode = true;

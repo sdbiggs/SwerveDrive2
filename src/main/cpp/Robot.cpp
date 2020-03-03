@@ -29,7 +29,7 @@
 #include "DriveControl.hpp"
 #include "AutoTarget.hpp"
 
-#include "Types/PIDConfig.hpp"
+#include "Utils/PIDConfig.hpp"
 
 // T_WheelOfFortuneColor V_ColorWheelColor;
 
