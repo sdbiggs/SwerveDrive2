@@ -168,8 +168,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       rotateDeBounce = 0;
       }
 
-    if ((rotateMode == true) || 
-        (autoBeamLock == true))
+    if (rotateMode == true)
       {
       // V_RCW = Control_PID(desiredAngle,
       //                     L_GyroAngleDegrees,
@@ -189,7 +188,9 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
 
       V_RCW = DesiredRotateSpeed(L_RotateErrorCalc);
       }
-
+      else if (autoBeamLock == true) {
+        V_RCW = -DesiredRotateSpeed(L_RotateErrorCalc);
+      }
   
     L_temp = V_FWD * cos(L_GyroAngleRadians) + V_STR * sin(L_GyroAngleRadians);
     V_STR = -V_FWD * sin(L_GyroAngleRadians) + V_STR * cos(L_GyroAngleRadians);

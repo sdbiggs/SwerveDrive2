@@ -18,4 +18,8 @@ extern void DesiredRollerSpeed(double  L_Distance,
                                double *L_LowerCmnd);
 
 extern double DesiredRotateSpeed(double L_Error);
+
+extern double DesiredLowerBeamSpeed(double L_TargetDistance);
+
+extern double DesiredUpperBeamSpeed(double L_TargetDistance);
 #endif /* SRC_ROBORIO2018_LOOKUP_HPP_ */

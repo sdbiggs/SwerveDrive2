@@ -8,7 +8,7 @@
  * */
 
 //NOTE: Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
-#define TEST
+#define COMP
 //NOTE: Set this to allow Shuffleboard configuration of PIDConfig objects (Will override defaults)
 #define PID_DEBUG
 
@@ -17,7 +17,6 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
 #include <frc/livewindow/LiveWindow.h>
-#include <frc/DigitalInput.h>
 
 #include "Encoders.hpp"
 #include "Enums.hpp"
@@ -29,6 +28,7 @@
 #include "vision.hpp"
 #include "DriveControl.hpp"
 #include "AutoTarget.hpp"
+#include <frc/DigitalInput.h>
 
 #include "Utils/PIDConfig.hpp"
 
@@ -319,7 +319,7 @@ void Robot::AutonomousInit()
       originalPosition = targetYaw0.GetDouble(0);
       vision1->PutBoolean("driverMode", true);
       inst.Flush();
-      GyroZero();
+      
   }
 
 
@@ -475,7 +475,7 @@ void Robot::AutonomousPeriodic()
 
       if(timeleft < 8 && timeleft > 4)
       {
-        driveforward = (-0.69 - 0.16);
+        driveforward = (0.85);
       }
 
       DriveControlMain(driveforward,
@@ -613,7 +613,6 @@ void Robot::TeleopInit()
 
   BallsShot = 0;
 
-  GyroZero();
 }
 
 
@@ -795,14 +794,14 @@ void Robot::TeleopPeriodic()
 
     // }
   #ifdef COMP
-   if ((c_joyStick2.GetPOV() == 90))
+   if (c_joyStick2.GetRawButton(7))
    {
      V_AutoShootEnable = false;
      V_ShooterSpeedDesiredFinalUpper = 0;
      V_ShooterSpeedDesiredFinalLower = 0;
    }
     
-    if ((c_joyStick2.GetPOV() == 180) || (c_joyStick2.GetPOV() == 270) || (c_joyStick2.GetPOV() == 0) || (V_AutoShootEnable == true))
+    if ((c_joyStick2.GetPOV() == 180) || (c_joyStick2.GetPOV() == 270) || (c_joyStick2.GetPOV() == 0) || c_joyStick2.GetRawButton(8) || (V_AutoShootEnable == true))
     {
       // V_ShooterSpeedDesired[E_TopShooter] = -3000;
       // V_ShooterSpeedDesired[E_BottomShooter] = -3200;
@@ -820,6 +819,11 @@ void Robot::TeleopPeriodic()
       {
        V_ShooterSpeedDesiredFinalUpper = -200;
        V_ShooterSpeedDesiredFinalLower = -200;
+      }
+      else if (c_joyStick2.GetRawButton(8))
+      {
+        V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
+        V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
       }
 
       V_AutoShootEnable = true;
@@ -991,22 +995,26 @@ else
 //      m_intake.Set(ControlMode::PercentOutput, 0);
 //    }
 
-    bool active = ir_sensor.Get();
+    bool activeBeamSensor = ir_sensor.Get();
+    frc::SmartDashboard::PutBoolean("ir beam", activeBeamSensor);
 
     if(c_joyStick2.GetRawButton(1))
     {
-      if(active)
+      if(activeBeamSensor)
       {
-        m_conveyDaBalls.Set(ControlMode::PercentOutput, -1);
+        m_conveyDaBalls.Set(ControlMode::PercentOutput, -0.5);
+        m_elevateDaBalls.Set(ControlMode::PercentOutput, 1);
       }
-      m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.4);
+      else
+      {
+        m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
+        m_elevateDaBalls.Set(ControlMode::PercentOutput, 1);
+      }
+      
     }
     else if(c_joyStick2.GetRawButton(2))
     {
-      if(active)
-      {
-        m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
-      }
+      m_elevateDaBalls.Set(ControlMode::PercentOutput, -0.420);
       m_conveyDaBalls.Set(ControlMode::PercentOutput, 0.420);
     }
     else
@@ -1014,6 +1022,7 @@ else
       m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
       m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
     }
+
 
     frc::Wait(C_ExeTime);
 }

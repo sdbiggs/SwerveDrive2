@@ -120,25 +120,45 @@ const double K_DesiredRotateSpeedAxis[10] = {-20.0,
                                                4.0,
                                               20.0};
 
-const double K_DesiredRotateSpeed[10] = {-1.0,  // -20.0
-                                         -1.0,  //  -4.0
-                                         -0.4,  //  -2.0
-                                         -0.2,  //  -1.0
+const double K_DesiredRotateSpeed[10] = {-0.5,  // -20.0
+                                         -0.2,  //  -4.0
+                                         -0.06,  //  -2.0
+                                         -0.05,  //  -1.0
                                           0.0,  //  -0.2
                                           0.0,  //   0.2
-                                          0.2,  //   1.0
-                                          0.4,  //   2.0
-                                          1.0,  //   4.0
-                                          1.0}; //  20.0
+                                          0.05,  //   1.0
+                                          0.06,  //   2.0
+                                          0.2,  //   4.0
+                                          0.5}; //  20.0
 
+const double K_DesiredDistanceAxis[6] = {408,
+                                     637,
+                                     833,
+                                     968,
+                                     1070,
+                                     1660};
+
+const double K_DesiredSpeedUpperBeam[6] = {-1185,
+                                           -1185,
+                                           -1420,
+                                           -1800,
+                                           -1950,
+                                           -3000};
+
+const double K_DesiredSpeedLowerBeam[6] = {-1150,
+                                           -1350,
+                                           -1880,
+                                           -2100,
+                                           -2400,
+                                           -3100};
 // This is the amount of time that we will wait to make sure we are at the correct location
-const double K_RotateDebounceTime = 0.05;  
+const double K_RotateDebounceTime = 0.06;  
 
 // This is the amount of error allowed when in auto rotate / auto target
-const double K_RotateDeadbandAngle = 0.5;  
+const double K_RotateDeadbandAngle = 0.420;  
 
 // This is the desired target angle for the auto vision targeting.  This is due to the offset of the camera.
-const double K_TargetVisionAngle = -0.5;
+const double K_TargetVisionAngle = 3.3;
 
 
 

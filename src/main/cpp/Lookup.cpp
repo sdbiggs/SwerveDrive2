@@ -295,6 +295,46 @@ double DesiredSpeed(double L_JoystickAxis)
   }
 
 /******************************************************************************
+ * Function:     DesiredUpperBeamSpeed
+ *
+ * Description:  Function to power up upper beam.
+ ******************************************************************************/
+double DesiredUpperBeamSpeed(double L_TargetDistance)
+  {
+  double L_DesiredBeamSpeed = 0.0;
+  int L_AxisSize             = (int)(sizeof(K_DesiredDistanceAxis) / sizeof(K_DesiredSpeedUpperBeam[0]));
+  int L_CalArraySize         = (int)(sizeof(K_DesiredSpeedUpperBeam) / sizeof(K_DesiredSpeedUpperBeam[0]));
+
+  L_DesiredBeamSpeed = LookUp1D_Table(&K_DesiredDistanceAxis[0],
+                                       &K_DesiredSpeedUpperBeam[0],
+                                        L_AxisSize,
+                                        L_CalArraySize,
+                                        L_TargetDistance);
+
+  return L_DesiredBeamSpeed;
+  }
+
+  /******************************************************************************
+ * Function:     DesiredLowerBeamSpeed
+ *
+ * Description:  Function to power up lower beam.
+ ******************************************************************************/
+double DesiredLowerBeamSpeed(double L_TargetDistance)
+  {
+  double L_DesiredBeamSpeed = 0.0;
+  int L_AxisSize             = (int)(sizeof(K_DesiredDistanceAxis) / sizeof(K_DesiredSpeedLowerBeam[0]));
+  int L_CalArraySize         = (int)(sizeof(K_DesiredSpeedLowerBeam) / sizeof(K_DesiredSpeedLowerBeam[0]));
+
+  L_DesiredBeamSpeed = LookUp1D_Table(&K_DesiredDistanceAxis[0],
+                                       &K_DesiredSpeedLowerBeam[0],
+                                        L_AxisSize,
+                                        L_CalArraySize,
+                                        L_TargetDistance);
+
+  return L_DesiredBeamSpeed;
+  }
+
+/******************************************************************************
  * Function:     DesiredRotateSpeed
  *
  * Description:  Function to determine the speed at which to rotate the robot 
