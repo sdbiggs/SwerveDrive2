@@ -17,6 +17,7 @@
 #include <frc/smartdashboard/SmartDashboard.h>
 #include <frc/DriverStation.h>
 #include <frc/livewindow/LiveWindow.h>
+#include <frc/Spark.h>
 
 #include "Encoders.hpp"
 #include "Enums.hpp"
@@ -102,6 +103,7 @@ double       V_ShooterSpeedDesiredFinalUpper;
 double       V_ShooterSpeedDesiredFinalLower;
 
 double SpeedRecommend;
+int theCoolerInteger;
 
 double PDP_Current_UpperShooter = 0;
 double PDP_Current_LowerShooter = 0;
@@ -113,6 +115,8 @@ double BallsShot = 0;
 PIDConfig UpperShooterPIDConfig {0.0008, 0.000001, 0.0006};
 
 frc::DigitalInput ir_sensor{1};
+
+frc::Spark blinkin {0};
 
 /******************************************************************************
  * Function:     RobotInit
@@ -187,6 +191,8 @@ void Robot::RobotInit() {
     frc::SmartDashboard::PutNumber("Speed Desired Top", 0);
     frc::SmartDashboard::PutNumber("Speed Desired Bottom", 0);
 
+    frc::SmartDashboard::PutNumber("cooler int", 1);
+
     V_ShooterSpeedDesired[E_TopShooter] = 0;
     V_ShooterSpeedDesired[E_BottomShooter] = 0;
     V_ShooterSpeedCurr[E_TopShooter] = 0;
@@ -237,6 +243,10 @@ void Robot::RobotInit() {
     // frc::SmartDashboard::PutNumber("Max Output", kMaxOutput);
     // frc::SmartDashboard::PutNumber("Min Output", kMinOutput);
     // frc::SmartDashboard::PutNumber("Desired Level", 0);
+
+    blinkin.Set(-0.99);
+
+    frc::SmartDashboard::PutNumber("Blinkin code", 0);
 }
 
 
@@ -249,6 +259,8 @@ void Robot::RobotInit() {
 void Robot::RobotPeriodic()
 {
   frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
+
+  
 
     /*
       Finds distance from robot to specified target.
@@ -277,6 +289,9 @@ void Robot::RobotPeriodic()
     //Run Gyro readings when the robot starts
     Gyro();
     frc::SmartDashboard::PutNumber("gyro angle", gyro_yawangledegrees);
+    theCoolerInteger = frc::SmartDashboard::GetNumber("cooler int", 1);
+
+    blinkin.Set(frc::SmartDashboard::GetNumber("Blinkin code", 0));
 }
 
 
@@ -331,8 +346,6 @@ void Robot::AutonomousInit()
  ******************************************************************************/
 void Robot::AutonomousPeriodic()
   {   
-      int theCoolerInteger;
-
       #pragma badauto
       // switch(theCoolerInteger)
       // {
@@ -451,31 +464,70 @@ void Robot::AutonomousPeriodic()
       double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
       double driveforward = 0;
 
-      if(timeleft > 8)
+      switch (theCoolerInteger)
       {
-        V_ShooterSpeedDesiredFinalUpper = -1275;
-        V_ShooterSpeedDesiredFinalLower = -1400;
-      }
-      else
-      {
-        V_ShooterSpeedDesiredFinalUpper = 0;
-        V_ShooterSpeedDesiredFinalLower = 0;
-      }
-      V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
-      V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
+        case 1:
+      
+          if(timeleft > 8)
+          {
+            // V_ShooterSpeedDesiredFinalUpper = -1275;
+            // V_ShooterSpeedDesiredFinalLower = -1400;
+            V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
+          }
+          else
+          {
+            V_ShooterSpeedDesiredFinalUpper = 0;
+            V_ShooterSpeedDesiredFinalLower = 0;
+          }
+          V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+          V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
 
-      if(timeleft < 12 && timeleft > 8)
-      {
-        m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.69);
-      }
-      else
-      {
-        m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
-      }
+          if(timeleft < 13 && timeleft > 8)
+          {
+            m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.420);
+          }
+          else
+          {
+            m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
+          }
 
-      if(timeleft < 8 && timeleft > 4)
-      {
-        driveforward = (0.85);
+          if(timeleft < 8 && timeleft > 4)
+          {
+            driveforward = (0.85);
+          }
+
+          break;
+        
+        case 2:
+          if(timeleft > 10)
+          {
+            V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
+          }
+          else
+          {
+            V_ShooterSpeedDesiredFinalUpper = 0;
+            V_ShooterSpeedDesiredFinalLower = 0;
+          }
+          V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+          V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
+
+          if(timeleft < 14.5 && timeleft > 10)
+          {
+            m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.8);
+          }
+          else
+          {
+            m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
+          }
+
+          if(timeleft < 15 && timeleft > 10)
+          {
+            driveforward = (0.420);
+          }
+
+          break;
       }
 
       DriveControlMain(driveforward,
@@ -571,6 +623,8 @@ void Robot::TeleopInit()
   {
   int index;
 
+  
+
   V_RobotInit = true;
   m_frontLeftSteerMotor.RestoreFactoryDefaults();
   m_frontLeftDriveMotor.RestoreFactoryDefaults();
@@ -626,6 +680,8 @@ void Robot::TeleopPeriodic()
   T_RobotCorner         index;
   double                L_FortuneMotor;
   // T_WheelOfFortuneColor L_Color;
+
+
 
   //L_Color = ColorSensor(false);
   L_FortuneMotor = WheelOfFortune (//L_Color,
