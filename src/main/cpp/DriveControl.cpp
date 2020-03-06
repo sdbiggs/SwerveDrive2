@@ -22,6 +22,7 @@ double rotateErrorCalc;
 double rotateErrorIntegral;
 bool   rotateMode;
 bool   autoBeamLock;
+bool   V_AutoRotateComplete;
 double V_FWD;
 double V_STR;
 double V_RCW;
@@ -108,6 +109,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       // Abort out of auto rotate and/or auto target if the driver moves the joysticks
       autoBeamLock = false;
       rotateMode   = false;
+      V_AutoRotateComplete = false;
     }
     else if(L_JoyStick1Button1 || autoBeamLock == true)
     {
@@ -145,6 +147,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       {
       // Use chameleon vison as target when in auto beam lock
       L_RotateErrorCalc = desiredAngle - L_VisionAngleDeg;
+      V_AutoRotateComplete = false;
       }
     else
       {
@@ -156,7 +159,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) || 
         (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime))
       {
-      // rotateMode = true;
+      V_AutoRotateComplete = false;      // rotateMode = true;
       // autoBeamLock = true;
       rotateDeBounce += C_ExeTime;
       }
@@ -166,6 +169,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       rotateMode = false;
       autoBeamLock = false;
       rotateDeBounce = 0;
+      V_AutoRotateComplete = true;
       }
 
     if (rotateMode == true)
@@ -287,4 +291,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       L_WheelAngleTarget[L_Index] = L_WA[L_Index];
       }
     *L_RobotInit = L_Init;
+
+
+    frc::SmartDashboard::PutBoolean("AutoRotate Complete",V_AutoRotateComplete);
   }

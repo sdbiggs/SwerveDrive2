@@ -338,9 +338,9 @@ void Robot::AutonomousInit()
       gyro_yawanglerad = 0;
 
       originalPosition = targetYaw0.GetDouble(0);
+      vision0->PutNumber("pipeline", 0);
       vision1->PutBoolean("driverMode", true);
-      inst.Flush();
-      
+      inst.Flush();    
   }
 
 
@@ -491,8 +491,8 @@ void Robot::AutonomousPeriodic()
       
           if(timeleft > 8)
           {
-            V_ShooterSpeedDesiredFinalUpper = -1200;
-            V_ShooterSpeedDesiredFinalLower = -1150;
+            V_ShooterSpeedDesiredFinalUpper = -1400;
+            V_ShooterSpeedDesiredFinalLower = -1250;
             // V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
             // V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
           }
