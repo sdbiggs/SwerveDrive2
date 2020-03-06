@@ -131,19 +131,33 @@ const double K_DesiredRotateSpeed[10] = {-0.5,  // -20.0
                                           0.2,  //   4.0
                                           0.5}; //  20.0
 
-const double K_DesiredDistanceAxis[6] = {408,
-                                     637,
-                                     833,
-                                     968,
-                                     1070,
-                                     1660};
+// const double K_DesiredDistanceAxis[6] = {408,
+//                                      637,
+//                                      833,
+//                                      968,
+//                                      1070,
+//                                      1660};
 
-const double K_DesiredSpeedUpperBeam[6] = {-1185,
-                                           -1185,
-                                           -1420,
-                                           -1800,
-                                           -1950,
-                                           -3000};
+const double K_DesiredDistanceAxis[6] = {415,
+                                     644,
+                                     840,
+                                     975,
+                                     1077,
+                                     1667};
+
+// const double K_DesiredSpeedUpperBeam[6] = {-1185,
+//                                            -1185,
+//                                            -1420,
+//                                            -1800,
+//                                            -1950,
+//                                            -3000};
+
+const double K_DesiredSpeedUpperBeam[6] = {-1200,
+                                           -1200,
+                                           -1435,
+                                           -1815,
+                                           -1965,
+                                           -3015};
 
 const double K_DesiredSpeedLowerBeam[6] = {-1150,
                                            -1350,

@@ -69,6 +69,7 @@ std::shared_ptr<NetworkTable> ledLight;
 
 nt::NetworkTableInstance inst;
 nt::NetworkTableEntry driverMode0;
+nt::NetworkTableEntry pipeline0;
 nt::NetworkTableEntry targetYaw0;
 nt::NetworkTableEntry targetPitch0;
 nt::NetworkTableEntry targetPose0;
@@ -98,6 +99,9 @@ bool         autonComplete[4];
 int          beamCount;
 bool         beamFullyCharged;
 
+int pipelineCounter;
+bool V_pipelinecounterLatch;
+
 bool         V_AutoShootEnable;
 double       V_ShooterSpeedDesiredFinalUpper;
 double       V_ShooterSpeedDesiredFinalLower;
@@ -117,6 +121,7 @@ PIDConfig UpperShooterPIDConfig {0.0008, 0.000001, 0.0006};
 frc::DigitalInput ir_sensor{1};
 
 frc::Spark blinkin {0};
+frc::DriverStation::Alliance L_AllianceColor;
 
 /******************************************************************************
  * Function:     RobotInit
@@ -158,6 +163,7 @@ void Robot::RobotInit() {
 
 
     driverMode0           = vision0->GetEntry("driverMode");
+    pipeline0             = vision0->GetEntry("pipeline");
     targetPitch0          = vision0->GetEntry("targetPitch");
     targetYaw0            = vision0->GetEntry("targetYaw");
     targetPose0           = vision0->GetEntry("targetpose");
@@ -244,9 +250,8 @@ void Robot::RobotInit() {
     // frc::SmartDashboard::PutNumber("Min Output", kMinOutput);
     // frc::SmartDashboard::PutNumber("Desired Level", 0);
 
-    blinkin.Set(-0.99);
 
-    frc::SmartDashboard::PutNumber("Blinkin code", 0);
+    // frc::SmartDashboard::PutNumber("Blinkin code", 0);
 }
 
 
@@ -290,8 +295,9 @@ void Robot::RobotPeriodic()
     Gyro();
     frc::SmartDashboard::PutNumber("gyro angle", gyro_yawangledegrees);
     theCoolerInteger = frc::SmartDashboard::GetNumber("cooler int", 1);
+      
 
-    blinkin.Set(frc::SmartDashboard::GetNumber("Blinkin code", 0));
+    // blinkin.Set(frc::SmartDashboard::GetNumber("Blinkin code", 0));
 }
 
 
@@ -464,16 +470,31 @@ void Robot::AutonomousPeriodic()
       double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
       double driveforward = 0;
 
+      L_AllianceColor = frc::DriverStation::GetInstance().GetAlliance();
+      
+      if(L_AllianceColor == frc::DriverStation::Alliance::kRed)
+      {
+        blinkin.Set(-0.17);
+      }
+      else if(L_AllianceColor == frc::DriverStation::Alliance::kBlue)
+      {
+        blinkin.Set(-0.15);
+      }
+      else
+      {
+        blinkin.Set(-0.27);
+      }
+
       switch (theCoolerInteger)
       {
         case 1:
       
           if(timeleft > 8)
           {
-            // V_ShooterSpeedDesiredFinalUpper = -1275;
-            // V_ShooterSpeedDesiredFinalLower = -1400;
-            V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
-            V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesiredFinalUpper = -1200;
+            V_ShooterSpeedDesiredFinalLower = -1150;
+            // V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
+            // V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
           }
           else
           {
@@ -667,6 +688,7 @@ void Robot::TeleopInit()
 
   BallsShot = 0;
 
+
 }
 
 
@@ -681,7 +703,12 @@ void Robot::TeleopPeriodic()
   double                L_FortuneMotor;
   // T_WheelOfFortuneColor L_Color;
 
+  double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
 
+  if(timeleft < 30)
+  {
+    blinkin.Set(-0.95);
+  }
 
   //L_Color = ColorSensor(false);
   L_FortuneMotor = WheelOfFortune (//L_Color,
@@ -1065,8 +1092,7 @@ else
       {
         m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
         m_elevateDaBalls.Set(ControlMode::PercentOutput, 1);
-      }
-      
+      }    
     }
     else if(c_joyStick2.GetRawButton(2))
     {
@@ -1078,7 +1104,29 @@ else
       m_conveyDaBalls.Set(ControlMode::PercentOutput, 0);
       m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
     }
-
+    
+    if(c_joyStick2.GetPOV() == 90 && V_pipelinecounterLatch == false)
+    { 
+      pipelineCounter++;
+      int pipelineChecker = (pipelineCounter % 2);
+      if(pipelineChecker != 0)
+      {
+        vision0->PutNumber("pipeline", 1);
+        inst.Flush();
+      }
+      else
+      {
+        vision0->PutNumber("pipeline", 0);
+        inst.Flush();
+      }
+      V_pipelinecounterLatch = true;
+    }
+    else if(c_joyStick2.GetPOV() != 90)
+    {
+      V_pipelinecounterLatch = false;
+    }
+    
+    frc::SmartDashboard::PutNumber("pipeline", pipeline0.GetDouble(0));
 
     frc::Wait(C_ExeTime);
 }
