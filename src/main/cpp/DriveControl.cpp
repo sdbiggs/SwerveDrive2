@@ -154,7 +154,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       L_RotateErrorCalc = 0;
       }
     
-    frc::SmartDashboard::PutNumber("L_RotateErrorCalc", L_RotateErrorCalc);
+    // frc::SmartDashboard::PutNumber("L_RotateErrorCalc", L_RotateErrorCalc);
 
     if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) || 
         (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime))

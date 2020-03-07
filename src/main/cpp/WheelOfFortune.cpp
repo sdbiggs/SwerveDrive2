@@ -32,9 +32,9 @@ double WheelOfFortune(//T_WheelOfFortuneColor L_WheelOfFortuneColor,
                       bool                  L_ManualRev)
   {
   double L_FortuneWheelPower = 0;
-  double L_SpinNumberDesired;
 
-  L_SpinNumberDesired = frc::SmartDashboard::GetNumber("Wheel Spin Number", 0);
+
+  
   gameData = frc::DriverStation::GetInstance().GetGameSpecificMessage();
   frc::SmartDashboard::PutString("Needed Color!", gameData);
 

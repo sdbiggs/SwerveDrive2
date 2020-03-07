@@ -10,7 +10,7 @@
 //NOTE: Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
 #define COMP
 //NOTE: Set this to allow Shuffleboard configuration of PIDConfig objects (Will override defaults)
-#define PID_DEBUG
+//#define PID_DEBUG
 
 #include "Robot.h"
 #include <iostream>
@@ -178,6 +178,7 @@ void Robot::RobotInit() {
     ledControl            = ledLight->GetEntry("ledControl");
     lidarDistance         = lidar->GetEntry("lidarDistance");
 
+ #ifdef TEST
     frc::SmartDashboard::PutNumber("Upper_P_Gx", 0);
     frc::SmartDashboard::PutNumber("Upper_I_Gx", 0);
     frc::SmartDashboard::PutNumber("Upper_D_Gx", 0);
@@ -193,9 +194,10 @@ void Robot::RobotInit() {
     frc::SmartDashboard::PutNumber("Lower_FF", 0);
     frc::SmartDashboard::PutNumber("Lower_Max_Limit", 0);
     frc::SmartDashboard::PutNumber("Lower_Min_Limit", 0);
+#endif
 
-    frc::SmartDashboard::PutNumber("Speed Desired Top", 0);
-    frc::SmartDashboard::PutNumber("Speed Desired Bottom", 0);
+    // frc::SmartDashboard::PutNumber("Speed Desired Top", 0);
+    // frc::SmartDashboard::PutNumber("Speed Desired Bottom", 0);
 
     frc::SmartDashboard::PutNumber("cooler int", 1);
 
@@ -263,7 +265,7 @@ void Robot::RobotInit() {
  ******************************************************************************/
 void Robot::RobotPeriodic()
 {
-  frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
+  // frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
   
 
@@ -273,18 +275,27 @@ void Robot::RobotPeriodic()
       and camera height relative to ground for ball distance.
       Make sure it's in meters.
     */
+   if(pipeline0.GetDouble(0) == 1)
+   {
+     distanceTarget     = 124.8 / tan((targetPitch0.GetDouble(0) + 15) * (C_Deg2Rad));
+   }
+   else
+   {
      distanceTarget     = 157.8 / tan((targetPitch0.GetDouble(0) + 15) * (C_Deg2Rad));
+   }
+   
     //  distanceBall       = 47  / tan((targetPitch1.GetDouble(0)) * (-deg2rad));
 
     //Finds robot's distance from target's center view.
      distanceFromTargetCenter = (distanceTarget * sin((90 - targetYaw0.GetDouble(0)) * C_Deg2Rad) - 28.17812754);
     //  distanceFromBallCenter   = distanceBall   * sin((90 - targetYaw1.GetDouble(0)) * deg2rad);
 
+    // frc::SmartDashboard::PutBoolean("testboolean", testboolean);
     frc::SmartDashboard::PutNumber("distanceTarget", distanceTarget);
-    frc::SmartDashboard::PutNumber("distanceFromTargetCenter", distanceFromTargetCenter);
+    // frc::SmartDashboard::PutNumber("distanceFromTargetCenter", distanceFromTargetCenter);
     frc::SmartDashboard::PutNumber("targetYaw", targetYaw0.GetDouble(0));
-    frc::SmartDashboard::PutNumber("targetPitch", targetPitch0.GetDouble(1));
-    frc::SmartDashboard::PutNumber("lidarDistance", lidarDistance.GetDouble(0));
+    // frc::SmartDashboard::PutNumber("targetPitch", targetPitch0.GetDouble(1));
+    // frc::SmartDashboard::PutNumber("lidarDistance", lidarDistance.GetDouble(0));
 
 
     #ifdef PID_DEBUG
@@ -707,7 +718,7 @@ void Robot::TeleopPeriodic()
 
   if(timeleft < 30)
   {
-    blinkin.Set(-0.95);
+    blinkin.Set(-0.89);
   }
 
   //L_Color = ColorSensor(false);
@@ -836,8 +847,8 @@ void Robot::TeleopPeriodic()
     // frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
     //Shooter mech
-    frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
-    frc::SmartDashboard::PutNumber("Bottom Speed", V_ShooterSpeedCurr[E_BottomShooter]);
+    // frc::SmartDashboard::PutNumber("Top Speed", V_ShooterSpeedCurr[E_TopShooter]);
+    // frc::SmartDashboard::PutNumber("Bottom Speed", V_ShooterSpeedCurr[E_BottomShooter]);
 
     // SpeedRecommend = (distanceTarget * sqrt(-9.807 / (2 * cos(35 * deg2rad) * cos(35 * deg2rad) * (1.56845 - (distanceTarget * tan(35 * deg2rad))))));
     // frc::SmartDashboard::PutNumber("Recommended Speed", SpeedRecommend);
@@ -954,6 +965,8 @@ void Robot::TeleopPeriodic()
     double lower_Max = frc::SmartDashboard::GetNumber("Lower_Max_Limit", 0);
     double lower_Min = frc::SmartDashboard::GetNumber("Lower_Min_Limit", 0);
 
+
+
     m_topShooterpid.SetP(upper_P_Gx);
     m_topShooterpid.SetI(upper_I_Gx);
     m_topShooterpid.SetD(upper_D_Gx);
@@ -973,7 +986,7 @@ void Robot::TeleopPeriodic()
 
 
 
-    frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
+    // frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
     if(c_joyStick2.GetRawAxis(3) > 0.1)
     {
@@ -1006,8 +1019,8 @@ void Robot::TeleopPeriodic()
       m_liftMotor.Set(0);
     }
 
-    frc::SmartDashboard::PutNumber("Upper Velocity", m_encoderTopShooter.GetVelocity());
-    frc::SmartDashboard::PutNumber("Lower Velocity", m_encoderBottomShooter.GetVelocity());
+    // frc::SmartDashboard::PutNumber("Upper Velocity", m_encoderTopShooter.GetVelocity());
+    // frc::SmartDashboard::PutNumber("Lower Velocity", m_encoderBottomShooter.GetVelocity());
 
 #ifdef COMP
 if (V_AutoShootEnable == true)
@@ -1051,12 +1064,12 @@ else
     // m_rearRightSteerMotor.Set(0);
 
     //Pneumatic Lift
-    if(c_joyStick2.GetRawButton(5))
+    if(c_joyStick2.GetRawButton(6))
     {
       lift.Set(frc::DoubleSolenoid::Value::kReverse);
       //go up
     }
-    else if(c_joyStick2.GetRawButton(6))
+    else if(c_joyStick2.GetRawButton(5))
     {
       lift.Set(frc::DoubleSolenoid::Value::kForward);
       //go down
@@ -1079,7 +1092,7 @@ else
 //    }
 
     bool activeBeamSensor = ir_sensor.Get();
-    frc::SmartDashboard::PutBoolean("ir beam", activeBeamSensor);
+    // frc::SmartDashboard::PutBoolean("ir beam", activeBeamSensor);
 
     if(c_joyStick2.GetRawButton(1))
     {
