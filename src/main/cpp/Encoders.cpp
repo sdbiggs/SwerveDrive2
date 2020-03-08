@@ -47,6 +47,8 @@ void Read_Encoders(bool            L_RobotInit,
   {
   T_RobotCorner index;
 
+//L_RobotInit = true;  // For calibration only!
+
   if (L_RobotInit == true)
     {
     V_WheelAngleRaw[E_FrontLeft]  = a_encoderFrontLeftSteerVoltage * 72 - K_WheelOffsetAngle[E_FrontLeft];
@@ -86,6 +88,8 @@ void Read_Encoders(bool            L_RobotInit,
     V_WheelAngleFwd[E_RearLeft]   = fmod(((m_encoderRearLeftSteer.GetPosition()   - V_WheelRelativeAngleRawOffset[E_RearLeft])   * -20), 360);
     V_WheelAngleFwd[E_RearRight]  = fmod(((m_encoderRearRightSteer.GetPosition()  - V_WheelRelativeAngleRawOffset[E_RearRight])  * -20), 360);
 
+
+
     for (index = E_FrontLeft;
          index < E_RobotCornerSz;
          index = T_RobotCorner(int(index) + 1))
@@ -110,6 +114,11 @@ void Read_Encoders(bool            L_RobotInit,
         }
       }
     }
+
+  frc::SmartDashboard::PutNumber("V_WheelAngleRaw Front Left", V_WheelAngleRaw[E_FrontLeft]);
+  frc::SmartDashboard::PutNumber("V_WheelAngleRaw Front Right", V_WheelAngleRaw[E_FrontRight]);
+  frc::SmartDashboard::PutNumber("V_WheelAngleRaw Rear Left", V_WheelAngleRaw[E_RearLeft]);
+  frc::SmartDashboard::PutNumber("V_WheelAngleRaw Rear Right", V_WheelAngleRaw[E_RearRight]);
 
   V_WheelVelocity[E_FrontLeft]  = ((m_encoderFrontLeftDrive.GetVelocity()  / K_ReductionRatio) / 60) * K_WheelCircufrence;
   V_WheelVelocity[E_FrontRight] = ((m_encoderFrontRightDrive.GetVelocity() / K_ReductionRatio) / 60) * K_WheelCircufrence;

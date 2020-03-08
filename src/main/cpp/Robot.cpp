@@ -10,7 +10,7 @@
 //NOTE: Set this to TEST for testing of speeds and PID gains.  Set to COMP for competion
 #define COMP
 //NOTE: Set this to allow Shuffleboard configuration of PIDConfig objects (Will override defaults)
-//#define PID_DEBUG
+#define PID_DEBUG
 
 #include "Robot.h"
 #include <iostream>
@@ -839,10 +839,10 @@ void Robot::TeleopPeriodic()
     // frc::SmartDashboard::PutNumber("WS_RL", V_WS[E_RearLeft]);
     // frc::SmartDashboard::PutNumber("WS_RR", V_WS[E_RearRight]);
 
-    // frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
-    // frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
-    // frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
-    // frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
+    frc::SmartDashboard::PutNumber("WA_FR", V_WA[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WA_FL", V_WA[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
     // frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
@@ -988,36 +988,36 @@ void Robot::TeleopPeriodic()
 
     // frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
-    if(c_joyStick2.GetRawAxis(3) > 0.1)
-    {
-      if(m_encoderLift.GetPosition() > -480)
-      {
-        m_liftMotor.Set(c_joyStick2.GetRawAxis(3) * -1.0);
-      }
-      else
-      {
-        m_liftMotor.Set(0);
-      }
-    }
-    else if (c_joyStick2.GetRawAxis(2) > 0.1)
-    {
-      if(m_encoderLift.GetPosition() < -30)
-      {
-        m_liftMotor.Set(c_joyStick2.GetRawAxis(2) * 1.0);
-      }
-      else
-      {
-        m_liftMotor.Set(0);
-      }
-    }
-    else if(c_joyStick2.GetRawButton(6))
-    {
-      m_liftMotor.Set(0.025);
-    }
-    else
-    {
-      m_liftMotor.Set(0);
-    }
+    // if(c_joyStick2.GetRawAxis(3) > 0.1)
+    // {
+    //   if(m_encoderLift.GetPosition() > -480)
+    //   {
+    //     m_liftMotor.Set(c_joyStick2.GetRawAxis(3) * -1.0);
+    //   }
+    //   else
+    //   {
+    //     m_liftMotor.Set(0);
+    //   }
+    // }
+    // else if (c_joyStick2.GetRawAxis(2) > 0.1)
+    // {
+    //   if(m_encoderLift.GetPosition() < -30)
+    //   {
+    //     m_liftMotor.Set(c_joyStick2.GetRawAxis(2) * 1.0);
+    //   }
+    //   else
+    //   {
+    //     m_liftMotor.Set(0);
+    //   }
+    // }
+    // else if(c_joyStick2.GetRawButton(6))
+    // {
+    //   m_liftMotor.Set(0.025);
+    // }
+    // else
+    // {
+    //   m_liftMotor.Set(0);
+    // }
 
     // frc::SmartDashboard::PutNumber("Upper Velocity", m_encoderTopShooter.GetVelocity());
     // frc::SmartDashboard::PutNumber("Lower Velocity", m_encoderBottomShooter.GetVelocity());
