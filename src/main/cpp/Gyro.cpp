@@ -6,6 +6,8 @@
 
 AHRS *NavX;
 
+using namespace frc;
+
 double gyro_angleprev;
 double gryo_loopcount = 0;
 double gyro_yawangledegrees;
