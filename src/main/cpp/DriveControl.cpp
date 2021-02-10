@@ -40,7 +40,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
                       double L_JoyStick1Axis1X,
                       double L_JoyStick1Axis2X,
                       double L_JoyStick1Axis3,
-                      double L_JoyStick1Button1,
+                      bool L_JoyStick1Button1,
                       double L_JoyStick1Button3,
                       double L_JoyStick1Button4,
                       double L_JoyStick1Button5,
@@ -53,7 +53,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
                       double *L_WheelAngleTarget,
                       bool   *L_RobotInit,
                       T_AutoTargetStates L_AutoTargetState,
-                      double L_DesiredAngle)
+                      bool *L_TargetFin)
   {
   int    L_Index;
   double L_temp;
@@ -170,6 +170,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       autoBeamLock = false;
       rotateDeBounce = 0;
       V_AutoRotateComplete = true;
+      *L_TargetFin = true;
       }
 
     if (rotateMode == true)

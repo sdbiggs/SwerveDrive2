@@ -113,7 +113,8 @@ double PDP_Current_UpperShooter = 0;
 double PDP_Current_LowerShooter = 0;
 double PDP_Current_UpperShooter_last = 0;
 double PDP_Current_LowerShooter_last = 0;
-
+bool V_autonTargetCmd = false;
+bool V_autonTargetFin = false;
 double BallsShot = 0;
 
 PIDConfig UpperShooterPIDConfig {0.0008, 0.000001, 0.0006};
@@ -320,6 +321,8 @@ void Robot::RobotPeriodic()
  ******************************************************************************/
 void Robot::AutonomousInit()
   {
+    V_autonTargetCmd = false;
+    V_autonTargetFin = false;
       int index;
       V_RobotInit = true;
       // visionInit(vision0, ledLight, inst);
@@ -560,13 +563,39 @@ void Robot::AutonomousPeriodic()
           }
 
           break;
+        
+      case 3:
+      if(timeleft < 15 && timeleft > 10)
+          {
+            driveforward = (0.420);
+            
+          }
+      if(timeleft < 9.5 && V_autonTargetCmd == false && V_autonTargetFin == false)
+          {
+            V_autonTargetCmd = true;
+            m_elevateDaBalls.Set(ControlMode::PercentOutput, 0);
+          }
+      
+      if(V_autonTargetFin)
+          {
+            V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+            V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
+          }
+      if(V_ShooterSpeedCurr[E_TopShooter] >= V_ShooterSpeedDesiredFinalUpper &&
+          V_ShooterSpeedCurr[E_BottomShooter] >= V_ShooterSpeedDesiredFinalLower){
+          m_elevateDaBalls.Set(ControlMode::PercentOutput, 0.8);
+
+      }
+      break;
       }
 
       DriveControlMain(driveforward,
                   0,
                   0,
                   c_joyStick.GetRawAxis(3),
-                  c_joyStick.GetRawButton(1),
+                  V_autonTargetCmd,
                   c_joyStick.GetRawButton(3),
                   c_joyStick.GetRawButton(4),
                   c_joyStick.GetRawButton(5),
@@ -579,7 +608,7 @@ void Robot::AutonomousPeriodic()
                   &V_WA[0],
                   &V_RobotInit,
                   V_AutoTargetState,
-                  V_AutoTargetAngle);
+                  &V_autonTargetFin);
         
         T_RobotCorner index; 
 
@@ -764,7 +793,7 @@ void Robot::TeleopPeriodic()
                    &V_WA[0],
                    &V_RobotInit,
                    V_AutoTargetState,
-                   V_AutoTargetAngle);
+                   &V_autonTargetFin);
 
   //PDP top shooter port 13
   //PDP bottom shooter port 12
