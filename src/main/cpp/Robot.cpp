@@ -578,9 +578,9 @@ void Robot::AutonomousPeriodic()
       
       if(V_autonState == 0)
           {
-            driveforward = (0.420);
+            driveforward = (1);
             V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 4){
+            if (V_autonTimer >= 2){
               driveforward = (0);
               V_autonState++;
               V_autonTimer = 0;
@@ -612,7 +612,7 @@ void Robot::AutonomousPeriodic()
       else if (V_autonState == 3){
         V_elevatorValue = 0.8;
         V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 1){
+            if (V_autonTimer >= 1.5){
               V_elevatorValue = 0;
               V_autonState++;
               V_autonTimer = 0;
@@ -620,13 +620,13 @@ void Robot::AutonomousPeriodic()
         }
       if(V_autonState == 4)
           {
-            strafe = (-0.420);
+            strafe = (-1.0);
             V_ShooterSpeedDesiredFinalUpper = 0;
             V_ShooterSpeedDesiredFinalLower = 0;
             V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
             V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 4){
+            if (V_autonTimer >= 2){
               strafe = (0);
               V_autonState++;
               V_autonTimer = 0;
@@ -650,7 +650,7 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
   
               V_autonTimer += C_ExeTime;
-              if (V_autonTimer >= .5){
+              if (V_autonTimer >= 1){
               V_autonState++;
               V_autonTimer = 0;
               }
@@ -658,7 +658,7 @@ void Robot::AutonomousPeriodic()
       else if (V_autonState == 7){
         V_elevatorValue = 0.8;
         V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= .5){
+            if (V_autonTimer >= 1.5){
               V_elevatorValue = 0;
               V_autonState++;
               V_autonTimer = 0;
@@ -670,9 +670,9 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesiredFinalLower = 0;
             V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
-            strafe = (0.420);
+            strafe = (1.0);
             V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 4){
+            if (V_autonTimer >= 2){
               strafe = (0);
               V_autonState++;
               V_autonTimer = 0;
@@ -696,7 +696,7 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
   
               V_autonTimer += C_ExeTime;
-              if (V_autonTimer >= .5){
+              if (V_autonTimer >= 1){
               V_autonState++;
               V_autonTimer = 0;
               }
@@ -704,7 +704,7 @@ void Robot::AutonomousPeriodic()
       else if (V_autonState == 11){
         V_elevatorValue = 0.8;
         V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 1){
+            if (V_autonTimer >= 1.5){
               V_elevatorValue = 0;
               V_autonState++;
               V_autonTimer = 0;
@@ -717,13 +717,13 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
             V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 2){
+            if (V_autonTimer >= 1){
               V_autonState++;
               V_autonTimer = 0;
             }
           }
      else if(V_autonState == 13){
-          speen = 0.7;
+          speen = 1.0;
           V_autonTimer += C_ExeTime;
         if (V_autonTimer >= 3){
               speen = 0;
