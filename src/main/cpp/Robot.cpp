@@ -493,6 +493,7 @@ void Robot::AutonomousPeriodic()
       double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
       double driveforward = 0;
       double strafe = 0;
+      double speen = 0;
       L_AllianceColor = frc::DriverStation::GetInstance().GetAlliance();
       
       if(L_AllianceColor == frc::DriverStation::Alliance::kRed)
@@ -614,13 +615,19 @@ void Robot::AutonomousPeriodic()
             if (V_autonTimer >= 1){
               V_elevatorValue = 0;
               V_autonState++;
+              V_autonTimer = 0;
             }
+        }
       if(V_autonState == 4)
           {
-            strafe = (0.210);
+            strafe = (-0.420);
+            V_ShooterSpeedDesiredFinalUpper = 0;
+            V_ShooterSpeedDesiredFinalLower = 0;
+            V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+            V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
             V_autonTimer += C_ExeTime;
             if (V_autonTimer >= 4){
-              driveforward = (0);
+              strafe = (0);
               V_autonState++;
               V_autonTimer = 0;
             }
@@ -643,7 +650,7 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
   
               V_autonTimer += C_ExeTime;
-              if (V_autonTimer >= 1){
+              if (V_autonTimer >= .5){
               V_autonState++;
               V_autonTimer = 0;
               }
@@ -651,16 +658,22 @@ void Robot::AutonomousPeriodic()
       else if (V_autonState == 7){
         V_elevatorValue = 0.8;
         V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 1){
+            if (V_autonTimer >= .5){
               V_elevatorValue = 0;
               V_autonState++;
+              V_autonTimer = 0;
             }
+      }
       if(V_autonState == 8)
           {
-            strafe = (0.210);
+            V_ShooterSpeedDesiredFinalUpper = 0;
+            V_ShooterSpeedDesiredFinalLower = 0;
+            V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
+            V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
+            strafe = (0.420);
             V_autonTimer += C_ExeTime;
             if (V_autonTimer >= 4){
-              driveforward = (0);
+              strafe = (0);
               V_autonState++;
               V_autonTimer = 0;
             }
@@ -683,7 +696,7 @@ void Robot::AutonomousPeriodic()
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
   
               V_autonTimer += C_ExeTime;
-              if (V_autonTimer >= 1){
+              if (V_autonTimer >= .5){
               V_autonState++;
               V_autonTimer = 0;
               }
@@ -694,59 +707,43 @@ void Robot::AutonomousPeriodic()
             if (V_autonTimer >= 1){
               V_elevatorValue = 0;
               V_autonState++;
-            }
-         }
-      if(V_autonState == 12)
-          {
-            strafe = (-0.630);
-            V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 4){
-              driveforward = (0);
-              V_autonState++;
               V_autonTimer = 0;
             }
-          }
-      else if(V_autonState == 13)
+         }
+     else if(V_autonState == 12)
           {
-            V_autonTargetCmd = true;
-            if (V_autonTargetFin == true){
-                V_autonTargetCmd = false;
-                V_autonTargetFin = false;
-                V_autonState++;
-            }
-          }
-      
-      else if(V_autonState == 14)
-          {
-            V_ShooterSpeedDesiredFinalUpper = DesiredUpperBeamSpeed(distanceTarget);
-            V_ShooterSpeedDesiredFinalLower = DesiredLowerBeamSpeed(distanceTarget);
+            V_ShooterSpeedDesiredFinalUpper = 0;
+            V_ShooterSpeedDesiredFinalLower = 0;
             V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 50);
             V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 50);
-  
-              V_autonTimer += C_ExeTime;
-              if (V_autonTimer >= 1){
+            V_autonTimer += C_ExeTime;
+            if (V_autonTimer >= 2){
               V_autonState++;
               V_autonTimer = 0;
-              }
-          }
-      else if (V_autonState == 15){
-        V_elevatorValue = 0.8;
-        V_autonTimer += C_ExeTime;
-            if (V_autonTimer >= 1){
-              V_elevatorValue = 0;
-              V_autonState++;
             }
-         }
+          }
+     else if(V_autonState == 13){
+          speen = 0.7;
+          V_autonTimer += C_ExeTime;
+        if (V_autonTimer >= 3){
+              speen = 0;
+              V_autonState++;
+              V_autonTimer = 0;
+            }
+      }
       
-      }
-      }
+      
+      
+      
+      
       break;
       }
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesiredFinalUpper", V_ShooterSpeedDesiredFinalUpper);
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesired[E_TopShooter]", V_ShooterSpeedDesired[E_TopShooter]);
+frc::SmartDashboard::PutNumber("V_AutonState", V_autonState);
       DriveControlMain(driveforward,
                   strafe,
-                  0,
+                  speen,
                   c_joyStick.GetRawAxis(3),
                   V_autonTargetCmd,
                   c_joyStick.GetRawButton(3),
