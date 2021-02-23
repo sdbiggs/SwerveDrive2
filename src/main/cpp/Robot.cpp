@@ -32,6 +32,7 @@
 #include <frc/DigitalInput.h>
 
 #include "Utils/PIDConfig.hpp"
+#include "Odometry.hpp"
 
 // T_WheelOfFortuneColor V_ColorWheelColor;
 
@@ -118,6 +119,8 @@ bool V_autonTargetFin = false;
 double BallsShot = 0;
 double V_autonTimer = 0;
 int V_autonState = 0;
+double V_M_RobotDisplacementX = 0;
+double V_M_RobotDisplacementY = 0;
 
 double V_elevatorValue = 0;
 
@@ -344,6 +347,7 @@ void Robot::AutonomousInit()
         V_WA[index] = 0;
         V_WheelRelativeAngleRawOffset[index] = 0;
         V_WheelAngleFwd[index] = 0;
+        V_Rad_WheelAngleFwd[index] = 0;
         V_WheelAnglePrev[index] = 0;
         V_WheelAngleLoop[index] = 0;
         V_WheelAngleRaw[index] = 0;
@@ -353,12 +357,15 @@ void Robot::AutonomousInit()
         V_WheelSpeedError[index] = 0;
         V_WheelSpeedIntergral[index] = 0;
         V_WheelAngleArb[index] = 0;
+        V_M_WheelDeltaDistance[index] = 0;
       }
       V_STR = 0;
       V_FWD = 0;
       V_RCW = 0;
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
+      V_M_RobotDisplacementX = 0;
+      V_M_RobotDisplacementY = 0;
 
       originalPosition = targetYaw0.GetDouble(0);
       vision0->PutNumber("pipeline", 0);
@@ -375,120 +382,28 @@ void Robot::AutonomousInit()
  ******************************************************************************/
 void Robot::AutonomousPeriodic()
   {   
-      #pragma badauto
-      // switch(theCoolerInteger)
-      // {
-      //     //1: Back up and shoot at the same time (5ft)
-      //     case 1:
-      //       if(autonComplete[3] == false)
-      //       {
-      //           if(AutoMove(distanceTarget, 457.0476) == false)
-      //           {
-      //             V_FWD = .5;
-      //           }
-      //           else
-      //           {
-      //             V_FWD = 0;
-      //             autonComplete[1] = true;
-      //           }
-
-      //           V_ShooterSpeedDesired[E_TopShooter] = AutoShoot(targetYaw0, distanceTarget, 0);
-      //           V_ShooterSpeedDesired[E_BottomShooter] = AutoShoot(targetYaw0, distanceTarget, 1);
-
-      //           if (beamFullyCharged == true && beamCount < 3)
-      //           {
-      //             m_belt.Set(ControlMode::PercentOutput, 1);
-      //           }
-      //           else
-      //           {
-      //             m_belt.Set(ControlMode::PercentOutput, 0);
-      //           }
-                
-      //           if (beamCount == 3)
-      //           {
-      //             autonComplete[2] = true;
-      //           }
-
-      //           if(autonComplete[1] && autonComplete[2])
-      //           {
-      //             autonComplete[3] = true;
-      //           }
-      //       }
-      //       break;
-          
-      //     //Rotates then shoots, then rotates back to 0 position, then moves forward
-      //     case 2:
-      //       if(autonComplete[3] == false)
-      //       {
-      //         if(autonComplete[1] == false)
-      //         {
-      //           // V_RCW = AutoTarget(targetYaw0.GetDouble(0), distanceTarget, desiredVisionAngle0);
-
-      //           V_ShooterSpeedDesired[E_TopShooter] = AutoShoot(targetYaw0, distanceTarget, 0);
-      //           V_ShooterSpeedDesired[E_BottomShooter] = AutoShoot(targetYaw0, distanceTarget, 1);
-                
-      //           if(V_RCW == 0)
-      //           {
-      //             if(beamFullyCharged == true && beamCount < 3)
-      //             {
-      //               m_belt.Set(ControlMode::PercentOutput, 1);
-      //             }
-      //             else
-      //             {
-      //               m_belt.Set(ControlMode::PercentOutput, 0);
-      //             }
-                    
-      //             if(beamCount == 3)
-      //             {
-      //               autonComplete[1] = true;
-      //             }
-      //           }
-      //         }
-
-      //         if (autonComplete[1])
-      //         {
-      //           if(abs(originalPosition) > 0)
-      //           {
-      //             // V_RCW = AutoTarget(-originalPosition, distanceTarget, desiredVisionAngle0);
-      //           }
-      //           else
-      //           {
-      //             autonComplete[2] = true;
-      //           }
-      //         }
-              
-      //         if(autonComplete[2])
-      //         {
-      //           if(AutoMove(distanceTarget, 457.0476) == false)
-      //           {
-      //             V_FWD = .5;
-      //           }
-      //           else
-      //           {
-      //             V_FWD = 0;
-      //             autonComplete[3] = true;
-      //           }
-      //         }
-      //       }
-      //       break;
-      // }
-      #pragma endregion
-
       Read_Encoders(V_RobotInit,
-                a_encoderFrontLeftSteer.GetVoltage(),
-                a_encoderFrontRightSteer.GetVoltage(),
-                a_encoderRearLeftSteer.GetVoltage(),
-                a_encoderRearRightSteer.GetVoltage(),
-                m_encoderFrontLeftSteer,
-                m_encoderFrontRightSteer,
-                m_encoderRearLeftSteer,
-                m_encoderRearRightSteer,
-                m_encoderFrontLeftDrive,
-                m_encoderFrontRightDrive,
-                m_encoderRearLeftDrive,
-                m_encoderRearRightDrive,
-                m_encoderTopShooter,
-                m_encoderBottomShooter);
+                    a_encoderFrontLeftSteer.GetVoltage(),
+                    a_encoderFrontRightSteer.GetVoltage(),
+                    a_encoderRearLeftSteer.GetVoltage(),
+                    a_encoderRearRightSteer.GetVoltage(),
+                    m_encoderFrontLeftSteer,
+                    m_encoderFrontRightSteer,
+                    m_encoderRearLeftSteer,
+                    m_encoderRearRightSteer,
+                    m_encoderFrontLeftDrive,
+                    m_encoderFrontRightDrive,
+                    m_encoderRearLeftDrive,
+                    m_encoderRearRightDrive,
+                    m_encoderTopShooter,
+                    m_encoderBottomShooter);
+
+        DtrmnSwerveBotLocation(V_RobotInit,
+                               gyro_yawanglerad,
+                               &V_Rad_WheelAngleFwd[0],
+                               &V_M_WheelDeltaDistance[0],
+                               &V_M_RobotDisplacementX,
+                               &V_M_RobotDisplacementY);
 
       double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
       double driveforward = 0;
@@ -836,8 +751,6 @@ void Robot::TeleopInit()
   {
   int index;
 
-  
-
   V_RobotInit = true;
   m_frontLeftSteerMotor.RestoreFactoryDefaults();
   m_frontLeftDriveMotor.RestoreFactoryDefaults();
@@ -861,6 +774,7 @@ void Robot::TeleopInit()
         V_WA[index] = 0;
         V_WheelRelativeAngleRawOffset[index] = 0;
         V_WheelAngleFwd[index] = 0;
+        V_Rad_WheelAngleFwd[index] = 0;
         V_WheelAnglePrev[index] = 0;
         V_WheelAngleLoop[index] = 0;
         V_WheelAngleRaw[index] = 0;
@@ -870,6 +784,7 @@ void Robot::TeleopInit()
         V_WheelSpeedError[index] = 0;
         V_WheelSpeedIntergral[index] = 0;
         V_WheelAngleArb[index] = 0;
+        V_M_WheelDeltaDistance[index] = 0;
       }
       V_STR = 0;
       V_FWD = 0;
@@ -877,10 +792,9 @@ void Robot::TeleopInit()
       gyro_yawangledegrees = 0;
       gyro_yawanglerad = 0;
       V_AutoShootEnable = false;
-
-  BallsShot = 0;
-
-
+      V_M_RobotDisplacementX = 0;
+      V_M_RobotDisplacementY = 0;
+      BallsShot = 0;
 }
 
 
@@ -923,6 +837,13 @@ void Robot::TeleopPeriodic()
                 m_encoderRearRightDrive,
                 m_encoderTopShooter,
                 m_encoderBottomShooter);
+
+  DtrmnSwerveBotLocation(V_RobotInit,
+                         gyro_yawanglerad,
+                         &V_Rad_WheelAngleFwd[0],
+                         &V_M_WheelDeltaDistance[0],
+                         &V_M_RobotDisplacementX,
+                         &V_M_RobotDisplacementY);
 
   double L_JoyStick1Axis1Y = DesiredSpeed(c_joyStick.GetRawAxis(1));
   double L_JoyStick1Axis1X = DesiredSpeed(c_joyStick.GetRawAxis(0));
@@ -1025,6 +946,8 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
+    frc::SmartDashboard::PutNumber("Robot X", V_M_RobotDisplacementX);
+    frc::SmartDashboard::PutNumber("Robot Y", V_M_RobotDisplacementY);
     // frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
     //Shooter mech

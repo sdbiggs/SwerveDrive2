@@ -20,6 +20,7 @@ double DtrmnEncoderRelativeToCmnd(double L_JoystickCmnd,
                                   double L_EncoderReading);
 
  extern double V_WheelAngleFwd[E_RobotCornerSz];
+ extern double V_Rad_WheelAngleFwd[E_RobotCornerSz]; 
  extern double V_WheelAngleRev[E_RobotCornerSz];
  extern double V_WheelAngleArb[E_RobotCornerSz];
  extern double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
@@ -28,3 +29,5 @@ double DtrmnEncoderRelativeToCmnd(double L_JoystickCmnd,
  extern double V_WheelAngleLoop[E_RobotCornerSz];
  extern double V_WheelAngleRaw[E_RobotCornerSz];
  extern double V_ShooterSpeedCurr[E_RoboShooter];
+ extern double V_WheelDeltaDistance[E_RobotCornerSz];
+ extern double V_M_WheelDeltaDistance[E_RobotCornerSz];

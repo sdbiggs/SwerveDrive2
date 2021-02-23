@@ -14,13 +14,15 @@
 
 double V_WheelAngleRaw[E_RobotCornerSz];
 double V_WheelAngle[E_RobotCornerSz];
-double V_WheelAngleFwd[E_RobotCornerSz]; // This is the wheel angle as if the wheel were going to be driven in a forward direction
+double V_WheelAngleFwd[E_RobotCornerSz]; // This is the wheel angle as if the wheel were going to be driven in a forward direction, in degrees
+double V_Rad_WheelAngleFwd[E_RobotCornerSz]; // This is the wheel angle as if the wheel were going to be driven in a forward direction, in radians
 double V_WheelAngleRev[E_RobotCornerSz]; // This is the wheel angle as if the wheel were going to be driven in a reverse direction
 double V_WheelAngleArb[E_RobotCornerSz]; // This is the arbitrated wheel angle that is used in the PID controller
 double V_WheelAnglePrev[E_RobotCornerSz];
 double V_WheelAngleLoop[E_RobotCornerSz];
 double V_WheelRelativeAngleRawOffset[E_RobotCornerSz];
 double V_WheelVelocity[E_RobotCornerSz]; // Velocity of drive wheels, in in/sec
+double V_M_WheelDeltaDistance[E_RobotCornerSz]; // Distance wheel moved, loop to loop, in inches
 double V_ShooterSpeedCurr[E_RoboShooter];
 
 
@@ -119,6 +121,22 @@ void Read_Encoders(bool            L_RobotInit,
   frc::SmartDashboard::PutNumber("V_WheelAngleRaw Front Right", V_WheelAngleRaw[E_FrontRight]);
   frc::SmartDashboard::PutNumber("V_WheelAngleRaw Rear Left", V_WheelAngleRaw[E_RearLeft]);
   frc::SmartDashboard::PutNumber("V_WheelAngleRaw Rear Right", V_WheelAngleRaw[E_RearRight]);
+
+  if (L_RobotInit == false)
+    {
+       V_M_WheelDeltaDistance[E_FrontLeft]  = V_M_WheelDeltaDistance[E_FrontLeft]  - ((m_encoderFrontLeftDrive.GetPosition() / K_ReductionRatio) / 60) * K_WheelCircufrence;
+       V_M_WheelDeltaDistance[E_FrontRight] = V_M_WheelDeltaDistance[E_FrontRight] - ((m_encoderFrontRightDrive.GetPosition()/ K_ReductionRatio) / 60) * K_WheelCircufrence;
+       V_M_WheelDeltaDistance[E_RearRight]  = V_M_WheelDeltaDistance[E_RearRight]  - ((m_encoderRearRightDrive.GetPosition() / K_ReductionRatio) / 60) * K_WheelCircufrence;
+       V_M_WheelDeltaDistance[E_RearLeft]   = V_M_WheelDeltaDistance[E_RearLeft]   - ((m_encoderRearLeftDrive.GetPosition()  / K_ReductionRatio) / 60) * K_WheelCircufrence;
+    }
+
+  for (index = E_FrontLeft;
+       index < E_RobotCornerSz;
+       index = T_RobotCorner(int(index) + 1))
+      {
+      /* Create a copy of the Angle Fwd, but in radians */
+      V_Rad_WheelAngleFwd[index] = V_WheelAngleFwd[index] * (C_PI/180);
+      }
 
   V_WheelVelocity[E_FrontLeft]  = ((m_encoderFrontLeftDrive.GetVelocity()  / K_ReductionRatio) / 60) * K_WheelCircufrence;
   V_WheelVelocity[E_FrontRight] = ((m_encoderFrontRightDrive.GetVelocity() / K_ReductionRatio) / 60) * K_WheelCircufrence;
