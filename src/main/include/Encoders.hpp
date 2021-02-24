@@ -31,3 +31,6 @@ double DtrmnEncoderRelativeToCmnd(double L_JoystickCmnd,
  extern double V_ShooterSpeedCurr[E_RoboShooter];
  extern double V_WheelDeltaDistance[E_RobotCornerSz];
  extern double V_M_WheelDeltaDistance[E_RobotCornerSz];
+ extern double V_Cnt_WheelDeltaDistanceCurr[E_RobotCornerSz];
+ extern double V_Cnt_WheelDeltaDistancePrev[E_RobotCornerSz];
+ 

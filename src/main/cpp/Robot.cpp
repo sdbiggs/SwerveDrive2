@@ -358,6 +358,8 @@ void Robot::AutonomousInit()
         V_WheelSpeedIntergral[index] = 0;
         V_WheelAngleArb[index] = 0;
         V_M_WheelDeltaDistance[index] = 0;
+        V_Cnt_WheelDeltaDistanceCurr[index] = 0; 
+        V_Cnt_WheelDeltaDistancePrev[index] = 0;
       }
       V_STR = 0;
       V_FWD = 0;
@@ -785,6 +787,8 @@ void Robot::TeleopInit()
         V_WheelSpeedIntergral[index] = 0;
         V_WheelAngleArb[index] = 0;
         V_M_WheelDeltaDistance[index] = 0;
+        V_Cnt_WheelDeltaDistanceCurr[index] = 0;
+        V_Cnt_WheelDeltaDistancePrev[index] = 0;
       }
       V_STR = 0;
       V_FWD = 0;
@@ -948,6 +952,11 @@ void Robot::TeleopPeriodic()
 
     frc::SmartDashboard::PutNumber("Robot X", V_M_RobotDisplacementX);
     frc::SmartDashboard::PutNumber("Robot Y", V_M_RobotDisplacementY);
+
+    frc::SmartDashboard::PutNumber("WheelDist Front Right", V_M_WheelDeltaDistance[E_FrontRight]);
+    frc::SmartDashboard::PutNumber("WheelDist Front Left", V_M_WheelDeltaDistance[E_FrontLeft]);
+    frc::SmartDashboard::PutNumber("WheelDist Rear Left", V_M_WheelDeltaDistance[E_RearLeft]);
+    frc::SmartDashboard::PutNumber("WheelDist Rear Right", V_M_WheelDeltaDistance[E_RearRight]);
     // frc::SmartDashboard::PutBoolean("RobotInit",  V_RobotInit);
 
     //Shooter mech
