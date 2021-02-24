@@ -154,8 +154,11 @@ void Robot::RobotInit() {
     m_liftMotor.RestoreFactoryDefaults();
 
     m_liftMotor.SetIdleMode(rev::CANSparkMax::IdleMode::kBrake);
+    
 
     V_RobotInit = true;
+    V_M_RobotDisplacementY = 0;
+    V_M_RobotDisplacementX = 0;
 
     GyroRobotInit();
 
@@ -950,8 +953,8 @@ void Robot::TeleopPeriodic()
     frc::SmartDashboard::PutNumber("WA_RL", V_WA[E_RearLeft]);
     frc::SmartDashboard::PutNumber("WA_RR", V_WA[E_RearRight]);
 
-    frc::SmartDashboard::PutNumber("Robot X", V_M_RobotDisplacementX);
-    frc::SmartDashboard::PutNumber("Robot Y", V_M_RobotDisplacementY);
+    frc::SmartDashboard::PutNumber("Robot X", (V_M_RobotDisplacementX * (-1)));
+    frc::SmartDashboard::PutNumber("Robot Y", (V_M_RobotDisplacementY * (-1)));
 
     frc::SmartDashboard::PutNumber("WheelDist Front Right", V_M_WheelDeltaDistance[E_FrontRight]);
     frc::SmartDashboard::PutNumber("WheelDist Front Left", V_M_WheelDeltaDistance[E_FrontLeft]);

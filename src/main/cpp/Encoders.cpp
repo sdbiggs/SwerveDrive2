@@ -26,7 +26,7 @@ double V_M_WheelDeltaDistance[E_RobotCornerSz]; // Distance wheel moved, loop to
 double V_Cnt_WheelDeltaDistanceCurr[E_RobotCornerSz]; // Prev distance wheel moved, loop to loop, in Counts
 double V_Cnt_WheelDeltaDistancePrev[E_RobotCornerSz]; // Prev distance wheel moved, loop to loop, in Counts
 double V_ShooterSpeedCurr[E_RoboShooter];
-
+double V_Cnt_WheelDeltaDistanceInit[E_RobotCornerSz];
 
 /******************************************************************************
  * Function:     Read_Encoders
@@ -84,6 +84,10 @@ void Read_Encoders(bool            L_RobotInit,
 
           V_WheelAnglePrev[index] = V_WheelAngleRaw[index];
         }
+        V_Cnt_WheelDeltaDistanceInit[E_FrontLeft] = m_encoderFrontLeftDrive.GetPosition();
+        V_Cnt_WheelDeltaDistanceInit[E_FrontRight] = m_encoderFrontRightDrive.GetPosition();
+        V_Cnt_WheelDeltaDistanceInit[E_RearRight] = m_encoderRearRightDrive.GetPosition();
+        V_Cnt_WheelDeltaDistanceInit[E_RearLeft] = m_encoderRearLeftDrive.GetPosition();
     }
   else
     {
@@ -126,11 +130,11 @@ void Read_Encoders(bool            L_RobotInit,
 
   if (L_RobotInit == false)
     {  
-       V_Cnt_WheelDeltaDistanceCurr[E_FrontLeft] = m_encoderFrontLeftDrive.GetPosition();
-       V_Cnt_WheelDeltaDistanceCurr[E_FrontRight] = m_encoderFrontRightDrive.GetPosition();
-       V_Cnt_WheelDeltaDistanceCurr[E_RearRight] = m_encoderRearRightDrive.GetPosition();
-       V_Cnt_WheelDeltaDistanceCurr[E_RearLeft] = m_encoderRearLeftDrive.GetPosition();
-
+       V_Cnt_WheelDeltaDistanceCurr[E_FrontLeft] = m_encoderFrontLeftDrive.GetPosition() - V_Cnt_WheelDeltaDistanceInit[E_FrontLeft];
+       V_Cnt_WheelDeltaDistanceCurr[E_FrontRight] = m_encoderFrontRightDrive.GetPosition() - V_Cnt_WheelDeltaDistanceInit[E_FrontRight];
+       V_Cnt_WheelDeltaDistanceCurr[E_RearRight] = m_encoderRearRightDrive.GetPosition() - V_Cnt_WheelDeltaDistanceInit[E_RearRight];
+       V_Cnt_WheelDeltaDistanceCurr[E_RearLeft] = m_encoderRearLeftDrive.GetPosition() - V_Cnt_WheelDeltaDistanceInit[E_RearLeft];
+      
 
        V_M_WheelDeltaDistance[E_FrontLeft]  = ((((V_Cnt_WheelDeltaDistanceCurr[E_FrontLeft]  - V_Cnt_WheelDeltaDistancePrev[E_FrontLeft])/  K_ReductionRatio)) * K_WheelCircufrence);
        V_M_WheelDeltaDistance[E_FrontRight] = ((((V_Cnt_WheelDeltaDistanceCurr[E_FrontRight] - V_Cnt_WheelDeltaDistancePrev[E_FrontRight])/ K_ReductionRatio)) * K_WheelCircufrence);
