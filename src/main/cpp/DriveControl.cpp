@@ -152,6 +152,14 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
       rotateMode = true;
       desiredAngle = 67.5;
       }
+    else if ((fabs(L_JoyStick1Axis1Y) == 0) &&
+             (fabs(L_JoyStick1Axis1X) == 0) &&
+             (fabs(L_JoyStick1Axis2X) == 0))
+      {
+      // No driver input
+      desiredAngle      = L_GyroAngleDegrees;
+      V_b_DriveStraight = false;
+      }
       
     if ((rotateMode == true) ||
         (V_b_DriveStraight == true))
@@ -201,9 +209,9 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
       V_RCW = -DesiredRotateSpeed(L_RotateErrorCalc);
       }
   
-    L_temp = V_FWD * cos(L_GyroAngleRadians) + V_STR * sin(L_GyroAngleRadians);
-    V_STR = -V_FWD * sin(L_GyroAngleRadians) + V_STR * cos(L_GyroAngleRadians);
-    V_FWD = L_temp;
+    L_temp =  V_FWD * cos(L_GyroAngleRadians) + V_STR * sin(L_GyroAngleRadians);
+    V_STR  = -V_FWD * sin(L_GyroAngleRadians) + V_STR * cos(L_GyroAngleRadians);
+    V_FWD  =  L_temp;
 
     //Ws1: fr, Ws2: fl, ws3: rl, ws4: rr
     L_A = V_STR - V_RCW * (C_L/C_R);
@@ -250,7 +258,7 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
       {
       L_Gain = L_JoyStick1Axis3;
       }
-    else if ((rotateMode == true) ||
+    else if ((rotateMode   == true) ||
              (autoBeamLock == true))
       {
       L_Gain = K_AutoRotateGx;
