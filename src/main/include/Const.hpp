@@ -109,6 +109,7 @@ const double K_DesiredDriveSpeed[20] = {-1.00,  //-0.95
                                          1.00}; // 0.95
 
 /*  Rotation calibrations */
+/* K_DesiredRotateSpeedAxis - This is the effective command axis, function of error calculation, in degrees */
 const double K_DesiredRotateSpeedAxis[10] = {-20.0,
                                               -4.0,
                                               -2.0,
@@ -120,6 +121,7 @@ const double K_DesiredRotateSpeedAxis[10] = {-20.0,
                                                4.0,
                                               20.0};
 
+/* K_DesiredRotateSpeed - This is the effective command, equivalent to the rotate joystick */
 const double K_DesiredRotateSpeed[10] = {-0.5,  // -20.0
                                          -0.2,  //  -4.0
                                          -0.06,  //  -2.0

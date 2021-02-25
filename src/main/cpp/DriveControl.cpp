@@ -3,6 +3,9 @@
 
   Created on: Feb 25, 2020
   Author: 5561
+
+  Changes:
+  2021-02-25 -> Updates to help the robot drive straight
  */
 #include "Robot.h"
 
@@ -22,12 +25,14 @@ double rotateErrorCalc;
 double rotateErrorIntegral;
 bool   rotateMode;
 bool   autoBeamLock;
+bool   V_b_DriveStraight;
 bool   V_AutoRotateComplete;
 double V_FWD;
 double V_STR;
 double V_RCW;
 double V_WS[E_RobotCornerSz];
 double V_WA[E_RobotCornerSz];
+double V_Deg_DesiredAngPrev = 0;
 
 
 
@@ -36,24 +41,24 @@ double V_WA[E_RobotCornerSz];
  *
  * Description:  Main calling function for the drive control.
  ******************************************************************************/
-void DriveControlMain(double L_JoyStick1Axis1Y,
-                      double L_JoyStick1Axis1X,
-                      double L_JoyStick1Axis2X,
-                      double L_JoyStick1Axis3,
-                      bool L_JoyStick1Button1,
-                      double L_JoyStick1Button3,
-                      double L_JoyStick1Button4,
-                      double L_JoyStick1Button5,
-                      double L_GyroAngleDegrees,
-                      double L_GyroAngleRadians,
-                      double L_VisionAngleDeg,
-                      double *L_WheelAngleFwd,
-                      double *L_WheelAngleRev,
-                      double *L_WheelSpeedTarget,
-                      double *L_WheelAngleTarget,
-                      bool   *L_RobotInit,
-                      T_AutoTargetStates L_AutoTargetState,
-                      bool *L_TargetFin)
+void DriveControlMain(double              L_JoyStick1Axis1Y,
+                      double              L_JoyStick1Axis1X,
+                      double              L_JoyStick1Axis2X,
+                      double              L_JoyStick1Axis3,
+                      bool                L_JoyStick1Button1,
+                      double              L_JoyStick1Button3,
+                      double              L_JoyStick1Button4,
+                      double              L_JoyStick1Button5,
+                      double              L_GyroAngleDegrees,
+                      double              L_GyroAngleRadians,
+                      double              L_VisionAngleDeg,
+                      double             *L_WheelAngleFwd,
+                      double             *L_WheelAngleRev,
+                      double             *L_WheelSpeedTarget,
+                      double             *L_WheelAngleTarget,
+                      bool               *L_RobotInit,
+                      T_AutoTargetStates  L_AutoTargetState,
+                      bool               *L_TargetFin)
   {
   int    L_Index;
   double L_temp;
@@ -86,6 +91,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
          L_Init = true;
          }
       }
+      V_Deg_DesiredAngPrev = L_GyroAngleDegrees;
     }
 
   /* Check to see if we are in initialization.
@@ -98,49 +104,59 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     V_RCW = L_JoyStick1Axis2X;
 
    //turning rotatemode on/off & setting desired angle
-    // if (L_AutoTargetState != E_NotActive)
-    //   {
-    //   desiredAngle = L_DesiredAngle;
-    //   }
     if ((fabs(L_JoyStick1Axis1Y) > 0) ||
         (fabs(L_JoyStick1Axis1X) > 0) ||
         (fabs(L_JoyStick1Axis2X) > 0))
-    {
+      {
       // Abort out of auto rotate and/or auto target if the driver moves the joysticks
       autoBeamLock = false;
-      rotateMode   = false;
       V_AutoRotateComplete = false;
-    }
+      rotateMode = false;
+
+      if (fabs(L_JoyStick1Axis2X) > 0)
+        {
+        // Ok, the driver is attempting to rotate the robot 
+        desiredAngle = L_GyroAngleDegrees;
+        V_b_DriveStraight   = false;
+        }
+      else
+        {
+        // Ok, the driver is attempting to not rotate the robot (i.e. drive straight and/or strafe)
+        // Set the desired angle of the robot equal to the previously measured/commanded angle and enable rotate mode
+        desiredAngle = V_Deg_DesiredAngPrev;
+        V_b_DriveStraight   = true;
+        }  
+      }
     else if(L_JoyStick1Button1 || autoBeamLock == true)
-    {
+      {
       /* Auto targeting */
+      V_b_DriveStraight = false;
       autoBeamLock = true;
       desiredAngle = K_TargetVisionAngle; // This is due to the offset of the camera
-    }
+      }
     else if (L_JoyStick1Button4)
       {
+      V_b_DriveStraight = false;
       rotateMode = true;
       desiredAngle = 90;
       }
     else if (L_JoyStick1Button3)
       {
+      V_b_DriveStraight = false;
       rotateMode = true;
       desiredAngle = 0;
       }
     else if (L_JoyStick1Button5)
       {
+      V_b_DriveStraight = false;
       rotateMode = true;
       desiredAngle = 67.5;
       }
       
-    if (L_JoyStick1Button5 && gyro_yawangledegrees == 67.5)
+    if ((rotateMode == true) ||
+        (V_b_DriveStraight == true))
       {
-      GyroZero();
-      }
-  
-    if (rotateMode == true)
-      {
-      // Use gyro as target when in auto rotate
+      // Use gyro as target when in auto rotate or drive straight mode
       L_RotateErrorCalc = desiredAngle - L_GyroAngleDegrees;
       }
     else if(autoBeamLock == true)
@@ -156,15 +172,17 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     
     // frc::SmartDashboard::PutNumber("L_RotateErrorCalc", L_RotateErrorCalc);
 
-    if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) || 
-        (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime))
+    if ((V_b_DriveStraight == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) ||
+        (rotateMode        == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime) || 
+        (autoBeamLock      == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce <= K_RotateDebounceTime))
       {
       V_AutoRotateComplete = false;      // rotateMode = true;
       // autoBeamLock = true;
       rotateDeBounce += C_ExeTime;
       }
-    else if ((rotateMode == true   && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime) ||
-             (autoBeamLock == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime))
+    else if ((V_b_DriveStraight == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime) ||
+             (rotateMode        == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime) ||
+             (autoBeamLock      == true && fabs(L_RotateErrorCalc) <= K_RotateDeadbandAngle && rotateDeBounce >= K_RotateDebounceTime))
       {
       rotateMode = false;
       autoBeamLock = false;
@@ -173,28 +191,14 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       *L_TargetFin = true;
       }
 
-    if (rotateMode == true)
+    if ((rotateMode == true) ||
+        (V_b_DriveStraight == true))
       {
-      // V_RCW = Control_PID(desiredAngle,
-      //                     L_GyroAngleDegrees,
-      //                     &rotateErrorCalc,
-      //                     &rotateErrorIntegral,
-      //                     K_RobotRotationPID_Gx[E_P_Gx],
-      //                     K_RobotRotationPID_Gx[E_I_Gx],
-      //                     K_RobotRotationPID_Gx[E_D_Gx],
-      //                     K_RobotRotationPID_Gx[E_P_Ul],
-      //                     K_RobotRotationPID_Gx[E_P_Ll],
-      //                     K_RobotRotationPID_Gx[E_I_Ul],
-      //                     K_RobotRotationPID_Gx[E_I_Ll],
-      //                     K_RobotRotationPID_Gx[E_D_Ul],
-      //                     K_RobotRotationPID_Gx[E_D_Ll],
-      //                     K_RobotRotationPID_Gx[E_Max_Ul],
-      //                     K_RobotRotationPID_Gx[E_Max_Ll]);
-
       V_RCW = DesiredRotateSpeed(L_RotateErrorCalc);
       }
-      else if (autoBeamLock == true) {
-        V_RCW = -DesiredRotateSpeed(L_RotateErrorCalc);
+    else if (autoBeamLock == true)
+      {
+      V_RCW = -DesiredRotateSpeed(L_RotateErrorCalc);
       }
   
     L_temp = V_FWD * cos(L_GyroAngleRadians) + V_STR * sin(L_GyroAngleRadians);
@@ -246,8 +250,8 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       {
       L_Gain = L_JoyStick1Axis3;
       }
-      else if ((rotateMode == true) ||
-               (autoBeamLock == true))
+    else if ((rotateMode == true) ||
+             (autoBeamLock == true))
       {
       L_Gain = K_AutoRotateGx;
       }
@@ -258,8 +262,8 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
     L_WS[E_RearRight]  *= (K_WheelMaxSpeed * L_Gain);
 
     for (L_Index = E_FrontLeft;
-        L_Index < E_RobotCornerSz;
-        L_Index = T_RobotCorner(int(L_Index) + 1))
+         L_Index < E_RobotCornerSz;
+         L_Index = T_RobotCorner(int(L_Index) + 1))
       {
       L_WA_FWD = DtrmnEncoderRelativeToCmnd(L_WA[L_Index],
                                             L_WheelAngleFwd[L_Index]);
@@ -293,6 +297,7 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
       }
     *L_RobotInit = L_Init;
 
+    V_Deg_DesiredAngPrev = desiredAngle;
 
     frc::SmartDashboard::PutBoolean("AutoRotate Complete",V_AutoRotateComplete);
   }
