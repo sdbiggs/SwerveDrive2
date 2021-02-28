@@ -19,6 +19,8 @@ extern void DesiredRollerSpeed(double  L_Distance,
 
 extern double DesiredRotateSpeed(double L_Error);
 
+extern double DesiredAutoRotateSpeed(double L_Error);
+
 extern double DesiredLowerBeamSpeed(double L_TargetDistance);
 
 extern double DesiredUpperBeamSpeed(double L_TargetDistance);

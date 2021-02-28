@@ -356,6 +356,27 @@ double DesiredRotateSpeed(double L_Error)
   }
 
 /******************************************************************************
+ * Function:     DesiredAutoRotateSpeed
+ *
+ * Description:  Function to determine the speed at which to rotate the robot 
+ *               (for auto targeting and auto rotate).
+ ******************************************************************************/
+double DesiredAutoRotateSpeed(double L_Error)
+  {
+  double L_DesiredRotateSpeed = 0.0;
+  int L_AxisSize             = (int)(sizeof(K_DesiredAutoRotateSpeedAxis) / sizeof(K_DesiredAutoRotateSpeed[0]));
+  int L_CalArraySize         = (int)(sizeof(K_DesiredAutoRotateSpeed) / sizeof(K_DesiredAutoRotateSpeed[0]));
+
+  L_DesiredRotateSpeed = LookUp1D_Table(&K_DesiredAutoRotateSpeedAxis[0],
+                                        &K_DesiredAutoRotateSpeed[0],
+                                         L_AxisSize,
+                                         L_CalArraySize,
+                                         L_Error);
+
+  return L_DesiredRotateSpeed;
+  }
+
+/******************************************************************************
  * Function:     DesiredRollerSpeed
  *
  * Description:  Function to determine the roller speed, aka the "special

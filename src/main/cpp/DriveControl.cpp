@@ -199,10 +199,13 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
       *L_TargetFin = true;
       }
 
-    if ((rotateMode == true) ||
-        (V_b_DriveStraight == true))
+    if ((rotateMode == true))
       {
       V_RCW = DesiredRotateSpeed(L_RotateErrorCalc);
+      }
+    else if ((V_b_DriveStraight == true))
+      {
+      V_RCW = DesiredAutoRotateSpeed(L_RotateErrorCalc);
       }
     else if (autoBeamLock == true)
       {
@@ -262,6 +265,11 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
              (autoBeamLock == true))
       {
       L_Gain = K_AutoRotateGx;
+      }
+
+    if (L_Gain >= K_MaxGain)
+      {
+      L_Gain = K_MaxGain;
       }
 
     L_WS[E_FrontRight] *= (K_WheelMaxSpeed * L_Gain);

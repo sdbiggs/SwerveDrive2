@@ -133,6 +133,30 @@ const double K_DesiredRotateSpeed[10] = {-0.5,  // -20.0
                                           0.2,  //   4.0
                                           0.5}; //  20.0
 
+/* K_DesiredAutoRotateSpeedAxis - This is the effective command axis, function of error calculation, in degrees */
+const double K_DesiredAutoRotateSpeedAxis[10] = {-4.0,
+                                              -3.0,
+                                              -2.0,
+                                              -1.0,
+                                              -0.2,
+                                               0.2,
+                                               1.0,
+                                               2.0,
+                                               3.0,
+                                              4.0};
+
+/* K_DesiredRotateSpeed - This is the effective command, equivalent to the rotate joystick */
+const double K_DesiredAutoRotateSpeed[10] = {-0.06,  // -4.0
+                                         -0.05,  //  -3.0
+                                         -0.04,  //  -2.0
+                                         -0.03,  //  -1.0
+                                         -0.01,  //  -0.2
+                                          0.01,  //   0.2
+                                          0.03,  //   1.0
+                                          0.04,  //   2.0
+                                          0.05,  //   4.0
+                                          0.06}; //  20.0
+
 // const double K_DesiredDistanceAxis[6] = {408,
 //                                      637,
 //                                      833,
@@ -194,6 +218,8 @@ const double K_TargetVisionUpperRollerErrorMax = 200;
 const double K_TargetVisionLowerRollerErrorMax = 200;
 
 const double K_RotateDebounceThreshold = 0.1;
+
+const double K_MaxGain = 0.75;
 
 const double K_AutoRotateGx = 0.1;
 
