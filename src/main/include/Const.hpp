@@ -247,7 +247,7 @@ const double K_BallLauncherLowerSpeed[K_BallLauncherDistanceSz][K_BallLauncherAn
 /* Auton specific cals */
 #include "K_L_AutonX_Position.hpp"
 #include "K_L_AutonY_Position.hpp"
-#include "K_L_AutonXY_PositionAxis.hpp"
+#include "K_t_AutonXY_PositionAxis.hpp"
 
 const double K_k_AutonX_PID_Gx[E_PID_CalSz] = { 0.5,       // P Gx
                                                 0.0005,    // I Gx

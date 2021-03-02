@@ -279,8 +279,6 @@ void Robot::RobotPeriodic()
 {
   // frc::SmartDashboard::PutNumber("Postion", m_encoderLift.GetPosition());
 
-  
-
     /*
       Finds distance from robot to specified target.
       Numerator depends upon camera height relative to target for target distance,
@@ -309,7 +307,6 @@ void Robot::RobotPeriodic()
     // frc::SmartDashboard::PutNumber("targetPitch", targetPitch0.GetDouble(1));
     // frc::SmartDashboard::PutNumber("lidarDistance", lidarDistance.GetDouble(0));
 
-
     #ifdef PID_DEBUG
       UpperShooterPIDConfig.Debug("Upper Shooter PID Control");
     #endif
@@ -319,7 +316,6 @@ void Robot::RobotPeriodic()
     frc::SmartDashboard::PutNumber("gyro angle", gyro_yawangledegrees);
     theCoolerInteger = frc::SmartDashboard::GetNumber("cooler int", 1);
       
-
     // blinkin.Set(frc::SmartDashboard::GetNumber("Blinkin code", 0));
 }
 
@@ -1028,7 +1024,9 @@ void Robot::TeleopPeriodic()
     {
       V_ShooterSpeedDesired[E_TopShooter] = c_joyStick2.GetRawAxis(1);
       V_ShooterSpeedDesired[E_BottomShooter] = c_joyStick2.GetRawAxis(5);
-    } else {
+    } 
+    else 
+    {
       V_ShooterSpeedDesired[E_TopShooter] = 0;
       V_ShooterSpeedDesired[E_BottomShooter] = 0;
     }

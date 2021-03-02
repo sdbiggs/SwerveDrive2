@@ -24,6 +24,9 @@ double V_L_X_ErrorPrev;
 double V_L_Y_ErrorPrev;
 double V_L_X_Integral;
 double V_L_Y_Integral;
+bool   V_b_RecordStartPosition;
+double V_L_X_StartPosition;
+double V_L_Y_StartPosition;
 
 
 // using namespace frc;
@@ -40,6 +43,9 @@ void AutonDriveReset(void)
       V_L_Y_ErrorPrev = 0.0;
       V_L_X_Integral = 0.0;
       V_L_Y_Integral = 0.0;
+      V_b_RecordStartPosition = true;
+      V_L_X_StartPosition = 0.0;
+      V_L_Y_StartPosition = 0.0;
   }
 
 /******************************************************************************
@@ -63,6 +69,8 @@ void AutonDriveMain(double *L_Pct_JoyStickFwdRev,
   {
     double L_L_X_Location = 0.0;
     double L_L_Y_Location = 0.0;
+    double L_L_FwdRevPosition = 0.0;
+    double L_L_Strafe = 0.0;
 
     if (L_b_RobotInit == false)
       {
@@ -70,8 +78,20 @@ void AutonDriveMain(double *L_Pct_JoyStickFwdRev,
                              &L_L_X_Location,
                              &L_L_Y_Location);
         
-        *L_Pct_JoyStickFwdRev =  Control_PID( L_L_X_Location,
-                                              L_L_X_FieldPos,
+        if (V_b_RecordStartPosition == true)
+          {
+            V_L_X_StartPosition = L_L_X_Location;
+            V_L_Y_StartPosition = L_L_Y_Location;
+            V_b_RecordStartPosition = false;
+          }
+
+        /* We need to offset the position by the start position since the odometry will 
+           start at zero, but the lookup table will not */
+        L_L_FwdRevPosition = L_L_X_Location - V_L_X_StartPosition;
+        L_L_Strafe = L_L_Y_Location - V_L_Y_StartPosition;
+
+        *L_Pct_JoyStickFwdRev =  Control_PID( L_L_FwdRevPosition,
+                                             -L_L_X_FieldPos,
                                              &V_L_X_ErrorPrev,
                                              &V_L_X_Integral,
                                               K_k_AutonX_PID_Gx[E_P_Gx],
@@ -86,8 +106,8 @@ void AutonDriveMain(double *L_Pct_JoyStickFwdRev,
                                               K_k_AutonX_PID_Gx[E_Max_Ul],
                                               K_k_AutonX_PID_Gx[E_Max_Ll]);
 
-        *L_Pct_JoyStickStrafe =  Control_PID( L_L_Y_Location,
-                                              L_L_Y_FieldPos,
+        *L_Pct_JoyStickStrafe =  Control_PID( L_L_Strafe,
+                                             -L_L_Y_FieldPos,
                                              &V_L_Y_ErrorPrev,
                                              &V_L_Y_Integral,
                                               K_k_AutonY_PID_Gx[E_P_Gx],
