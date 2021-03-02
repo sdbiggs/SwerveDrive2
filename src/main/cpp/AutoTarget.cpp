@@ -15,9 +15,6 @@
 #include "Enums.hpp"
 #include <math.h>
 
-T_AutoTargetStates V_AutoTargetState;
-
-
 
 /******************************************************************************
  * Function:     AutoTargeting

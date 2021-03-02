@@ -24,4 +24,8 @@ extern double DesiredAutoRotateSpeed(double L_Error);
 extern double DesiredLowerBeamSpeed(double L_TargetDistance);
 
 extern double DesiredUpperBeamSpeed(double L_TargetDistance);
+
+extern void DesiredAutonLocation(double  L_t_AutonTime,
+                                 double *L_L_X_Location,
+                                 double *L_L_Y_Location);
 #endif /* SRC_ROBORIO2018_LOOKUP_HPP_ */

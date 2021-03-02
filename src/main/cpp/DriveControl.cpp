@@ -57,7 +57,6 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
                       double             *L_WheelSpeedTarget,
                       double             *L_WheelAngleTarget,
                       bool               *L_RobotInit,
-                      T_AutoTargetStates  L_AutoTargetState,
                       bool               *L_TargetFin)
   {
   int    L_Index;
@@ -199,11 +198,11 @@ void DriveControlMain(double              L_JoyStick1Axis1Y,
       *L_TargetFin = true;
       }
 
-    if ((rotateMode == true))
+    if (rotateMode == true)
       {
       V_RCW = DesiredRotateSpeed(L_RotateErrorCalc);
       }
-    else if ((V_b_DriveStraight == true))
+    else if (V_b_DriveStraight == true)
       {
       V_RCW = DesiredAutoRotateSpeed(L_RotateErrorCalc);
       }

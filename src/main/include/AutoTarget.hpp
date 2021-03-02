@@ -1,7 +1,5 @@
 #include "Enums.hpp"
 
-extern T_AutoTargetStates V_AutoTargetState;
-
 T_AutoTargetStates AutoTargeting(T_AutoTargetStates  L_CurrentState,
                                  bool                L_Activate,
                                  double              L_DriverAxis1,

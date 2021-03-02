@@ -125,26 +125,6 @@ double RampTo(double  L_Final,
 
 
 /******************************************************************************
- * Function:     CriteriaMet
- *
- * Description:  This function checks to see if certain criteria is met.
- ******************************************************************************/
-bool CriteriaMet(double  L_Desired,
-                 double  L_Current,
-                 double  L_AllowedError)
-  {
-  bool L_CriteriaMet = true;
-
-  if (fabs(L_Current - L_Desired) <= L_AllowedError)
-    {
-    L_CriteriaMet = false;
-    }
-
-  return (L_CriteriaMet);
-  }
-
-
-/******************************************************************************
  * Function:     LookUp1D_Axis
  *
  * Description:  Single axis lookup.
@@ -274,6 +254,40 @@ double LookUp2D_Table(double const *L_X_Axis,
 
 
 /******************************************************************************
+ * Function:     DesiredAutonCmd
+ *
+ * Description:  Determine the desired X/Y location based on the current time.
+ ******************************************************************************/
+void DesiredAutonLocation(double  L_t_AutonTime,
+                          double *L_L_X_Location,
+                          double *L_L_Y_Location)
+  {
+  double L_L_X_Loc = 0.0;
+  double L_L_Y_Loc = 0.0;
+  int L_i_X_AxisSize             = (int)(sizeof(K_L_AutonXY_PositionAxis) / sizeof(K_L_AutonX_Position[0]));
+  int L_i_X_CalArraySize         = (int)(sizeof(K_L_AutonX_Position) / sizeof(K_L_AutonX_Position[0]));
+  int L_i_Y_AxisSize             = (int)(sizeof(K_L_AutonXY_PositionAxis) / sizeof(K_L_AutonY_Position[0]));
+  int L_i_Y_CalArraySize         = (int)(sizeof(K_L_AutonY_Position) / sizeof(K_L_AutonY_Position[0]));
+
+  L_L_X_Loc = LookUp1D_Table(&K_L_AutonXY_PositionAxis[0],
+                             &K_L_AutonX_Position[0],
+                              L_i_X_AxisSize,
+                              L_i_X_CalArraySize,
+                              L_t_AutonTime);
+
+  L_L_Y_Loc = LookUp1D_Table(&K_L_AutonXY_PositionAxis[0],
+                             &K_L_AutonY_Position[0],
+                              L_i_Y_AxisSize,
+                              L_i_Y_CalArraySize,
+                              L_t_AutonTime);
+
+  *L_L_X_Location = L_L_X_Loc;
+  *L_L_Y_Location = L_L_Y_Loc;
+  }
+
+
+
+/******************************************************************************
  * Function:     DesiredSpeed
  *
  * Description:  Function to scale the joystick input.
@@ -306,10 +320,10 @@ double DesiredUpperBeamSpeed(double L_TargetDistance)
   int L_CalArraySize         = (int)(sizeof(K_DesiredSpeedUpperBeam) / sizeof(K_DesiredSpeedUpperBeam[0]));
 
   L_DesiredBeamSpeed = LookUp1D_Table(&K_DesiredDistanceAxis[0],
-                                       &K_DesiredSpeedUpperBeam[0],
-                                        L_AxisSize,
-                                        L_CalArraySize,
-                                        L_TargetDistance);
+                                      &K_DesiredSpeedUpperBeam[0],
+                                       L_AxisSize,
+                                       L_CalArraySize,
+                                       L_TargetDistance);
 
   return L_DesiredBeamSpeed;
   }

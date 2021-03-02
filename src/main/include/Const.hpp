@@ -156,27 +156,12 @@ const double K_DesiredAutoRotateSpeed[10] = {-0.06,  // -4.0
                                           0.04,  //   2.0
                                           0.05,  //   4.0
                                           0.06}; //  20.0
-
-// const double K_DesiredDistanceAxis[6] = {408,
-//                                      637,
-//                                      833,
-//                                      968,
-//                                      1070,
-//                                      1660};
-
 const double K_DesiredDistanceAxis[6] = {415,
                                      644,
                                      840,
                                      975,
                                      1077,
                                      1667};
-
-// const double K_DesiredSpeedUpperBeam[6] = {-1185,
-//                                            -1185,
-//                                            -1420,
-//                                            -1800,
-//                                            -1950,
-//                                            -3000};
 
 const double K_DesiredSpeedUpperBeam[6] = {-1200,
                                            -1200,
@@ -256,3 +241,34 @@ const double K_BallLauncherLowerSpeed[K_BallLauncherDistanceSz][K_BallLauncherAn
     {-2500, -2500, -2500},
     {-2900, -2900, -2900}
   };
+
+
+
+/* Auton specific cals */
+#include "K_L_AutonX_Position.hpp"
+#include "K_L_AutonY_Position.hpp"
+#include "K_L_AutonXY_PositionAxis.hpp"
+
+const double K_k_AutonX_PID_Gx[E_PID_CalSz] = { 0.5,       // P Gx
+                                                0.0005,    // I Gx
+                                                0.05,      // D Gx
+                                                0.8,       // P UL
+                                               -0.8,       // P LL
+                                                0.12,      // I UL
+                                               -0.12,      // I LL
+                                                0.5,       // D UL
+                                               -0.5,       // D LL
+                                                0.9,       // Max upper
+                                               -0.9};      // Max lower
+
+const double K_k_AutonY_PID_Gx[E_PID_CalSz] = { 0.5,       // P Gx
+                                                0.0005,    // I Gx
+                                                0.05,      // D Gx
+                                                0.8,       // P UL
+                                               -0.8,       // P LL
+                                                0.12,      // I UL
+                                               -0.12,      // I LL
+                                                0.5,       // D UL
+                                               -0.5,       // D LL
+                                                0.9,       // Max upper
+                                               -0.9};      // Max lower

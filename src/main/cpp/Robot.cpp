@@ -33,6 +33,7 @@
 
 #include "Utils/PIDConfig.hpp"
 #include "Odometry.hpp"
+#include "Auton.hpp"
 
 // T_WheelOfFortuneColor V_ColorWheelColor;
 
@@ -372,6 +373,8 @@ void Robot::AutonomousInit()
       V_M_RobotDisplacementX = 0;
       V_M_RobotDisplacementY = 0;
 
+      AutonDriveReset();
+
       originalPosition = targetYaw0.GetDouble(0);
       vision0->PutNumber("pipeline", 0);
       vision1->PutBoolean("driverMode", true);
@@ -386,7 +389,13 @@ void Robot::AutonomousInit()
  *               should place our primary autonomous control code.
  ******************************************************************************/
 void Robot::AutonomousPeriodic()
-  {   
+  {
+    T_RobotCorner index;
+    double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
+    double driveforward = 0;
+    double strafe = 0;
+    double speen = 0;
+
       Read_Encoders(V_RobotInit,
                     a_encoderFrontLeftSteer.GetVoltage(),
                     a_encoderFrontRightSteer.GetVoltage(),
@@ -410,10 +419,7 @@ void Robot::AutonomousPeriodic()
                                &V_M_RobotDisplacementX,
                                &V_M_RobotDisplacementY);
 
-      double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
-      double driveforward = 0;
-      double strafe = 0;
-      double speen = 0;
+
       L_AllianceColor = frc::DriverStation::GetInstance().GetAlliance();
       
       if(L_AllianceColor == frc::DriverStation::Alliance::kRed)
@@ -432,7 +438,6 @@ void Robot::AutonomousPeriodic()
       switch (theCoolerInteger)
       {
         case 1:
-      
           if(timeleft > 8)
           {
             V_ShooterSpeedDesiredFinalUpper = -1400;
@@ -463,7 +468,7 @@ void Robot::AutonomousPeriodic()
           }
 
           break;
-        
+
         case 2:
           if(timeleft > 10)
           {
@@ -651,36 +656,42 @@ void Robot::AutonomousPeriodic()
               V_autonTimer = 0;
             }
       }
-      
-      
-      
-      
-      
+      break;
+
+      case 4:
+        AutonDriveMain(&driveforward,
+                       &strafe,
+                       &speen,
+                        V_M_RobotDisplacementY,
+                        V_M_RobotDisplacementX,
+                        gyro_yawangledegrees,
+                        0,
+                        V_RobotInit);
       break;
       }
+
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesiredFinalUpper", V_ShooterSpeedDesiredFinalUpper);
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesired[E_TopShooter]", V_ShooterSpeedDesired[E_TopShooter]);
 frc::SmartDashboard::PutNumber("V_AutonState", V_autonState);
       DriveControlMain(driveforward,
-                  strafe,
-                  speen,
-                  c_joyStick.GetRawAxis(3),
-                  V_autonTargetCmd,
-                  c_joyStick.GetRawButton(3),
-                  c_joyStick.GetRawButton(4),
-                  c_joyStick.GetRawButton(5),
-                  gyro_yawangledegrees,
-                  gyro_yawanglerad,
-                  targetYaw0.GetDouble(0),
-                  &V_WheelAngleFwd[0],
-                  &V_WheelAngleRev[0],
-                  &V_WS[0],
-                  &V_WA[0],
-                  &V_RobotInit,
-                  V_AutoTargetState,
-                  &V_autonTargetFin);
+                       strafe,
+                       speen,
+                       c_joyStick.GetRawAxis(3),
+                       V_autonTargetCmd,
+                       c_joyStick.GetRawButton(3),
+                       c_joyStick.GetRawButton(4),
+                       c_joyStick.GetRawButton(5),
+                       gyro_yawangledegrees,
+                       gyro_yawanglerad,
+                       targetYaw0.GetDouble(0),
+                       &V_WheelAngleFwd[0],
+                       &V_WheelAngleRev[0],
+                       &V_WS[0],
+                       &V_WA[0],
+                       &V_RobotInit,
+                       &V_autonTargetFin);
         
-        T_RobotCorner index; 
+        
 
         for (index = E_FrontLeft;
          index < E_RobotCornerSz;
@@ -872,7 +883,6 @@ void Robot::TeleopPeriodic()
                    &V_WS[0],
                    &V_WA[0],
                    &V_RobotInit,
-                   V_AutoTargetState,
                    &V_autonTargetFin);
 
   //PDP top shooter port 13
@@ -975,34 +985,6 @@ void Robot::TeleopPeriodic()
       GyroZero();
     }
 
-
-    //Shooter mech controls
-    // int shooterSpeedSlowDown;
-    // T_RoboShooter dex;
-    
-    //NOTE: Shooting code slowdown
-    // if(c_joyStick2.GetRawButton(8))
-    // {   
-    //   if(shooterSpeedSlowDown < 200)
-    //   {
-    //     for (dex = E_TopShooter;
-    //          dex < E_RoboShooter;
-    //          dex = T_RoboShooter(int(dex) + 1))
-    //     {
-    //         V_ShooterSpeedDesired[dex] *= 0.99;
-    //         shooterSpeedSlowDown++;
-    //     }
-    //   }       
-    //   else if(shooterSpeedSlowDown >= 200)
-    //   {
-    //     V_ShooterSpeedDesired[E_TopShooter] = 0;
-    //     V_ShooterSpeedDesired[E_BottomShooter] = 0;
-    //   }
-    // }
-    // if(c_joyStick2.GetRawButton(8))
-    // {
-
-    // }
   #ifdef COMP
    if (c_joyStick2.GetRawButton(7))
    {
@@ -1011,10 +993,12 @@ void Robot::TeleopPeriodic()
      V_ShooterSpeedDesiredFinalLower = 0;
    }
     
-    if ((c_joyStick2.GetPOV() == 180) || (c_joyStick2.GetPOV() == 270) || (c_joyStick2.GetPOV() == 0) || c_joyStick2.GetRawButton(8) || (V_AutoShootEnable == true))
+    if ((c_joyStick2.GetPOV() == 180) || 
+        (c_joyStick2.GetPOV() == 270) || 
+        (c_joyStick2.GetPOV() == 0)   || 
+        (c_joyStick2.GetRawButton(8)) || 
+        (V_AutoShootEnable == true))
     {
-      // V_ShooterSpeedDesired[E_TopShooter] = -3000;
-      // V_ShooterSpeedDesired[E_BottomShooter] = -3200;
       if ((c_joyStick2.GetPOV() == 180))
       {
        V_ShooterSpeedDesiredFinalUpper = (-1312.5); //-1312.5
@@ -1054,17 +1038,7 @@ void Robot::TeleopPeriodic()
     V_ShooterSpeedDesiredFinalLower = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
     V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 40);
     V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 40);
-#endif
-    
-    // // else
-    // // {
-    // V_ShooterSpeedDesiredFinalUpper    = frc::SmartDashboard::GetNumber("Speed Desired Top", 0);
-    // V_ShooterSpeedDesiredFinalLower = frc::SmartDashboard::GetNumber("Speed Desired Bottom", 0);
-    // // }
-    // V_ShooterSpeedDesired[E_TopShooter] = RampTo(V_ShooterSpeedDesiredFinalUpper, V_ShooterSpeedDesired[E_TopShooter], 40);
-    // V_ShooterSpeedDesired[E_BottomShooter] = RampTo(V_ShooterSpeedDesiredFinalLower, V_ShooterSpeedDesired[E_BottomShooter], 40);
-    //Shooter mech
-    #ifdef TEST
+
     double upper_P_Gx = frc::SmartDashboard::GetNumber("Upper_P_Gx", 0);
     double upper_I_Gx = frc::SmartDashboard::GetNumber("Upper_I_Gx", 0);
     double upper_D_Gx = frc::SmartDashboard::GetNumber("Upper_D_Gx", 0);

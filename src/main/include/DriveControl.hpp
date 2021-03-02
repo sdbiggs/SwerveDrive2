@@ -32,7 +32,6 @@ void DriveControlMain(double L_JoyStick1Axis1Y,
                       double *L_WheelSpeedTarget,
                       double *L_WheelAngleTarget,
                       bool   *L_RobotInit,
-                      T_AutoTargetStates L_AutoTargetState,
                       bool *L_TargetFin);
 
 
