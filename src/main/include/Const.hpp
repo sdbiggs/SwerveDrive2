@@ -163,19 +163,26 @@ const double K_DesiredDistanceAxis[6] = {415,
                                      1077,
                                      1667};
 
-const double K_DesiredSpeedUpperBeam[6] = {-1200,
-                                           -1200,
-                                           -1435,
-                                           -1815,
-                                           -1965,
-                                           -3015};
+const double K_DesiredSpeedUpperBeam[6] = {-950,
+                                           -950,
+                                           -1185,
+                                           -1585,
+                                           -1715,
+                                           -2785};
+                                          //  {-1200,
+                                          //  -1200,
+                                          //  -1435,
+                                          //  -1815,
+                                          //  -1965,
+                                          //  -3015};
+
 
 const double K_DesiredSpeedLowerBeam[6] = {-1150,
-                                           -1350,
-                                           -1880,
-                                           -2100,
-                                           -2400,
-                                           -3100};
+                                          -1350,
+                                          -1880,
+                                          -2100,
+                                          -2400,
+                                          -3100};
 // This is the amount of time that we will wait to make sure we are at the correct location
 const double K_RotateDebounceTime = 0.06;  
 
