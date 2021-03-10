@@ -164,6 +164,8 @@ void Read_Encoders(bool            L_RobotInit,
 
   V_ShooterSpeedCurr[E_TopShooter]    = (m_encoderTopShooter.GetVelocity()    * K_ShooterWheelRotation[E_TopShooter]);
   V_ShooterSpeedCurr[E_BottomShooter] = (m_encoderBottomShooter.GetVelocity() * K_ShooterWheelRotation[E_BottomShooter]);
+  frc::SmartDashboard::PutNumber("Top speed current", m_encoderTopShooter.GetVelocity());
+  frc::SmartDashboard::PutNumber("Bottom speed current", m_encoderBottomShooter.GetVelocity());
   }
 
 /******************************************************************************
