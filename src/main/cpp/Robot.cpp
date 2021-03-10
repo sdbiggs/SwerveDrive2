@@ -391,7 +391,8 @@ void Robot::AutonomousPeriodic()
     double driveforward = 0;
     double strafe = 0;
     double speen = 0;
-
+    double solut_num;
+    solut_num = 0;
       Read_Encoders(V_RobotInit,
                     a_encoderFrontLeftSteer.GetVoltage(),
                     a_encoderFrontRightSteer.GetVoltage(),
@@ -647,7 +648,7 @@ void Robot::AutonomousPeriodic()
           speen = 1.0;
           V_autonTimer += C_ExeTime;
         if (V_autonTimer >= 3){
-              speen = 0;
+              speen = 0.0;
               V_autonState++;
               V_autonTimer = 0;
             }
@@ -663,12 +664,54 @@ void Robot::AutonomousPeriodic()
                         gyro_yawangledegrees,
                         0,
                         V_RobotInit);
+
+      // case 5 is expirimental, do not use for any real driving
+      case 5 :
+        GyroZero();
+        if(V_autonState == 0)
+          {
+            driveforward = (.7);
+            if (V_M_RobotDisplacementY <= -30.0){
+              driveforward = (0.0);
+              V_autonState++;
+              solut_num = 1;
+            }
+            // else if (V_M_RobotDisplacementX >= 15.0){
+            //   driveforward = (0.0);
+            //   V_autonState++;
+            //   solut_num = 2;
+            // }
+          }
+        else if(V_autonState == 1)
+          {
+            strafe = (.7);
+            if (V_M_RobotDisplacementX <= -30.0){
+              strafe = (0.0);
+              V_autonState++;
+            }
+          }
+        else if(V_autonState == 2)
+          {
+            driveforward = (-.7);
+            if (V_M_RobotDisplacementY >= 0.0){
+              driveforward = (0.0);
+              V_autonState++;
+            }
+          }
+        else if(V_autonState == 3)
+          {
+            strafe = (-.7);
+            if (V_M_RobotDisplacementX >= 0.0){
+              strafe = (0.0);
+            }
+          }
       break;
       }
 
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesiredFinalUpper", V_ShooterSpeedDesiredFinalUpper);
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesired[E_TopShooter]", V_ShooterSpeedDesired[E_TopShooter]);
 frc::SmartDashboard::PutNumber("V_AutonState", V_autonState);
+frc::SmartDashboard::PutNumber("solution number", solut_num);
       DriveControlMain(driveforward,
                        strafe,
                        speen,
@@ -997,8 +1040,8 @@ void Robot::TeleopPeriodic()
     {
       if ((c_joyStick2.GetPOV() == 180))
       {
-       V_ShooterSpeedDesiredFinalUpper = (-1312.5); //-1312.5
-       V_ShooterSpeedDesiredFinalLower = (-1400 * .8); //-1400
+       V_ShooterSpeedDesiredFinalUpper = (0.0); //-1312.5
+       V_ShooterSpeedDesiredFinalLower = (-2000); //-1400 * .8
       }
       else if ((c_joyStick2.GetPOV() == 270))
       {
