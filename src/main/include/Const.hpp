@@ -163,12 +163,19 @@ const double K_DesiredDistanceAxis[6] = {415,
                                      1077,
                                      1667};
 
-const double K_DesiredSpeedUpperBeam[6] = {-950,
-                                           -950,
-                                           -1185,
-                                           -1585,
-                                           -1715,
-                                           -2785};
+const double K_DesiredSpeedUpperBeam[6] = {-1050,
+                                           -1050,
+                                           -1285,
+                                           -1735,
+                                           -1865,
+                                           -2935};
+                                          //  {-950,
+                                          //  -950,
+                                          //  -1185,
+                                          //  -1585,
+                                          //  -1715,
+                                          //  -2785};
+
                                           //  {-1200,
                                           //  -1200,
                                           //  -1435,
