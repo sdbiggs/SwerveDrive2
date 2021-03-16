@@ -388,11 +388,9 @@ void Robot::AutonomousPeriodic()
   {
     T_RobotCorner index;
     double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
-    double driveforward = 0;
-    double strafe = 0;
+    double driveforward = 0; //+ forward - backward
+    double strafe = 0; //+ right - left
     double speen = 0;
-    double solut_num;
-    solut_num = 0;
       Read_Encoders(V_RobotInit,
                     a_encoderFrontLeftSteer.GetVoltage(),
                     a_encoderFrontRightSteer.GetVoltage(),
@@ -666,6 +664,7 @@ void Robot::AutonomousPeriodic()
                         V_RobotInit);
 
       // case 5 is expirimental, do not use for any real driving
+      // probably works
       case 5 :
         GyroZero();
         if(V_autonState == 0)
@@ -674,13 +673,8 @@ void Robot::AutonomousPeriodic()
             if (V_M_RobotDisplacementY <= -30.0){
               driveforward = (0.0);
               V_autonState++;
-              solut_num = 1;
+              
             }
-            // else if (V_M_RobotDisplacementX >= 15.0){
-            //   driveforward = (0.0);
-            //   V_autonState++;
-            //   solut_num = 2;
-            // }
           }
         else if(V_autonState == 1)
           {
@@ -711,7 +705,6 @@ void Robot::AutonomousPeriodic()
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesiredFinalUpper", V_ShooterSpeedDesiredFinalUpper);
 frc::SmartDashboard::PutNumber("V_ShooterSpeedDesired[E_TopShooter]", V_ShooterSpeedDesired[E_TopShooter]);
 frc::SmartDashboard::PutNumber("V_AutonState", V_autonState);
-frc::SmartDashboard::PutNumber("solution number", solut_num);
       DriveControlMain(driveforward,
                        strafe,
                        speen,
