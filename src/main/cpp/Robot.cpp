@@ -388,8 +388,8 @@ void Robot::AutonomousPeriodic()
   {
     T_RobotCorner index;
     double timeleft = frc::DriverStation::GetInstance().GetMatchTime();
-    double driveforward = 0; //+ forward - backward
-    double strafe = 0; //+ right - left
+    double driveforward = 0; //+ forward, - backward
+    double strafe = 0; //+ right, - left
     double speen = 0;
       Read_Encoders(V_RobotInit,
                     a_encoderFrontLeftSteer.GetVoltage(),
